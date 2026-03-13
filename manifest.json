@@ -1,0 +1,27 @@
+{
+  "name": "Fortune's Descent",
+  "short_name": "Fortune's Descent",
+  "description": "A roguelike slots game — descend the floors, collect dark blessings, and never go broke.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0608",
+  "theme_color": "#0a0608",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "screenshots": [],
+  "lang": "en"
+}

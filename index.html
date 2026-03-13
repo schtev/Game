@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fortune's Descent">
+<meta name="theme-color" content="#0a0608">
+<meta name="description" content="A roguelike slots game. Descend the floors, collect dark blessings, never go broke.">
+<link rel="manifest" href="manifest.json">
+<title>FORTUNE'S DESCENT — Slots Roguelike</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600&family=IM+Fell+English:ital@0;1&display=swap');
+
+  :root {
+    --gold: #d4a843;
+    --gold-light: #f0cc6e;
+    --gold-dark: #8b6914;
+    --red: #c0392b;
+    --red-light: #e74c3c;
+    --green: #27ae60;
+    --green-light: #2ecc71;
+    --bg-deep: #0a0608;
+    --bg-mid: #120e10;
+    --bg-card: #1a1318;
+    --bg-panel: #150f12;
+    --text: #e8d5b0;
+    --text-dim: #8a7560;
+    --border: #3a2a1a;
+    --border-gold: #5a4020;
+    --purple: #8b5cf6;
+    --purple-light: #a78bfa;
+    --cyan: #06b6d4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: 'Cinzel', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(180, 100, 20, 0.04) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(140, 40, 60, 0.04) 0%, transparent 60%);
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    padding: 30px 0 20px;
+    border-bottom: 1px solid var(--border-gold);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .header::before, .header::after {
+    content: '✦';
+    position: absolute;
+    bottom: -10px;
+    color: var(--gold);
+    font-size: 14px;
+  }
+  .header::before { left: 50%; transform: translateX(-50%) translateX(-80px); }
+  .header::after { left: 50%; transform: translateX(-50%) translateX(80px); }
+
+  .game-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(20px, 5vw, 36px);
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(212, 168, 67, 0.4), 0 2px 4px rgba(0,0,0,0.8);
+    line-height: 1.2;
+  }
+  .game-subtitle {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-top: 6px;
+    letter-spacing: 0.2em;
+  }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--border-gold);
+    padding: 10px 14px;
+    text-align: center;
+    position: relative;
+    transition: border-color 0.3s;
+  }
+  .stat-box.danger { border-top-color: var(--red); }
+  .stat-box.good { border-top-color: var(--green); }
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .stat-value {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 18px;
+    color: var(--gold);
+    font-weight: 700;
+    text-shadow: 0 0 20px rgba(212,168,67,0.3);
+  }
+  .stat-value.coins { color: var(--gold-light); }
+  .stat-value.danger { color: var(--red-light); }
+  .stat-value.good { color: var(--green-light); }
+
+  /* MAIN LAYOUT */
+  .game-layout {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 16px;
+  }
+  @media (max-width: 700px) {
+    .game-layout { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* SLOT MACHINE */
+  .slot-machine {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 24px;
+    position: relative;
+  }
+  .slot-machine::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .reels-container {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 20px;
+    background: #080508;
+    padding: 20px 16px;
+    border: 1px solid #2a1a2a;
+    position: relative;
+    overflow: hidden;
+  }
+  .reels-container::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.6) 100%);
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .reel-wrapper {
+    flex: 1;
+    max-width: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .reel-slot {
+    width: 100%;
+    aspect-ratio: 1;
+    background: #100810;
+    border: 1px solid #2a1a2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(24px, 6vw, 42px);
+    transition: all 0.1s;
+    position: relative;
+  }
+  .reel-slot.active-row {
+    border-color: var(--gold-dark);
+    background: #180f10;
+    box-shadow: inset 0 0 20px rgba(212,168,67,0.08);
+  }
+  .reel-slot.spinning {
+    animation: spinBlur 0.1s linear infinite;
+  }
+  @keyframes spinBlur {
+    0% { filter: blur(3px) brightness(1.5); transform: translateY(-4px); }
+    50% { filter: blur(5px) brightness(2); transform: translateY(4px); }
+    100% { filter: blur(3px) brightness(1.5); transform: translateY(-4px); }
+  }
+  .reel-slot.win-flash {
+    animation: winPulse 0.5s ease-in-out 3;
+  }
+  @keyframes winPulse {
+    0%, 100% { background: #100810; border-color: #2a1a2a; }
+    50% { background: rgba(212,168,67,0.15); border-color: var(--gold); box-shadow: 0 0 20px rgba(212,168,67,0.4); }
+  }
+
+  .payline-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .payline-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border-gold);
+    transition: background 0.3s;
+  }
+  .payline-dot.active { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+
+  /* BET & SPIN */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .bet-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+  }
+  .bet-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+  }
+  .bet-btn {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.1em;
+  }
+  .bet-btn:hover { border-color: var(--gold-dark); color: var(--gold); }
+  .bet-display {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 20px;
+    color: var(--gold-light);
+    min-width: 70px;
+    text-align: center;
+    text-shadow: 0 0 20px rgba(240,204,110,0.3);
+  }
+
+  .spin-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #8b1a2a 0%, #5a0f1a 100%);
+    border: 1px solid #c0392b;
+    border-top: 2px solid var(--red-light);
+    color: #fff;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+  }
+  .spin-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.4s;
+  }
+  .spin-btn:hover:not(:disabled)::before { left: 100%; }
+  .spin-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #a01f30 0%, #6e1220 100%);
+    box-shadow: 0 0 30px rgba(192,57,43,0.3);
+    transform: translateY(-1px);
+  }
+  .spin-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* WIN MESSAGE */
+  .win-display {
+    text-align: center;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .win-msg {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(14px, 3vw, 22px);
+    font-weight: 700;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .win-msg.show {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .win-msg.jackpot { color: var(--gold); text-shadow: 0 0 30px rgba(212,168,67,0.6); }
+  .win-msg.big { color: var(--gold-light); }
+  .win-msg.small { color: var(--green-light); }
+  .win-msg.lose { color: var(--text-dim); font-size: 14px; font-family: 'IM Fell English', serif; font-style: italic; }
+
+  /* PAYTABLE */
+  .paytable {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-top: 0;
+  }
+  .paytable-title {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--gold-dark);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+  .pay-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(58,42,26,0.4);
+  }
+  .pay-symbols { letter-spacing: 2px; }
+  .pay-mult { color: var(--gold); font-size: 11px; }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .panel-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 16px;
+  }
+  .panel-title {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    color: var(--gold-dark);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    text-align: center;
+  }
+
+  /* UPGRADES */
+  .upgrade-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .upgrade-item {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .upgrade-item:hover:not(.owned):not(.cant-afford) {
+    border-color: var(--gold-dark);
+  }
+  .upgrade-item.owned {
+    border-color: var(--green);
+    opacity: 0.7;
+    cursor: default;
+  }
+  .upgrade-item.cant-afford { opacity: 0.4; cursor: not-allowed; }
+  .upgrade-name {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    margin-bottom: 3px;
+    color: var(--text);
+  }
+  .upgrade-item.owned .upgrade-name { color: var(--green-light); }
+  .upgrade-desc {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    margin-bottom: 5px;
+    line-height: 1.3;
+  }
+  .upgrade-cost {
+    font-size: 10px;
+    color: var(--gold);
+    font-family: 'Cinzel Decorative', serif;
+  }
+  .upgrade-item.owned .upgrade-cost { color: var(--green); }
+
+  /* FLOOR / PROGRESS */
+  .floor-display {
+    text-align: center;
+  }
+  .floor-number {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 32px;
+    color: var(--gold);
+    line-height: 1;
+    text-shadow: 0 0 30px rgba(212,168,67,0.3);
+  }
+  .floor-label {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .floor-progress {
+    margin-top: 12px;
+    background: #0a0608;
+    height: 6px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .floor-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+    transition: width 0.6s ease;
+    box-shadow: 0 0 10px rgba(212,168,67,0.4);
+  }
+  .floor-desc {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    text-align: center;
+    margin-top: 6px;
+  }
+
+  /* LOG */
+  .event-log {
+    max-height: 130px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-gold) transparent;
+  }
+  .log-entry {
+    font-size: 10px;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(58,42,26,0.3);
+    color: var(--text-dim);
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    line-height: 1.4;
+  }
+  .log-entry.win { color: var(--gold); font-style: normal; }
+  .log-entry.jackpot { color: var(--gold-light); font-weight: bold; font-style: normal; }
+  .log-entry.lose { color: var(--red-light); }
+  .log-entry.upgrade { color: var(--purple-light); font-style: normal; }
+  .log-entry.floor { color: var(--cyan); font-style: normal; }
+
+  /* SAVE BUTTONS */
+  .save-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .save-btn {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    padding: 8px 4px;
+    cursor: pointer;
+    letter-spacing: 0.15em;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .save-btn:hover { border-color: var(--gold-dark); color: var(--gold); }
+
+  /* GAME OVER */
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+  }
+  .overlay.show { display: flex; }
+  .overlay-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-gold);
+    padding: 48px 40px;
+    text-align: center;
+    max-width: 400px;
+    position: relative;
+  }
+  .overlay-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+  }
+  .overlay-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 28px;
+    color: var(--red-light);
+    margin-bottom: 12px;
+    text-shadow: 0 0 30px rgba(192,57,43,0.5);
+  }
+  .overlay-msg {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .overlay-stat {
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .overlay-stat span { color: var(--gold); }
+  .restart-btn {
+    margin-top: 24px;
+    padding: 14px 36px;
+    background: linear-gradient(135deg, #3a1a0a, #5a2a0f);
+    border: 1px solid var(--gold-dark);
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .restart-btn:hover {
+    background: linear-gradient(135deg, #4a2a0f, #6a3a1a);
+    box-shadow: 0 0 20px rgba(212,168,67,0.2);
+  }
+
+  /* Floor events */
+  .floor-event {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 400;
+    align-items: center;
+    justify-content: center;
+  }
+  .floor-event.show { display: flex; }
+  .event-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-gold);
+    padding: 36px 32px;
+    max-width: 440px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+  }
+  .event-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .event-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 20px;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  .event-flavor {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .event-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .event-choice {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+  }
+  .event-choice:hover {
+    border-color: var(--gold-dark);
+    background: rgba(212,168,67,0.05);
+  }
+  .choice-title {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .choice-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+  }
+  .choice-cost { color: var(--gold); }
+  .choice-warning { color: var(--red-light); }
+
+  /* Coin particle */
+  .coin-particle {
+    position: fixed;
+    pointer-events: none;
+    font-size: 20px;
+    z-index: 600;
+    animation: coinFloat 1s ease-out forwards;
+  }
+  @keyframes coinFloat {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-80px) scale(0.5); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="game-title">FORTUNE'S DESCENT</div>
+    <div class="game-subtitle">A Roguelike Slots Odyssey</div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-box" id="coinBox">
+      <div class="stat-label">Gold Coins</div>
+      <div class="stat-value coins" id="coinDisplay">100</div>
+    </div>
+    <div class="stat-box" id="winsBox">
+      <div class="stat-label">Floor Wins</div>
+      <div class="stat-value" id="winsDisplay">0 / 5</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Total Won</div>
+      <div class="stat-value good" id="totalWonDisplay">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Spins</div>
+      <div class="stat-value" id="spinDisplay">0</div>
+    </div>
+  </div>
+
+  <div class="game-layout">
+
+    <!-- SLOT MACHINE -->
+    <div>
+      <div class="slot-machine">
+        <div class="payline-indicator">
+          <div class="payline-dot active"></div>
+          <div class="payline-dot" id="pd2"></div>
+          <div class="payline-dot" id="pd3"></div>
+        </div>
+
+        <div class="reels-container" id="reelsContainer">
+          <!-- 3x3 grid: reels[col][row] -->
+        </div>
+
+        <div class="win-display">
+          <div class="win-msg" id="winMsg">―</div>
+        </div>
+
+        <div class="controls">
+          <div class="bet-row">
+            <span class="bet-label">BET</span>
+            <button class="bet-btn" onclick="changeBet(-5)">◀</button>
+            <div class="bet-display" id="betDisplay">10</div>
+            <button class="bet-btn" onclick="changeBet(5)">▶</button>
+            <button class="bet-btn" onclick="maxBet()">MAX</button>
+          </div>
+          <button class="spin-btn" id="spinBtn" onclick="spin()">SPIN THE REELS</button>
+        </div>
+      </div>
+
+      <div class="paytable" style="margin-top: 12px;">
+        <div class="paytable-title">✦ Paytable ✦</div>
+        <div class="pay-row"><span class="pay-symbols">💀💀💀</span><span class="pay-mult">×50 JACKPOT</span></div>
+        <div class="pay-row"><span class="pay-symbols">👁️👁️👁️</span><span class="pay-mult">×30</span></div>
+        <div class="pay-row"><span class="pay-symbols">⚔️⚔️⚔️</span><span class="pay-mult">×20</span></div>
+        <div class="pay-row"><span class="pay-symbols">🗝️🗝️🗝️</span><span class="pay-mult">×15</span></div>
+        <div class="pay-row"><span class="pay-symbols">💎💎💎</span><span class="pay-mult">×12</span></div>
+        <div class="pay-row"><span class="pay-symbols">🌙🌙🌙</span><span class="pay-mult">×8</span></div>
+        <div class="pay-row"><span class="pay-symbols">🃏🃏🃏</span><span class="pay-mult">×5</span></div>
+        <div class="pay-row"><span class="pay-symbols">🍷🍷🍷</span><span class="pay-mult">×4</span></div>
+        <div class="pay-row"><span class="pay-symbols">Any pair</span><span class="pay-mult">×1.5</span></div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+
+      <!-- Floor -->
+      <div class="panel-box">
+        <div class="panel-title">✦ The Descent ✦</div>
+        <div class="floor-display">
+          <div class="floor-number" id="floorDisplay">1</div>
+          <div class="floor-label">FLOOR OF DESCENT</div>
+          <div class="floor-progress"><div class="floor-fill" id="floorFill" style="width:0%"></div></div>
+          <div class="floor-desc" id="floorDesc">The tavern reeks of smoke and desperation.</div>
+        </div>
+      </div>
+
+      <!-- Upgrades -->
+      <div class="panel-box">
+        <div class="panel-title">✦ Dark Blessings ✦</div>
+        <div class="upgrade-list" id="upgradeList"></div>
+      </div>
+
+      <!-- Log -->
+      <div class="panel-box">
+        <div class="panel-title">✦ Chronicle ✦</div>
+        <div class="event-log" id="eventLog"></div>
+      </div>
+
+      <!-- Save/Load -->
+      <div class="panel-box">
+        <div class="panel-title">✦ Memory ✦</div>
+        <div class="save-row">
+          <button class="save-btn" onclick="saveGame()">⬇ Save</button>
+          <button class="save-btn" onclick="loadGame()">⬆ Load</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Game Over Overlay -->
+<div class="overlay" id="gameOverOverlay">
+  <div class="overlay-box">
+    <div class="overlay-title">RUINED</div>
+    <div class="overlay-msg">"The house takes everything. Even hope.<br>You leave with nothing but lessons."</div>
+    <div class="overlay-stat">Floor Reached: <span id="goFloor">—</span></div>
+    <div class="overlay-stat">Total Spins: <span id="goSpins">—</span></div>
+    <div class="overlay-stat">Peak Fortune: <span id="goPeak">—</span></div>
+    <button class="restart-btn" onclick="restartGame()">BEGIN ANEW</button>
+  </div>
+</div>
+
+<!-- Floor Event Overlay -->
+<div class="floor-event" id="floorEventOverlay">
+  <div class="event-box">
+    <div class="event-title" id="evTitle">—</div>
+    <div class="event-flavor" id="evFlavor">—</div>
+    <div class="event-choices" id="evChoices"></div>
+  </div>
+</div>
+
+<script>
+// ==================== GAME STATE ====================
+const SYMBOLS = ['🍷','🃏','🌙','💎','🗝️','⚔️','👁️','💀'];
+const WEIGHTS = [30, 25, 18, 14, 10, 7, 4, 2]; // weighted rarity
+const MULT = { '💀':50,'👁️':30,'⚔️':20,'🗝️':15,'💎':12,'🌙':8,'🃏':5,'🍷':4 };
+
+const UPGRADES = [
+  { id:'lucky_reel', name:'Cursed Reel', desc:'One reel is blessed. +10% better symbols.', cost:60, effect:'luckyreel' },
+  { id:'double_pair', name:'Serpent\'s Tongue', desc:'Matching pairs pay double.', cost:80, effect:'doublepair' },
+  { id:'insurance', name:'Devil\'s Insurance', desc:'If you\'d go bankrupt, keep 10 coins.', cost:100, effect:'insurance' },
+  { id:'extra_payline', name:'Third Eye', desc:'Diagonal payline activated.', cost:120, effect:'extrapayline' },
+  { id:'high_roller', name:'Blood Pact', desc:'Max bet multiplier ×1.5.', cost:150, effect:'highroller' },
+  { id:'nudge', name:'Fate\'s Nudge', desc:'Once per 5 spins: reroll one reel free.', cost:180, effect:'nudge' },
+];
+
+const FLOOR_EVENTS = [
+  {
+    title: 'The Moneylender',
+    flavor: '"For a small consideration, I can offer... assistance."',
+    choices: [
+      { title: 'Accept the loan', desc: '+50 coins, but you owe 80 next floor.', cost: null, tag: 'loan' },
+      { title: 'Decline politely', desc: 'Nothing gained, nothing owed.', cost: null, tag: 'skip' }
+    ]
+  },
+  {
+    title: 'The Witch\'s Wager',
+    flavor: '"Risk your silver for a chance at gold..."',
+    choices: [
+      { title: 'Wager 30 coins', desc: '50% chance: win 90. 50% chance: lose it all.', cost: 30, tag: 'gamble' },
+      { title: 'Walk away', desc: 'The witch sneers. You keep your coins.', cost: null, tag: 'skip' }
+    ]
+  },
+  {
+    title: 'The Beggar\'s Gift',
+    flavor: '"I found something shiny in the gutter..."',
+    choices: [
+      { title: 'Accept the gift', desc: 'Receive 20 free coins.', cost: null, tag: 'gift' },
+      { title: 'Give them your coins', desc: 'Donate 15 coins. Gain favor (+1 extra payline win next spin).', cost: 15, tag: 'donate' }
+    ]
+  },
+  {
+    title: 'The Gambler\'s Ghost',
+    flavor: '"I won everything once. Then I lost it. Let me show you my trick..."',
+    choices: [
+      { title: 'Learn the trick', desc: 'Pay 25 coins. Next 3 spins have +20% win chance.', cost: 25, tag: 'ghost' },
+      { title: 'Ignore the shade', desc: 'Some debts should stay buried.', cost: null, tag: 'skip' }
+    ]
+  }
+];
+
+const FLOOR_DESCS = [
+  'The tavern reeks of smoke and desperation.',
+  'Deeper now. The walls sweat with greed.',
+  'Whispers echo of fortunes won and lost.',
+  'The light grows dim. Only gold gleams.',
+  'The abyss gambles with you now.',
+  'You can no longer tell luck from doom.',
+  'Destiny itself deals the cards here.',
+  'Few descend this far. None leave unchanged.',
+];
+
+let G = {};
+
+function initState() {
+  G = {
+    coins: 100,
+    bet: 10,
+    spins: 0,
+    floor: 1,
+    floorWins: 0,
+    floorTarget: 5,
+    totalWon: 0,
+    peakCoins: 100,
+    upgrades: [],
+    loanDebt: 0,
+    ghostSpins: 0,
+    nudgeReady: false,
+    nudgeCounter: 0,
+    bonusPayline: false,
+    reels: [['🍷','🃏','🌙'],['🍷','🃏','🌙'],['🍷','🃏','🌙']],
+    spinning: false,
+    log: [],
+  };
+}
+
+// ==================== REEL GRID RENDER ====================
+function buildReelGrid() {
+  const container = document.getElementById('reelsContainer');
+  container.innerHTML = '';
+  for (let col = 0; col < 3; col++) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'reel-wrapper';
+    for (let row = 0; row < 3; row++) {
+      const slot = document.createElement('div');
+      slot.className = 'reel-slot' + (row === 1 ? ' active-row' : '');
+      slot.id = `reel_${col}_${row}`;
+      slot.textContent = G.reels[col][row];
+      wrapper.appendChild(slot);
+    }
+    container.appendChild(wrapper);
+  }
+}
+
+function updateReelGrid() {
+  for (let col = 0; col < 3; col++) {
+    for (let row = 0; row < 3; row++) {
+      const el = document.getElementById(`reel_${col}_${row}`);
+      if (el) el.textContent = G.reels[col][row];
+    }
+  }
+}
+
+// ==================== WEIGHTED RANDOM ====================
+function weightedSymbol(boosted = false) {
+  let w = [...WEIGHTS];
+  if (boosted) { w = w.map((v,i) => i >= 4 ? v * 1.8 : v); }
+  if (G.ghostSpins > 0) { w = w.map((v,i) => i >= 3 ? v * 1.4 : v); }
+  const total = w.reduce((a,b) => a+b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < SYMBOLS.length; i++) {
+    r -= w[i]; if (r <= 0) return SYMBOLS[i];
+  }
+  return SYMBOLS[0];
+}
+
+function spinReels() {
+  for (let col = 0; col < 3; col++) {
+    const boosted = G.upgrades.includes('luckyreel') && col === 1;
+    G.reels[col] = [weightedSymbol(boosted), weightedSymbol(boosted), weightedSymbol(boosted)];
+  }
+}
+
+// ==================== PAYLINE EVAL ====================
+function evalPaylines() {
+  const results = [];
+  // Middle row (always active)
+  const mid = [G.reels[0][1], G.reels[1][1], G.reels[2][1]];
+  results.push(evalLine(mid));
+  // Extra payline (diagonal) if owned
+  if (G.upgrades.includes('extrapayline')) {
+    const diag = [G.reels[0][0], G.reels[1][1], G.reels[2][2]];
+    results.push(evalLine(diag));
+  }
+  // Bonus payline from donation event
+  if (G.bonusPayline) {
+    const top = [G.reels[0][0], G.reels[1][0], G.reels[2][0]];
+    results.push(evalLine(top));
+    G.bonusPayline = false;
+  }
+  return results;
+}
+
+function evalLine(line) {
+  const [a, b, c] = line;
+  // 3 of a kind
+  if (a === b && b === c) {
+    let mult = MULT[a];
+    if (G.upgrades.includes('highroller') && G.bet === maxBetVal()) mult = Math.floor(mult * 1.5);
+    return { type: 'triple', symbol: a, mult, win: G.bet * mult };
+  }
+  // Pair
+  if (a === b || b === c || a === c) {
+    let mult = 1.5;
+    if (G.upgrades.includes('doublepair')) mult = 3;
+    return { type: 'pair', win: Math.floor(G.bet * mult) };
+  }
+  return { type: 'none', win: 0 };
+}
+
+function maxBetVal() {
+  return Math.min(Math.floor(G.coins / 2), 50);
+}
+
+// ==================== SPIN ====================
+async function spin() {
+  if (G.spinning || G.coins < G.bet) return;
+  G.spinning = true;
+  document.getElementById('spinBtn').disabled = true;
+
+  G.coins -= G.bet;
+  G.spins++;
+  if (G.ghostSpins > 0) G.ghostSpins--;
+  if (G.upgrades.includes('nudge')) {
+    G.nudgeCounter++;
+    if (G.nudgeCounter >= 5) { G.nudgeReady = true; G.nudgeCounter = 0; }
+  }
+  updateStats();
+
+  // Spinning animation
+  for (let col = 0; col < 3; col++) {
+    for (let row = 0; row < 3; row++) {
+      document.getElementById(`reel_${col}_${row}`)?.classList.add('spinning');
+    }
+  }
+
+  await delay(600);
+
+  spinReels();
+
+  // Stop reels staggered
+  for (let col = 0; col < 3; col++) {
+    await delay(180);
+    for (let row = 0; row < 3; row++) {
+      const el = document.getElementById(`reel_${col}_${row}`);
+      if (el) { el.classList.remove('spinning'); el.textContent = G.reels[col][row]; }
+    }
+  }
+
+  await delay(200);
+
+  // Evaluate
+  const results = evalPaylines();
+  let totalWin = results.reduce((s, r) => s + r.win, 0);
+  let bestResult = results.reduce((best, r) => r.win > best.win ? r : best, { win: 0, type: 'none' });
+
+  if (totalWin > 0) {
+    G.coins += totalWin;
+    G.totalWon += totalWin;
+    G.floorWins++;
+    if (G.coins > G.peakCoins) G.peakCoins = G.coins;
+    flashWinReels();
+    showWinMsg(bestResult, totalWin);
+    spawnCoinParticles();
+    addLog(bestResult.type === 'triple' && bestResult.mult >= 20 ? 'jackpot' : 'win',
+      bestResult.type === 'triple' ? `★ ${bestResult.symbol}${bestResult.symbol}${bestResult.symbol} — won ${totalWin} coins!` : `Won ${totalWin} coins.`);
+  } else {
+    showLoseMsg();
+    addLog('lose', getFlavorLoss());
+  }
+
+  // Insurance
+  if (G.coins < 1 && G.upgrades.includes('insurance')) {
+    G.coins = 10;
+    addLog('upgrade', '⚡ Insurance triggered: saved from ruin.');
+  }
+
+  // Check floor progress
+  if (G.floorWins >= G.floorTarget) {
+    await delay(600);
+    G.spinning = false;
+    document.getElementById('spinBtn').disabled = false;
+    advanceFloor();
+    return;
+  }
+
+  // Check game over
+  if (G.coins < G.bet) {
+    // Adjust bet down
+    if (G.coins >= 5) {
+      G.bet = 5;
+      addLog('', 'Your purse lightens. Bet reduced.');
+    } else {
+      await delay(400);
+      triggerGameOver();
+      return;
+    }
+  }
+
+  updateStats();
+  updateUpgrades();
+  G.spinning = false;
+  document.getElementById('spinBtn').disabled = false;
+}
+
+// ==================== FLOOR ====================
+function advanceFloor() {
+  G.floor++;
+  G.floorWins = 0;
+  G.floorTarget = 5 + Math.floor(G.floor * 0.5);
+
+  if (G.loanDebt > 0) {
+    const debt = G.loanDebt;
+    G.coins = Math.max(10, G.coins - debt);
+    G.loanDebt = 0;
+    addLog('lose', `Moneylender collected ${debt} coins of debt.`);
+  }
+
+  addLog('floor', `✦ Descended to Floor ${G.floor}.`);
+  updateStats();
+
+  // Show floor event
+  const ev = FLOOR_EVENTS[Math.floor(Math.random() * FLOOR_EVENTS.length)];
+  showFloorEvent(ev);
+}
+
+function showFloorEvent(ev) {
+  document.getElementById('evTitle').textContent = ev.title;
+  document.getElementById('evFlavor').textContent = ev.flavor;
+  const choicesDiv = document.getElementById('evChoices');
+  choicesDiv.innerHTML = '';
+  ev.choices.forEach(ch => {
+    const btn = document.createElement('div');
+    btn.className = 'event-choice';
+    if (ch.cost && ch.cost > G.coins) btn.classList.add('cant-afford');
+    btn.innerHTML = `
+      <div class="choice-title">${ch.title}</div>
+      <div class="choice-desc">${ch.desc} ${ch.cost ? `<span class="choice-cost">(costs ${ch.cost})</span>` : ''}</div>
+    `;
+    if (!ch.cost || ch.cost <= G.coins) {
+      btn.onclick = () => resolveEvent(ch.tag, ch.cost, ev);
+    }
+    choicesDiv.appendChild(btn);
+  });
+  document.getElementById('floorEventOverlay').classList.add('show');
+}
+
+function resolveEvent(tag, cost, ev) {
+  document.getElementById('floorEventOverlay').classList.remove('show');
+  if (cost) G.coins -= cost;
+  switch (tag) {
+    case 'loan': G.coins += 50; G.loanDebt = 80; addLog('upgrade', '💰 Borrowed 50 coins. Owe 80 next floor.'); break;
+    case 'gamble':
+      if (Math.random() < 0.5) { G.coins += 90; addLog('win', '🎲 The gamble paid off! +90 coins.'); }
+      else { addLog('lose', '🎲 The gamble failed. Coins lost.'); }
+      break;
+    case 'gift': G.coins += 20; addLog('win', '🎁 A kind stranger gave you 20 coins.'); break;
+    case 'donate': G.bonusPayline = true; addLog('upgrade', '🙏 Donated coins. A blessing awaits.'); break;
+    case 'ghost': G.ghostSpins = 3; addLog('upgrade', '👻 The ghost\'s trick activates for 3 spins.'); break;
+    default: addLog('', 'You pass through unmarked.'); break;
+  }
+  if (G.coins > G.peakCoins) G.peakCoins = G.coins;
+  updateStats();
+  updateUpgrades();
+  document.getElementById('spinBtn').disabled = false;
+}
+
+// ==================== UI HELPERS ====================
+function showWinMsg(result, total) {
+  const el = document.getElementById('winMsg');
+  el.className = 'win-msg';
+  if (result.type === 'triple' && result.mult >= 20) {
+    el.textContent = `✦ ${result.symbol} JACKPOT — ${total} COINS ✦`;
+    el.classList.add('jackpot');
+  } else if (result.win >= G.bet * 5) {
+    el.textContent = `BIG WIN — ${total} COINS`;
+    el.classList.add('big');
+  } else {
+    el.textContent = `Win: +${total} coins`;
+    el.classList.add('small');
+  }
+  setTimeout(() => el.classList.add('show'), 10);
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function showLoseMsg() {
+  const el = document.getElementById('winMsg');
+  el.className = 'win-msg lose';
+  const losses = ['The house wins.', 'Fortune frowns.', 'Nothing.', 'The void stares back.', 'Empty hands.'];
+  el.textContent = losses[Math.floor(Math.random() * losses.length)];
+  setTimeout(() => el.classList.add('show'), 10);
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function flashWinReels() {
+  [0,1,2].forEach(col => {
+    const el = document.getElementById(`reel_${col}_1`);
+    if (el) el.classList.add('win-flash');
+    setTimeout(() => el?.classList.remove('win-flash'), 1600);
+  });
+}
+
+function updateStats() {
+  const coinEl = document.getElementById('coinDisplay');
+  coinEl.textContent = G.coins;
+  const coinBox = document.getElementById('coinBox');
+  coinBox.className = 'stat-box' + (G.coins <= 20 ? ' danger' : G.coins >= 200 ? ' good' : '');
+
+  document.getElementById('winsDisplay').textContent = `${G.floorWins} / ${G.floorTarget}`;
+  document.getElementById('totalWonDisplay').textContent = G.totalWon;
+  document.getElementById('spinDisplay').textContent = G.spins;
+  document.getElementById('floorDisplay').textContent = G.floor;
+  document.getElementById('floorFill').style.width = `${(G.floorWins / G.floorTarget) * 100}%`;
+  document.getElementById('betDisplay').textContent = G.bet;
+  const desc = FLOOR_DESCS[Math.min(G.floor - 1, FLOOR_DESCS.length - 1)];
+  document.getElementById('floorDesc').textContent = desc;
+
+  // Payline dots
+  document.getElementById('pd2').classList.toggle('active', G.upgrades.includes('extrapayline'));
+  document.getElementById('pd3').classList.toggle('active', G.bonusPayline);
+}
+
+function updateUpgrades() {
+  const list = document.getElementById('upgradeList');
+  list.innerHTML = '';
+  UPGRADES.forEach(u => {
+    const owned = G.upgrades.includes(u.effect);
+    const cantAfford = G.coins < u.cost && !owned;
+    const div = document.createElement('div');
+    div.className = `upgrade-item${owned ? ' owned' : cantAfford ? ' cant-afford' : ''}`;
+    div.innerHTML = `
+      <div class="upgrade-name">${u.name}</div>
+      <div class="upgrade-desc">${u.desc}</div>
+      <div class="upgrade-cost">${owned ? '✓ ACQUIRED' : `${u.cost} coins`}</div>
+    `;
+    if (!owned && !cantAfford) div.onclick = () => buyUpgrade(u);
+    list.appendChild(div);
+  });
+}
+
+function buyUpgrade(u) {
+  if (G.coins < u.cost || G.upgrades.includes(u.effect)) return;
+  G.coins -= u.cost;
+  G.upgrades.push(u.effect);
+  addLog('upgrade', `🔮 Acquired: ${u.name}`);
+  updateStats();
+  updateUpgrades();
+}
+
+function addLog(type, msg) {
+  G.log.unshift({ type, msg });
+  if (G.log.length > 30) G.log.pop();
+  renderLog();
+}
+
+function renderLog() {
+  const el = document.getElementById('eventLog');
+  el.innerHTML = G.log.map(e => `<div class="log-entry ${e.type}">${e.msg}</div>`).join('');
+}
+
+// ==================== BET ====================
+function changeBet(delta) {
+  G.bet = Math.max(5, Math.min(G.coins, G.bet + delta));
+  updateStats();
+}
+function maxBet() {
+  G.bet = Math.min(G.coins, 50);
+  updateStats();
+}
+
+// ==================== SAVE/LOAD ====================
+function saveGame() {
+  localStorage.setItem('fortunesDescent', JSON.stringify(G));
+  addLog('', '📜 Game saved.');
+}
+
+function loadGame() {
+  const data = localStorage.getItem('fortunesDescent');
+  if (!data) { addLog('', 'No saved game found.'); return; }
+  G = JSON.parse(data);
+  buildReelGrid();
+  updateStats();
+  updateUpgrades();
+  renderLog();
+  addLog('', '📜 Game loaded.');
+}
+
+// ==================== GAME OVER ====================
+function triggerGameOver() {
+  document.getElementById('goFloor').textContent = G.floor;
+  document.getElementById('goSpins').textContent = G.spins;
+  document.getElementById('goPeak').textContent = G.peakCoins + ' coins';
+  document.getElementById('gameOverOverlay').classList.add('show');
+}
+
+function restartGame() {
+  document.getElementById('gameOverOverlay').classList.remove('show');
+  initState();
+  buildReelGrid();
+  updateStats();
+  updateUpgrades();
+  renderLog();
+  addLog('', 'A new descent begins...');
+}
+
+// ==================== PARTICLES ====================
+function spawnCoinParticles() {
+  const spinBtn = document.getElementById('spinBtn');
+  const rect = spinBtn.getBoundingClientRect();
+  for (let i = 0; i < 5; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.className = 'coin-particle';
+      p.textContent = '🪙';
+      p.style.left = (rect.left + Math.random() * rect.width) + 'px';
+      p.style.top = rect.top + 'px';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1000);
+    }, i * 80);
+  }
+}
+
+function getFlavorLoss() {
+  const msgs = [
+    'The wheel turns against you.', 'Luck has gone to sleep.',
+    'The darkness hungers.', 'Not this time.',
+    'The reels mock your hopes.', 'Fortune is a fickle mistress.',
+    'The abyss takes another coin.', 'Silence from the fates.'
+  ];
+  return msgs[Math.floor(Math.random() * msgs.length)];
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ==================== INIT ====================
+initState();
+buildReelGrid();
+updateStats();
+updateUpgrades();
+addLog('', '"Enter, if you dare. The reels await."');
+
+<!-- PWA Install Banner -->
+<div id="installBanner" style="
+  display:none; position:fixed; bottom:0; left:0; right:0; z-index:2000;
+  background:#1a1318; border-top:2px solid #d4a843;
+  padding: env(safe-area-inset-bottom, 0px) 0 0 0;
+">
+  <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 20px; gap:12px;">
+    <div>
+      <div style="font-family:'Cinzel',serif; font-size:13px; color:#d4a843; letter-spacing:0.1em;">Install Fortune's Descent</div>
+      <div style="font-family:'IM Fell English',serif; font-style:italic; font-size:11px; color:#8a7560; margin-top:2px;">Play offline, anytime.</div>
+    </div>
+    <div style="display:flex; gap:8px; flex-shrink:0;">
+      <button id="installDismiss" style="
+        background:transparent; border:1px solid #3a2a1a; color:#8a7560;
+        font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.1em;
+        padding:8px 14px; cursor:pointer;">
+        NOT NOW
+      </button>
+      <button id="installAccept" style="
+        background:linear-gradient(135deg,#5a4020,#3a2a10); border:1px solid #d4a843;
+        color:#d4a843; font-family:'Cinzel',serif; font-size:10px;
+        letter-spacing:0.15em; padding:8px 16px; cursor:pointer;">
+        INSTALL ✦
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Service Worker ──────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(e => console.warn('SW:', e));
+  });
+}
+
+// ── Install Prompt ──────────────────────────────────────────────────────────
+let deferredPrompt = null;
+const banner = document.getElementById('installBanner');
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Only show if not already installed / dismissed before
+  if (!localStorage.getItem('pwaInstallDismissed')) {
+    setTimeout(() => { banner.style.display = 'block'; }, 3000);
+  }
+});
+
+document.getElementById('installAccept').addEventListener('click', async () => {
+  banner.style.display = 'none';
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  }
+});
+
+document.getElementById('installDismiss').addEventListener('click', () => {
+  banner.style.display = 'none';
+  localStorage.setItem('pwaInstallDismissed', '1');
+});
+
+window.addEventListener('appinstalled', () => {
+  banner.style.display = 'none';
+  deferredPrompt = null;
+});
+</script>
+</body>
+</html>
