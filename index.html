@@ -733,11 +733,11 @@ const RELICS=[
    quotas:3, apply:{mirrorReel:true}},
   {id:'goldenshard',  icon:'🌟', name:'Golden Shard',         type:'buff',
    lore:'"A fragment of something ancient. It hums with residual fortune."',
-   desc:'After any triple win, gain <b>+5 bonus coins</b> for each floor youve descended.',
+   desc:'After any triple win, gain <b>+5 bonus coins</b> for each floor descended.',
    quotas:undefined, apply:{goldenShard:true}},
   {id:'vaultkey',     icon:'🗝️', name:'Vault Master Key',    type:'buff',
    lore:'"Every lock has a price. This one pays you back."',
-   desc:'Vault withdrawals gain <b>+20% bonus</b> coins on top of whats stored.',
+   desc:'Vault withdrawals gain <b>+20% bonus</b> coins on top of stored amount.',
    quotas:4, apply:{vaultKey:true}},
   {id:'bloodcrown',   icon:'👑', name:'Blood Crown',          type:'mixed',
    lore:'"Wear it, and the machine bows. But the machine remembers."',
@@ -932,10 +932,8 @@ function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.ra
 function calcQuota(){
   let base;
   if(G.quotasPaid===0){base=1000;}else{base=Math.floor(G.prevQuota+G.lastQuotaPaid*20);base=Math.max(base,G.prevQuota+200);}
-  if(G.loanDoubleNext)base=base*2;
-  // Apply discount
+  if(G.loanDoubleNext){base=base*2;G.loanDoubleNext=false;} // consume the double here
   if(G.quotaReduceStack>0) base=Math.floor(base*(1-Math.min(0.5,G.quotaReduceStack)));
-  // Credit card penalty
   if(G.creditCardDebt>0) base=Math.floor(base*(1+Math.min(0.5,G.creditCardDebt)));
   return base;
 }
@@ -1496,6 +1494,10 @@ async function spin(){
     updateVaultUI();
   }
   G.quotaSpinsLeft--;
+  // 3-spins-left: offer devil deal if struggling
+  if(G.quotaSpinsLeft===3&&G.coins<G.quota*0.5){
+    checkLoanOffer();
+  }
   // Last-spin warning
   if(G.quotaSpinsLeft===1&&G.coins<G.quota&&!G.lastWarnShown){
     G.lastWarnShown=true;
@@ -1567,7 +1569,6 @@ function tryPayQuota(){
   G.lastQuotaPaid=Math.max(1,G.coins-G.quota);
   G.coins-=G.quota;
   G.quotasPaid++;
-  G.loanDoubleNext=false;
   G.lastWarnShown=false;
   document.getElementById('lastWarnBar').style.display='none';
   G.irsActive=false;G.irsRisk=0;G.spinsSinceDouble=0;
@@ -1592,7 +1593,7 @@ function advFloor(){
   if(G.loanDebt>0){const d=G.loanDebt;G.coins=Math.max(15,G.coins-d);G.loanDebt=0;log('lose',`Moneylender collected ${d}.`);}
   log('floor',`✦ Descended to Floor ${G.floor}.`);
   if(G.floor%5===0){G.isBossFloor=true;showBossIntro();}
-  else{G.isBossFloor=false;G.quota=calcQuota();G.quotaSpins=calcSpins(G.floor);G.quotaSpinsLeft=G.quotaSpins;G.lastWarnShown=false;updateStats();checkLoanOffer();showEvent(getScaledEvent());}
+  else{G.isBossFloor=false;G.quota=calcQuota();G.quotaSpins=calcSpins(G.floor);G.quotaSpinsLeft=G.quotaSpins;G.lastWarnShown=false;updateStats();showEvent(getScaledEvent());}
 }
 function showBossIntro(){
   const idx=Math.floor(G.floor/5)-1;G.bossName=BOSS_NAMES[idx%BOSS_NAMES.length];
@@ -2050,27 +2051,42 @@ function updateVaultUI(){
 // LOAN SYSTEM
 // ============================================================
 function checkLoanOffer(){
-  if(G.quotasPaid===0||G.quotasPaid%5!==0)return;
-  if(G.lastLoanQuota===G.quotasPaid)return;
+  // Block if already offered this quota period
+  const periodKey=G.quotasPaid;
+  if(G.lastLoanQuota===periodKey)return;
+  // Must be below 50% of quota to qualify
   if(G.coins/G.quota>=0.5)return;
-  G.lastLoanQuota=G.quotasPaid;
-  const loanAmt=Math.floor(G.quota*1.5);
-  document.getElementById('loanPopupMsg').textContent='"You carry only '+G.coins+' coins toward '+G.quota+' required. Take '+loanAmt+' now — but your next quota doubles."';
-  document.getElementById('loanPopupAmount').innerHTML='Loan: <span style="color:var(--gold)">'+loanAmt+' coins</span>';
-  document.getElementById('loanPopupCooldown').textContent='Offer expires. Next eligible at quota #'+(G.quotasPaid+5)+'.';
+  // Block if loan double is already pending (already took one)
+  if(G.loanDoubleNext)return;
+  G.lastLoanQuota=periodKey;
+  const loanAmt=Math.floor(G.quota*0.5); // 50% of quota
+  const devilQuotes=[
+    'Ah... struggling, are we? How delightful. I have been watching your descent with great interest.',
+    'The house always wins — but I am not the house. I am something far older. And I am willing to deal.',
+    'Your pockets are thin, your quota is hungry. I can solve both... for a modest arrangement.',
+    'Every soul that passes through here eventually finds themselves across this very table. Welcome.',
+    'Fortune has abandoned you. I, however, never abandon a client. The terms are simple.',
+    'I have collected debts from kings. From gods. You are merely... overdue.',
+    'The Collector does not lose patience. He simply adjusts his terms.',
+    'Three spins. That is all you have. I, however, am eternal. Shall we talk?',
+  ];
+  const quote=devilQuotes[Math.floor(Math.random()*devilQuotes.length)];
+  document.getElementById('loanPopupMsg').textContent=quote;
+  document.getElementById('loanPopupAmount').innerHTML=loanAmt+' coins';
+  document.getElementById('loanPopupCooldown').textContent='This offer is good for this quota only. The Collector moves on when the floor does.';
   document.getElementById('loanPopup').style.display='flex';
 }
 function acceptLoan(){
-  const loanAmt=Math.floor(G.quota*1.5);
+  const loanAmt=Math.floor(G.quota*0.5);
   G.coins+=loanAmt;G.loanDoubleNext=true;
   if(G.coins>G.peakCoins)G.peakCoins=G.coins;
   document.getElementById('loanPopup').style.display='none';
-  log('upgrade','💰 Emergency Loan: +'+loanAmt+' coins. NEXT QUOTA DOUBLED!');
+  log('boss','😈 Pact sealed. +'+loanAmt+' coins — but the Collector takes his due next quota.');
   updateStats();
 }
 function declineLoan(){
   document.getElementById('loanPopup').style.display='none';
-  log('','💰 Loan declined.');
+  log('','😈 The Collector smiles. "We will meet again."');
 }
 
 function restartGame(){
@@ -2304,7 +2320,16 @@ window.fd = {
     return 'Middle row forced to '+sym;
   },
 
-  loan(){ checkLoanOffer(); if(document.getElementById('loanPopup').style.display==='flex') return 'Loan popup opened.'; G.lastLoanQuota=-999; G.coins=0; checkLoanOffer(); return 'Forced loan popup.'; },
+  loan(){
+    // Force show regardless of conditions
+    G.lastLoanQuota=-999;
+    const savedCoins=G.coins;
+    const savedDouble=G.loanDoubleNext;
+    G.coins=0;G.loanDoubleNext=false;
+    checkLoanOffer();
+    G.coins=savedCoins;G.loanDoubleNext=savedDouble;
+    return document.getElementById('loanPopup').style.display==='flex'?'Loan popup opened.':'Popup failed — check console for errors.';
+  },
 
   noIRS(){ G.irsActive=false; G.irsRisk=0; G.spinsSinceDouble=0; document.getElementById('irsWarn').classList.remove('show'); updateStats(); return 'IRS threat cleared for now.'; },
   killIRS(){ window.fd.noIRS(); return 'IRS neutralised.'; },
@@ -2325,17 +2350,27 @@ log('','Starting quota: 1000. Each new quota = previous + 20× your leftover coi
 </script>
 
 <!-- LOAN OFFER POPUP -->
-<div id="loanPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:600;align-items:center;justify-content:center;padding:16px;">
-  <div style="background:#050a16;border:1px solid var(--irs-light);padding:28px 24px;text-align:center;max-width:400px;width:100%;position:relative;">
-    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--irs-light),transparent);"></div>
-    <div class="ov-title bi" style="font-size:16px">💰 EMERGENCY LOAN OFFER</div>
-    <div id="loanPopupMsg" class="ov-msg">"You're struggling. I can help — for a price."</div>
-    <div id="loanPopupAmount" class="ov-stat">Loan amount: — coins</div>
-    <div class="ov-stat" style="color:var(--red-light)">⚠ Next quota will be DOUBLED</div>
-    <div id="loanPopupCooldown" class="ov-stat" style="font-size:8px;color:var(--text-dim);"></div>
-    <div style="display:flex;gap:10px;justify-content:center;margin-top:14px;">
-      <button class="ov-btn" onclick="acceptLoan()">Accept Loan</button>
-      <button class="ov-btn" style="background:linear-gradient(135deg,#1a0808,#2a0a0a);border-color:var(--red)" onclick="declineLoan()">Decline</button>
+<div id="loanPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:600;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#0d0008;border:1px solid #6b0000;border-top:3px solid #cc2200;padding:30px 26px;text-align:center;max-width:440px;width:100%;position:relative;box-shadow:0 0 60px rgba(150,0,0,.4),inset 0 0 40px rgba(80,0,0,.2);">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#cc2200,#ff4400,#cc2200,transparent);"></div>
+    <div style="font-size:48px;margin-bottom:6px;filter:drop-shadow(0 0 12px rgba(255,60,0,.7));">😈</div>
+    <div style="font-family:'Cinzel Decorative',serif;font-size:17px;color:#ff4400;letter-spacing:.12em;text-shadow:0 0 20px rgba(255,80,0,.6);margin-bottom:4px;">A DEAL WITH THE DEVIL</div>
+    <div style="font-size:8px;letter-spacing:.3em;color:#6b2200;text-transform:uppercase;margin-bottom:16px;">The Crossroads Collector has arrived</div>
+    <div id="loanPopupMsg" style="font-family:'IM Fell English',serif;font-style:italic;color:#c4804a;font-size:12px;line-height:1.7;margin-bottom:14px;border-left:2px solid #6b0000;border-right:2px solid #6b0000;padding:8px 12px;background:rgba(60,0,0,.3);"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div style="background:rgba(30,60,0,.3);border:1px solid #2a5000;padding:8px;">
+        <div style="font-size:7px;letter-spacing:.2em;color:#4a8000;text-transform:uppercase;margin-bottom:4px;">You receive</div>
+        <div id="loanPopupAmount" style="font-family:'Cinzel Decorative',serif;font-size:16px;color:#a0d040;">—</div>
+      </div>
+      <div style="background:rgba(60,0,0,.3);border:1px solid #500000;padding:8px;">
+        <div style="font-size:7px;letter-spacing:.2em;color:#800000;text-transform:uppercase;margin-bottom:4px;">The price</div>
+        <div id="loanPopupCost" style="font-family:'Cinzel Decorative',serif;font-size:11px;color:#cc2200;">Next quota ×2</div>
+      </div>
+    </div>
+    <div id="loanPopupCooldown" style="font-size:8px;color:#4a2020;letter-spacing:.1em;margin-bottom:14px;font-family:'IM Fell English',serif;font-style:italic;"></div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button onclick="acceptLoan()" style="padding:10px 20px;background:linear-gradient(135deg,#3a0000,#6b0000);border:1px solid #cc2200;border-top:2px solid #ff4400;color:#ff8866;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.18em;cursor:pointer;text-transform:uppercase;transition:all .2s;" onmouseover="this.style.boxShadow='0 0 20px rgba(200,40,0,.5)'" onmouseout="this.style.boxShadow=''">Sign the Contract</button>
+      <button onclick="declineLoan()" style="padding:10px 20px;background:linear-gradient(135deg,#0a0808,#180808);border:1px solid #3a2020;color:#6a4040;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.18em;cursor:pointer;text-transform:uppercase;transition:all .2s;" onmouseover="this.style.borderColor='#6a3030';this.style.color='#8a5050'" onmouseout="this.style.borderColor='#3a2020';this.style.color='#6a4040'">Walk Away</button>
     </div>
   </div>
 </div>
