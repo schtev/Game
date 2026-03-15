@@ -317,6 +317,8 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 @keyframes quotaPaidFlash{0%,100%{background:var(--bg-card)}50%{background:rgba(46,204,113,.08)}}
 .quota-paid-flash{animation:quotaPaidFlash .6s ease 2;}
 
+@keyframes cursePulse{0%,100%{opacity:.7}50%{opacity:1}}
+.curse-tag{display:inline-block;font-size:7px;letter-spacing:.1em;padding:1px 6px;border:1px solid var(--red);color:var(--red-light);text-transform:uppercase;animation:cursePulse 2s ease infinite;}
 @keyframes warnPulse{0%,100%{border-color:var(--red);box-shadow:0 0 6px rgba(192,57,43,.3)}50%{border-color:var(--red-light);box-shadow:0 0 18px rgba(231,76,60,.6)}}
 @keyframes feverShimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
 @keyframes feverPulseAnim{0%,100%{opacity:.75;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.08)}}
@@ -358,6 +360,9 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   <div class="irs-warn" id="irsWarn">
     <div class="irs-text" id="irsText">⚠ IRS RISK: 10% — You have exceeded double the quota. Each spin without paying increases your risk.</div>
   </div>
+
+  <!-- QUOTA EVENT / OBJECTIVE BAR -->
+  <div id="quotaModBar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;min-height:0;"></div>
 
   <!-- LAST WARNING -->
   <div id="lastWarnBar" style="display:none;background:#1a0808;border:2px solid var(--red);padding:6px 10px;margin-bottom:8px;text-align:center;animation:warnPulse 1s ease infinite;">
@@ -558,6 +563,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <div class="ov-stat">Your gain: <span id="bossResYou">—</span></div>
     <div class="ov-stat">Enemy gain: <span id="bossResThem">—</span></div>
     <div class="ov-stat" id="bossResBonus"></div>
+    <div id="bossResCurses" style="font-size:8px;color:var(--text-dim);margin-top:4px;"></div>
     <button class="ov-btn" onclick="closeBossResult()">CONTINUE DESCENT</button>
   </div>
 </div>
@@ -567,6 +573,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   <div class="ov-box boss-ov">
     <div class="ov-title bl" id="biTitle">—</div>
     <div class="ov-msg" id="biMsg">—</div>
+    <div id="biMechanic" style="display:none;font-size:9px;background:rgba(60,0,0,.3);border:1px solid var(--boss-dark);color:var(--boss);padding:5px 10px;margin-bottom:6px;letter-spacing:.08em;"></div>
     <div class="ov-stat">Quota to reach: <span id="biQuota">—</span></div>
     <div class="ov-stat">Spins allowed: <span id="biSpins">—</span></div>
     <div class="ov-msg" style="margin-top:8px;font-size:10px;color:var(--boss);">First to quota wins. Neither? Highest coins wins.</div>
@@ -631,34 +638,86 @@ const BASE_W=[30,25,18,14,10,7,4,2];
 const BASE_MULT={'💀':50,'👁️':30,'⚔️':20,'🗝️':15,'💎':12,'🌙':8,'🃏':5,'🍷':4};
 const HIGH_SYMS=['👁️','⚔️','🗝️','💎','💀']; // "high-value"
 const FLOOR_DESCS=['The tavern reeks of smoke and desperation.','Deeper now. The walls sweat with greed.','Whispers echo of fortunes won and lost.','The light grows dim. Only gold gleams.','The abyss gambles with you now.','You cannot tell luck from doom anymore.','Destiny itself deals the cards here.','Few descend this far. None leave unchanged.','The walls breathe coin dust and regret.','Not even shadows descend this deep willingly.'];
-const BOSS_NAMES=['The Iron Banker','The Fate Weaver','Lord of the Abyss','The Void Dealer','The Eternal House'];
+const BOSS_NAMES=['The Iron Banker','The Fate Weaver','Lord of the Abyss','The Void Dealer','The Eternal House','The Auditor','The Saboteur','The Glitch'];
+const BOSS_MECHANICS=[
+  null, // Iron Banker: no special mechanic
+  null, // Fate Weaver: no special mechanic
+  {id:'auditor', name:'The Auditor', desc:'Takes 40% of every win before you receive it.', icon:'⚖️'},
+  {id:'saboteur', name:'The Saboteur', desc:'Each reel has a 30% chance to stop on a random symbol.', icon:'💣'},
+  {id:'glitch', name:'The Glitch', desc:'After landing, each symbol has a 25% chance to shift to an adjacent symbol.', icon:'📺'},
+  {id:'auditor', name:'The Auditor', desc:'Takes 40% of every win before you receive it.', icon:'⚖️'},
+  {id:'saboteur', name:'The Saboteur', desc:'Each reel has a 30% chance to stop on a random symbol.', icon:'💣'},
+  {id:'glitch', name:'The Glitch', desc:'After landing, each symbol has a 25% chance to shift to an adjacent symbol.', icon:'📺'},
+];
+const BOSS_CURSES=[
+  {id:'greed',  name:'Greed Curse',   icon:'🪙',
+   desc:'All wins pay 25% fewer coins.',
+   detail:'Every win you receive is reduced to 75% of its calculated value. Stacks multiplicatively with other reductions.',
+   apply:{cursedGreed:true}},
+  {id:'decay',  name:'Decay Curse',   icon:'📉',
+   desc:'Multipliers slowly rot. Each spin they shrink a little more.',
+   detail:'All symbol multipliers decrease by 0.5 per spin, minimum 1. After 20 spins even jackpots pay minimum.',
+   apply:{cursedDecay:true}},
+  {id:'chaos',  name:'Chaos Curse',   icon:'🌀',
+   desc:'Win amounts vary wildly — anywhere from 50% to 130% of expected.',
+   detail:'Each win is multiplied by a random factor between 0.5 and 1.3. You might get more, you might get much less.',
+   apply:{cursedChaos:true}},
+  {id:'fog',    name:'Fog Curse',     icon:'🌫️',
+   desc:'The middle row is concealed until the reels stop spinning.',
+   detail:'You cannot see your middle-row result until the spin resolves. Plan your bets blind.',
+   apply:{cursedFog:true}},
+  {id:'leech',  name:'Leech Curse',   icon:'🩸',
+   desc:'Lose 3 coins on every spin, win or lose.',
+   detail:'A flat 3 coin drain occurs after every spin. Stacks with other per-spin costs like Debt Contract.',
+   apply:{cursedLeech:true}},
+  {id:'hollow', name:'Hollow Wins',   icon:'🕳️',
+   desc:'Every other win is worth nothing. The machine is hollow inside.',
+   detail:'Alternating wins pay zero — your first win counts, second does not, third does, and so on per quota.',
+   apply:{cursedHollow:true}},
+  {id:'mirror', name:'Mirror Curse',  icon:'🪞',
+   desc:'Your best symbol is mirrored to your worst. Highs become lows.',
+   detail:'Whenever you land a symbol with x20+ multiplier, it is replaced with 🍷 (x4) before payout.',
+   apply:{cursedMirror:true}},
+  {id:'debt',   name:'Debt Curse',    icon:'📜',
+   desc:'You owe 10% of your coins at every quota payment.',
+   detail:'When paying quota, an additional 10% of your coin total is taken as a curse tithe.',
+   apply:{cursedDebt:true}},
+  {id:'hunger', name:'Hunger Curse',  icon:'😤',
+   desc:'Your bet minimum rises by 2 every spin.',
+   detail:'The minimum bet increases by 2 after each spin this run. Saved bets are unaffected but new minimums apply.',
+   apply:{cursedHunger:true}},
+  {id:'blind',  name:'Blind Curse',   icon:'🙈',
+   desc:'You cannot see your coin total. Play on faith.',
+   detail:'The coin counter is hidden. You must judge your wealth by the quota bar and your instincts alone.',
+   apply:{cursedBlind:true}},
+];
 const BOSS_QUOTES=['"Fortune favors me. Always."','"Every thread of luck I weave — for myself."','"The deeper you fall, the more is mine."','"I have swallowed kingdoms. You are a coin."','"The house does not lose. Ever."'];
 const SHELF_SIZE=5;
 
 // ── PERMANENT UPGRADES (bought with regular coins, expensive, late-game) ──
 const UPG_DEFS=[
   // Early-ish (300-600)
-  {id:'luckyreel',    name:'Cursed Reel',       desc:'Middle reel: +10% rare symbols per level.',           baseCost:300,  max:4, stack:true },
-  {id:'symbolboost',  name:"Witch's Favour",     desc:'All rares +8% per level.',                            baseCost:400,  max:4, stack:true },
-  {id:'pairbonus',    name:'Twin Omen',           desc:'+20% pair payout per level.',                        baseCost:350,  max:3, stack:true },
-  {id:'rerollchance', name:'Chaos Engine',        desc:'Dead spin: 25% chance reroll a row. +25% per lv.',   baseCost:380,  max:4, stack:true },
-  {id:'lossback',     name:"Sorrow's Rebate",     desc:'On a loss, recover 15% of bet.',                     baseCost:320,  max:1, stack:false},
-  {id:'combo',        name:'Chain Fortune',       desc:'Each consecutive win adds +8% to next win.',         baseCost:450,  max:3, stack:true },
+  {id:'luckyreel',    name:'Cursed Reel',       desc:'Middle reel: +10% rare symbols per level.',           baseCost:900,  max:4, stack:true },
+  {id:'symbolboost',  name:"Witch's Favour",     desc:'All rares +8% per level.',                            baseCost:1200,  max:4, stack:true },
+  {id:'pairbonus',    name:'Twin Omen',           desc:'+20% pair payout per level.',                        baseCost:1050,  max:3, stack:true },
+  {id:'rerollchance', name:'Chaos Engine',        desc:'Dead spin: 25% chance reroll a row. +25% per lv.',   baseCost:1140,  max:4, stack:true },
+  {id:'lossback',     name:"Sorrow's Rebate",     desc:'On a loss, recover 15% of bet.',                     baseCost:960,  max:1, stack:false},
+  {id:'combo',        name:'Chain Fortune',       desc:'Each consecutive win adds +8% to next win.',         baseCost:1350,  max:3, stack:true },
   // Mid (700-1200)
-  {id:'doublepair',   name:"Serpent's Tongue",    desc:'Pairs pay ×3 instead of ×1.5.',                     baseCost:700,  max:1, stack:false},
-  {id:'insurance',    name:"Devil's Insurance",   desc:'Bankrupt? Keep 20 coins once per floor.',            baseCost:600,  max:1, stack:false},
-  {id:'nudge',        name:"Fate's Nudge",        desc:'Every 5 spins: next bet costs half.',                baseCost:800,  max:1, stack:false},
+  {id:'doublepair',   name:"Serpent's Tongue",    desc:'Pairs pay ×3 instead of ×1.5.',                     baseCost:2100,  max:1, stack:false},
+  {id:'insurance',    name:"Devil's Insurance",   desc:'Bankrupt? Keep 20 coins once per floor.',            baseCost:1800,  max:1, stack:false},
+  {id:'nudge',        name:"Fate's Nudge",        desc:'Every 5 spins: next bet costs half.',                baseCost:2400,  max:1, stack:false},
   // Late (1500+)
-  {id:'extrapayline', name:'Third Eye',           desc:'Both diagonals become active paylines.',             baseCost:1500, max:1, stack:false},
-  {id:'highroller',   name:'Blood Pact',          desc:'Max bet payouts ×1.5.',                              baseCost:1800, max:1, stack:false},
-  {id:'multirow',     name:'All-Seeing Row',      desc:'Top and bottom rows also count as paylines.',        baseCost:2200, max:1, stack:false},
+  {id:'extrapayline', name:'Third Eye',           desc:'Both diagonals become active paylines.',             baseCost:4500, max:1, stack:false},
+  {id:'highroller',   name:'Blood Pact',          desc:'Max bet payouts ×1.5.',                              baseCost:5400, max:1, stack:false},
+  {id:'multirow',     name:'All-Seeing Row',      desc:'Top and bottom rows also count as paylines.',        baseCost:6600, max:1, stack:false},
   // New upgrades
-  {id:'vaultupgrade', name:'Vault Expansion',     desc:'Vault lasts +2 extra spins per level.',              baseCost:400,  max:3, stack:true },
-  {id:'betscaling',   name:'Momentum Bet',        desc:'Each consecutive win: bet ceiling +5% of coins.',    baseCost:500,  max:3, stack:true },
-  {id:'feverboost',   name:'Fever Kindling',      desc:'Wins add +3 extra Fever per level.',                 baseCost:350,  max:4, stack:true },
-  {id:'quotabuffer',  name:'Debt Shield',         desc:'Last-spin: if within 20% of quota, get 1 free spin.',baseCost:900,  max:1, stack:false},
-  {id:'icbonus',      name:'Fortune Tithe',       desc:'+1 item coin on every quota payment.',               baseCost:600,  max:3, stack:true },
-  {id:'vaultreturn',  name:'Iron Safe',           desc:'Vault payout on expiry gives +10% bonus per level.', baseCost:700,  max:3, stack:true },
+  {id:'vaultupgrade', name:'Vault Expansion',     desc:'Vault lasts +2 extra spins per level.',              baseCost:1200,  max:3, stack:true },
+  {id:'betscaling',   name:'Momentum Bet',        desc:'Each consecutive win: bet ceiling +5% of coins.',    baseCost:1500,  max:3, stack:true },
+  {id:'feverboost',   name:'Fever Kindling',      desc:'Wins add +3 extra Fever per level.',                 baseCost:1050,  max:4, stack:true },
+  {id:'quotabuffer',  name:'Debt Shield',         desc:'Last-spin: if within 20% of quota, get 1 free spin.',baseCost:2700,  max:1, stack:false},
+  {id:'icbonus',      name:'Fortune Tithe',       desc:'+1 item coin on every quota payment.',               baseCost:1800,  max:3, stack:true },
+  {id:'vaultreturn',  name:'Iron Safe',           desc:'Vault payout on expiry gives +10% bonus per level.', baseCost:2100,  max:3, stack:true },
 ];
 
 // ── RELIC DEFINITIONS ──
@@ -784,36 +843,136 @@ const RELICS=[
 
 const ALL_SHOP_ITEMS=[
   // MULTIPLIER (coin-bought)
-  {id:'diag_boost',   icon:'↘', name:'Crooked Angle',      desc:'Diagonal wins pay ×2.',                    cost:200, tag:'mult',  max:1,  apply:{diagMult:2}},
-  {id:'diag_boost2',  icon:'↗', name:'Second Diagonal',    desc:'Diagonal wins pay ×3. (Needs Crooked)',     cost:400, tag:'mult',  max:1,  req:'diag_boost', apply:{diagMult:3}},
-  {id:'skull_boost',  icon:'💀', name:'Death Omen',         desc:'💀 jackpot becomes ×70.',                  cost:500, tag:'mult',  max:1,  apply:{skullMult:70}},
-  {id:'eye_boost',    icon:'👁️', name:"Seer's Lens",        desc:'👁️ multiplier becomes ×40.',               cost:350, tag:'mult',  max:1,  apply:{eyeMult:40}},
-  {id:'sword_boost',  icon:'⚔️', name:'Blood Edge',         desc:'⚔️ multiplier becomes ×28.',               cost:300, tag:'mult',  max:1,  apply:{swordMult:28}},
-  {id:'gem_boost',    icon:'💎', name:'Gem Cutter',         desc:'💎 multiplier becomes ×18.',               cost:250, tag:'mult',  max:1,  apply:{gemMult:18}},
-  {id:'pair_mult2',   icon:'♊', name:'Double Mirror',      desc:'All pair payouts ×2.',                     cost:300, tag:'mult',  max:1,  apply:{pairMult2:true}},
-  {id:'triple_all',   icon:'🔱', name:'Trinity Pact',       desc:'All triple multipliers +5.',               cost:400, tag:'mult',  max:1,  apply:{tripleBonus:5}},
-  {id:'triple_all2',  icon:'⚜️', name:'Greater Trinity',   desc:'Triple mults +10 more. (Needs Trinity)',   cost:700, tag:'mult',  max:1,  req:'triple_all', apply:{tripleBonus:10}},
+  {id:'diag_boost',   icon:'↘', name:'Crooked Angle',      desc:'Diagonal wins pay ×2.',                    cost:800, tag:'mult',  max:1,  apply:{diagMult:2}},
+  {id:'diag_boost2',  icon:'↗', name:'Second Diagonal',    desc:'Diagonal wins pay ×3. (Needs Crooked)',     cost:1600, tag:'mult',  max:1,  req:'diag_boost', apply:{diagMult:3}},
+  {id:'skull_boost',  icon:'💀', name:'Death Omen',         desc:'💀 jackpot becomes ×70.',                  cost:2000, tag:'mult',  max:1,  apply:{skullMult:70}},
+  {id:'eye_boost',    icon:'👁️', name:"Seer's Lens",        desc:'👁️ multiplier becomes ×40.',               cost:1400, tag:'mult',  max:1,  apply:{eyeMult:40}},
+  {id:'sword_boost',  icon:'⚔️', name:'Blood Edge',         desc:'⚔️ multiplier becomes ×28.',               cost:1200, tag:'mult',  max:1,  apply:{swordMult:28}},
+  {id:'gem_boost',    icon:'💎', name:'Gem Cutter',         desc:'💎 multiplier becomes ×18.',               cost:1000, tag:'mult',  max:1,  apply:{gemMult:18}},
+  {id:'pair_mult2',   icon:'♊', name:'Double Mirror',      desc:'All pair payouts ×2.',                     cost:1200, tag:'mult',  max:1,  apply:{pairMult2:true}},
+  {id:'triple_all',   icon:'🔱', name:'Trinity Pact',       desc:'All triple multipliers +5.',               cost:1600, tag:'mult',  max:1,  apply:{tripleBonus:5}},
+  {id:'triple_all2',  icon:'⚜️', name:'Greater Trinity',   desc:'Triple mults +10 more. (Needs Trinity)',   cost:2800, tag:'mult',  max:1,  req:'triple_all', apply:{tripleBonus:10}},
   // CHANCE
-  {id:'skull_chance', icon:'☠️', name:'Bone Market',        desc:'💀 symbol 50% more likely.',               cost:400, tag:'chance',max:1,  apply:{skullChance:1.5}},
-  {id:'all_rare_up',  icon:'✨', name:'Fortune Shift',      desc:'All ×8+ symbols: +15% chance. Stackable.', cost:500, tag:'chance',max:3,  stack:true, apply:{allRareUp:0.15}},
-  {id:'gem_chance',   icon:'💎', name:"Jeweller's Eye",     desc:'💎 symbol 40% more likely.',               cost:200, tag:'chance',max:1,  apply:{gemChance:1.4}},
-  {id:'moon_chance',  icon:'🌙', name:'Moon Favour',        desc:'🌙 symbol 60% more likely.',               cost:160, tag:'chance',max:1,  apply:{moonChance:1.6}},
+  {id:'skull_chance', icon:'☠️', name:'Bone Market',        desc:'💀 symbol 50% more likely.',               cost:1600, tag:'chance',max:1,  apply:{skullChance:1.5}},
+  {id:'all_rare_up',  icon:'✨', name:'Fortune Shift',      desc:'All ×8+ symbols: +15% chance. Stackable.', cost:2000, tag:'chance',max:3,  stack:true, apply:{allRareUp:0.15}},
+  {id:'gem_chance',   icon:'💎', name:"Jeweller's Eye",     desc:'💎 symbol 40% more likely.',               cost:800, tag:'chance',max:1,  apply:{gemChance:1.4}},
+  {id:'moon_chance',  icon:'🌙', name:'Moon Favour',        desc:'🌙 symbol 60% more likely.',               cost:640, tag:'chance',max:1,  apply:{moonChance:1.6}},
   // UTIL
-  {id:'xtra_spins',   icon:'⏳', name:'Borrowed Time',      desc:'+3 spins per quota deadline.',             cost:250, tag:'util',  max:3,  stack:true, apply:{extraSpins:3}},
-  {id:'quota_reduce', icon:'💸', name:'Dark Discount',      desc:'Each future quota 8% cheaper.',            cost:280, tag:'util',  max:4,  stack:true, apply:{quotaReduce:0.08}},
-  {id:'half_bet',     icon:'🎭', name:"Fool's Gambit",      desc:'Next 5 spins cost 40% of bet.',            cost:200, tag:'util',  max:3,  stack:true, apply:{halfBetSpins:5}},
-  {id:'bet_size',     icon:'📈', name:'High Stakes',        desc:'Max bet cap +20.',                         cost:300, tag:'util',  max:4,  stack:true, apply:{maxBetBonus:20}},
-  {id:'nudge_token',  icon:'☝️', name:'Nudge Token',        desc:'+1 nudge. After spin, nudge reel up/down.',cost:200, tag:'util',  max:999,stack:true, apply:{nudgeToken:1}},
-  {id:'fever_charge', icon:'🔥', name:'Fever Charge',       desc:'Immediately gain +20% Fever.',             cost:150, tag:'util',  max:5,  stack:true, apply:{feverCharge:20}},
-  {id:'vault_time',   icon:'⏱️', name:'Vault Extension',    desc:'Add +3 spins to active vault (or next).',  cost:180, tag:'util',  max:5,  stack:true, apply:{vaultTime:3}},
-  {id:'lucky_streak', icon:'🍀', name:'Lucky Break',        desc:'Next 4 spins: +30% rare symbol chance.',   cost:220, tag:'chance',max:3,  stack:true, apply:{ghostSpins:4}},
-  {id:'triple_threat',icon:'🎯', name:'Triple Threat',      desc:'Triples on top/bottom row pay same as mid.',cost:350, tag:'mult',  max:1,  apply:{tripleAllRows:true}},
-  {id:'coinmagnet',   icon:'🪙', name:'Coin Magnet',        desc:'Each win: +2 bonus coins per reel stopped.',cost:300, tag:'mult',  max:3,  stack:true, apply:{coinMagnet:2}},
-  {id:'death_wish',   icon:'💀', name:'Death Wish',         desc:'💀 on any row: +15 coins (not just jackpot).',cost:400,tag:'mult',  max:1,  apply:{deathWish:true}},
-  {id:'reroll_up2',   icon:'♻️', name:'Entropy Surge',      desc:'+15% chaos reroll chance. Stackable.',     cost:320, tag:'chance',max:3,  stack:true, apply:{rerollBoost:0.15}},
-  {id:'icmulti',      icon:'🔶', name:'Item Hoarder',       desc:'Overpaying quota earns 2x item coins.',    cost:500, tag:'util',  max:1,  apply:{icDouble:true}},
+  {id:'xtra_spins',   icon:'⏳', name:'Borrowed Time',      desc:'+3 spins per quota deadline.',             cost:1000, tag:'util',  max:3,  stack:true, apply:{extraSpins:3}},
+  {id:'quota_reduce', icon:'💸', name:'Dark Discount',      desc:'Each future quota 8% cheaper.',            cost:1120, tag:'util',  max:4,  stack:true, apply:{quotaReduce:0.08}},
+  {id:'half_bet',     icon:'🎭', name:"Fool's Gambit",      desc:'Next 5 spins cost 40% of bet.',            cost:800, tag:'util',  max:3,  stack:true, apply:{halfBetSpins:5}},
+  {id:'bet_size',     icon:'📈', name:'High Stakes',        desc:'Max bet cap +20.',                         cost:1200, tag:'util',  max:4,  stack:true, apply:{maxBetBonus:20}},
+  {id:'nudge_token',  icon:'☝️', name:'Nudge Token',        desc:'+1 nudge. After spin, nudge reel up/down.',cost:800, tag:'util',  max:999,stack:true, apply:{nudgeToken:1}},
+  {id:'fever_charge', icon:'🔥', name:'Fever Charge',       desc:'Immediately gain +20% Fever.',             cost:600, tag:'util',  max:5,  stack:true, apply:{feverCharge:20}},
+  {id:'vault_time',   icon:'⏱️', name:'Vault Extension',    desc:'Add +3 spins to active vault (or next).',  cost:720, tag:'util',  max:5,  stack:true, apply:{vaultTime:3}},
+  {id:'lucky_streak', icon:'🍀', name:'Lucky Break',        desc:'Next 4 spins: +30% rare symbol chance.',   cost:880, tag:'chance',max:3,  stack:true, apply:{ghostSpins:4}},
+  {id:'triple_threat',icon:'🎯', name:'Triple Threat',      desc:'Triples on top/bottom row pay same as mid.',cost:1400, tag:'mult',  max:1,  apply:{tripleAllRows:true}},
+  {id:'coinmagnet',   icon:'🪙', name:'Coin Magnet',        desc:'Each win: +2 bonus coins per reel stopped.',cost:1200, tag:'mult',  max:3,  stack:true, apply:{coinMagnet:2}},
+  {id:'death_wish',   icon:'💀', name:'Death Wish',         desc:'💀 on any row: +15 coins (not just jackpot).',cost:1600,tag:'mult',  max:1,  apply:{deathWish:true}},
+  {id:'reroll_up2',   icon:'♻️', name:'Entropy Surge',      desc:'+15% chaos reroll chance. Stackable.',     cost:1280, tag:'chance',max:3,  stack:true, apply:{rerollBoost:0.15}},
+  {id:'icmulti',      icon:'🔶', name:'Item Hoarder',       desc:'Overpaying quota earns 2x item coins.',    cost:2000, tag:'util',  max:1,  apply:{icDouble:true}},
 ];
 
+const QUOTA_EVENTS=[
+  {id:'houseedge',   name:'House Edge',      icon:'🏠', type:'bad',
+   desc:'The house skims 20% off every payout. Nothing personal.',
+   detail:'All win amounts reduced by 20% for the entire quota period. Stacks with Greed Curse.',
+   mod:{payoutMult:0.8}},
+  {id:'luckyhour',   name:'Lucky Hour',      icon:'🍀', type:'good',
+   desc:'A brief window where the machine feels almost generous.',
+   detail:'Rare symbols (x8+) appear 50% more often this quota. Enjoy it while it lasts.',
+   mod:{rareMult:1.5}},
+  {id:'riggedmach',  name:'Rigged Machine',  icon:'🔧', type:'bad',
+   desc:'The wilds have been disabled. Someone got to the machine.',
+   detail:'Wild (★) symbols are completely ignored this quota — they no longer substitute for other symbols.',
+   mod:{noWilds:true}},
+  {id:'goldtime',    name:'Gold Rush',        icon:'✨', type:'good',
+   desc:'A surge of fortune runs through the machine.',
+   detail:'All win payouts increased by 30%. Pairs, triples, and fever wins all benefit.',
+   mod:{payoutMult:1.3}},
+  {id:'cursedreels', name:'Cursed Reels',     icon:'⛓️', type:'bad',
+   desc:'Every third pull costs twice as much. The machine is hungry.',
+   detail:'On spins 3, 6, 9, etc. (counting from quota start), your bet cost is doubled.',
+   mod:{tripleSpinCost:true}},
+  {id:'overflow',    name:'Overflow',         icon:'💰', type:'good',
+   desc:'Big wins overflow into bonus coins.',
+   detail:'Any win worth more than 5x your current bet awards an additional 50% bonus on top.',
+   mod:{overflowBonus:true}},
+  {id:'mirroredge',  name:'Mirror Edge',      icon:'🪞', type:'bad',
+   desc:'Every loss is magnified. The machine mocks your failures.',
+   detail:'On any losing spin, you lose an extra 5% of your current bet as a penalty.',
+   mod:{lossExtra:0.05}},
+  {id:'doubletrouble',name:'Double Trouble',  icon:'⚠️', type:'bad',
+   desc:'Pairs are weakened. Only triples count for full value.',
+   detail:'Pair payouts are halved this quota. Triple wins are unaffected.',
+   mod:{pairNerf:0.5}},
+  {id:'symbolfamine',name:'Symbol Famine',    icon:'💀', type:'bad',
+   desc:'The high-value symbols have retreated deep into the machine.',
+   detail:'All symbols with x12+ multipliers appear 40% less often.',
+   mod:{highRareNerf:0.6}},
+  {id:'feverwind',   name:'Fever Wind',       icon:'🔥', type:'good',
+   desc:'The fever runs hot. Each spin brings you closer to the edge.',
+   detail:'Fever gained per win is doubled this quota. Losing spins no longer drain fever.',
+   mod:{feverDouble:true}},
+  {id:'tinyfortune', name:'Tiny Fortunes',    icon:'🪙', type:'good',
+   desc:'Small wins come easy. The machine is feeling generous with crumbs.',
+   detail:'All pair wins give double coins. Triple wins are unaffected.',
+   mod:{pairDouble:true}},
+  {id:'bloodmarket', name:'Blood Market',     icon:'🩸', type:'bad',
+   desc:'The cost of each spin increases as your coins grow.',
+   detail:'Your effective bet costs an extra 1% of your current coins per spin (minimum +1).',
+   mod:{bloodMarket:true}},
+  {id:'jackpotecho', name:'Jackpot Echo',     icon:'🔔', type:'good',
+   desc:'The last jackpot symbol still rings in the machine.',
+   detail:'If you hit a triple, the same triple pays out again for free on the next spin.',
+   mod:{jackpotEcho:true}},
+  {id:'voidtax',     name:'Void Tax',         icon:'⚫', type:'bad',
+   desc:'A portion of every win vanishes into the void.',
+   detail:'10% of every win is taken before you receive it, silently consumed.',
+   mod:{voidTax:0.1}},
+];
+const QUOTA_OBJECTIVES=[
+  {id:'diff_syms',   name:'Symbol Collector',icon:'🎰',
+   desc:'Win with 5 different symbols in the middle row.',
+   detail:'Land wins using 5 distinct symbols on the middle row this quota. Partial progress shown.',
+   type:'sym_variety', target:5},
+  {id:'small_streak',name:'Hot Streak',      icon:'🔥',
+   desc:'Hit 3 wins in a row (any size).',
+   detail:'Land any 3 consecutive wins without a losing spin in between. Streak resets on loss.',
+   type:'win_streak', target:3},
+  {id:'no_wilds',    name:'Pure Spin',       icon:'🚫',
+   desc:'Win at least once with no wild symbols active.',
+   detail:'Score any win on a spin where no ★ wild symbols appeared anywhere on the reels.',
+   type:'no_wilds', target:1},
+  {id:'big_win',     name:'Fortunes Favour', icon:'💎',
+   desc:'Land a win worth at least 10x your current bet.',
+   detail:'Score a single spin total payout of 10x or more your bet. Fever boosts count.',
+   type:'big_single', target:10},
+  {id:'hit_fever',   name:'Fever Dream',     icon:'🌡️',
+   desc:'Reach 50% Fever or above.',
+   detail:'Build fever to 50% or higher at any point during this quota period.',
+   type:'fever_reach', target:50},
+  {id:'multi_pay',   name:'Jackpot Hunter',  icon:'👑',
+   desc:'Hit a triple of any high symbol (×12+).',
+   detail:'Land three matching symbols with a multiplier of x12 or higher on any active payline.',
+   type:'high_triple', target:1},
+  {id:'loss_run',    name:'Take the Pain',   icon:'🩹',
+   desc:'Survive 5 consecutive losing spins.',
+   detail:'Do not win anything for 5 spins in a row. You must still be alive at the end.',
+   type:'loss_streak', target:5},
+  {id:'pair_hunt',   name:'Pair Hoarder',    icon:'♊',
+   desc:'Score 4 pair wins (not triples).',
+   detail:'Land 4 wins where the best result was a pair, not a triple. Pairs only count.',
+   type:'pair_count', target:4},
+  {id:'fever_spend', name:'Fever Burn',      icon:'🔥',
+   desc:'Trigger a Fever jackpot win.',
+   detail:'Let fever activate during a spin — the fever jackpot override counts as completion.',
+   type:'fever_jackpot', target:1},
+  {id:'no_loss',     name:'Clean Run',       icon:'✨',
+   desc:'Go 6 spins without losing.',
+   detail:'Win or break even on 6 consecutive spins. Any win or zero-loss result counts.',
+   type:'no_loss_run', target:6},
+];
 const FLOOR_EVENTS=[
   {title:'The Moneylender',flavor:'"For a small consideration, I can offer assistance."',choices:[
     {title:'Accept the loan',desc:'+80 coins. Owe 120 next floor.',tag:'loan'},
@@ -912,7 +1071,23 @@ function initState(){
     quotasPaid:0,prevQuota:0,loanDoubleNext:false,lastLoanQuota:-999,lastWarnShown:false,
     vault:0,vaultActive:false,vaultSpinsLeft:0,vaultDeposited:false,vaultCost:50,vaultSpinInterval:5,
     bloodCrownUsed:false,bloodCrownBest:0,
+    jackpotEchoReady:false,hollowWinCount:0,hungerMinBet:5,
     quotaBufferUsed:false,
+    // Boss mechanic
+    bossMechanic:null,
+    // Active curses (array of curse ids)
+    activeCurses:[],
+    curseDecayStacks:0,
+    // Quota event & objective
+    quotaEvent:null,
+    quotaEventMod:null,
+    quotaObjective:null,
+    quotaObjProgress:0,
+    quotaObjDone:false,
+    // Objective tracking helpers
+    objSymsHit:new Set(),
+    objSmallStreak:0,
+    objWildlessWin:false,
   };
   // Calculate first quota
   G.quota = calcQuota();
@@ -931,11 +1106,29 @@ function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.ra
 // ============================================================
 function calcQuota(){
   let base;
-  if(G.quotasPaid===0){base=1000;}else{base=Math.floor(G.prevQuota+G.lastQuotaPaid*20);base=Math.max(base,G.prevQuota+200);}
-  if(G.loanDoubleNext){base=base*2;G.loanDoubleNext=false;} // consume the double here
+  if(G.quotasPaid===0){
+    base=1000;
+  } else {
+    // Base scaling: prevQuota * bracket multiplier + leftover * bracket
+    const floorMult = quotaFloorMult();
+    base=Math.floor(G.prevQuota * floorMult.prev + G.lastQuotaPaid * floorMult.left);
+    base=Math.max(base, G.prevQuota + floorMult.minGrowth);
+  }
+  if(G.loanDoubleNext){base=base*2;G.loanDoubleNext=false;}
   if(G.quotaReduceStack>0) base=Math.floor(base*(1-Math.min(0.5,G.quotaReduceStack)));
   if(G.creditCardDebt>0) base=Math.floor(base*(1+Math.min(0.5,G.creditCardDebt)));
+  if(G.quotaEventMod){base=Math.floor(base*G.quotaEventMod);}
   return base;
+}
+function quotaFloorMult(){
+  const f=G.floor;
+  // Each bracket dramatically steeper
+  if(f<=5)  return {prev:1.4,  left:20,  minGrowth:600};
+  if(f<=10) return {prev:2.0,  left:50,  minGrowth:2000};
+  if(f<=15) return {prev:2.8,  left:100, minGrowth:8000};
+  if(f<=20) return {prev:3.5,  left:180, minGrowth:25000};
+  if(f<=25) return {prev:4.5,  left:300, minGrowth:80000};
+  return           {prev:6.0,  left:500, minGrowth:200000};
 }
 function calcSpins(floor){
   return Math.max(12, 22 - Math.floor((floor-1)/2)) + G.extraSpinsStack;
@@ -1059,6 +1252,8 @@ function getSymMult(sym,jackpotBoost=false){
   if(getMod('tripleBonus',0))m+=getMod('tripleBonus',0);
   // Cursed jackpot: 💀 pays ×100
   if(sym==='💀'&&hasRelic('cursedJackpot'))m=100;
+  if(G.activeCurses.includes('decay'))m=Math.max(1,m-G.curseDecayStacks*0.5);
+  if(G.activeCurses.includes('chaos'))m=Math.max(1,m*(0.5+Math.random()));
   return m;
 }
 
@@ -1071,6 +1266,8 @@ function getW(col,overrideRaw=false){
   if(ll>0&&col===1)w=w.map((v,i)=>i>=3?v*(1+ll*.1):v);
   if(bl>0)w=w.map((v,i)=>i>=4?v*(1+bl*.08):v);
   if(G.ghostSpins>0)w=w.map((v,i)=>i>=3?v*1.25:v);
+  if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.rareMult){const rm=G.quotaEvent.mod.rareMult;w=w.map((v,i)=>BASE_MULT[SYMS[i]]>=8?v*rm:v);}
+  if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.highRareNerf){w=w.map((v,i)=>BASE_MULT[SYMS[i]]>=12?v*G.quotaEvent.mod.highRareNerf:v);}
   w=w.map((v,i)=>v*getSymChance(i));
   const aru=getMod('allRareUp',0);
   if(aru>0){const n=G.shopOwned.filter(x=>x==='all_rare_up').length;const boost=1+aru*n;w=w.map((v,i)=>BASE_MULT[SYMS[i]]>=8?v*boost:v);}
@@ -1131,7 +1328,8 @@ function evalLine(cells,bet,lineName,isDiag){
   let syms=cells.map(([c,r])=>G.reels[c][r]);
   // Wild ★ matches any symbol
   const nonWild=syms.filter(s=>s!=='★');
-  if(nonWild.length>0&&syms.includes('★')){const match=nonWild[0];syms=syms.map(s=>s==='★'?match:s);}
+  const wildsDisabled=G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.noWilds;
+  if(!wildsDisabled&&nonWild.length>0&&syms.includes('★')){const match=nonWild[0];syms=syms.map(s=>s==='★'?match:s);}
   const[a,b,c2]=syms;
   if(a===b&&b===c2){
     let m=getSymMult(a);
@@ -1168,8 +1366,10 @@ function evalLine(cells,bet,lineName,isDiag){
     if(G.doubleMultNext){m*=2;G.doubleMultNext=false;}
     if(hasRelic('blackcat')&&G.comboStreak<2)m*=0.8;
     if(hasRelic('debtcontract'))m*=2;
-    const win=Math.floor(bet*m);
-    return{win,cells:pc,type:'pair',mult:m,lineName,isDiag};
+    let pairWin=Math.floor(bet*m);
+    if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.pairNerf) pairWin=Math.floor(pairWin*G.quotaEvent.mod.pairNerf);
+    if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.pairDouble) pairWin=Math.floor(pairWin*2);
+    return{win:pairWin,cells:pc,type:'pair',mult:m,lineName,isDiag};
   }
   return{win:0,cells:[],type:'none',lineName,isDiag};
 }
@@ -1360,12 +1560,15 @@ async function tryReroll(bet){
 // SPIN
 // ============================================================
 async function spin(){
+  if(G.activeCurses&&G.activeCurses.includes('hunger')){G.hungerMinBet=(G.hungerMinBet||5)+2;if(G.bet<G.hungerMinBet){G.bet=Math.min(G.coins,G.hungerMinBet);updateStats();}}
   if(G.spinning||G.coins<G.bet)return;
   G.spinning=true;
   const btn=document.getElementById('spinBtn');btn.disabled=true;
   document.getElementById('payQuotaBtn').disabled=true;
 
   let cost=G.bet;
+  if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.tripleSpinCost&&G.spins%3===0){cost*=2;log('lose','🔧 Rigged: double cost this spin!');}
+  if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.bloodMarket){cost+=Math.max(1,Math.floor(G.coins*0.01));}
   if(lv('nudge')>0){G.nudgeCtr++;if(G.nudgeCtr>=5){cost=Math.floor(G.bet/2);G.nudgeCtr=0;log('upgrade',"⚡ Fate's Nudge: half cost!");}}
   if(G.halfBetSpinsLeft>0){cost=Math.floor(cost*.4);G.halfBetSpinsLeft--;;}
 
@@ -1377,6 +1580,9 @@ async function spin(){
   if(!freeSpin&&G.coins<cost){G.spinning=false;btn.disabled=false;updatePayQuotaBtn();return;}
 
   G.coins-=cost;G.spins++;
+  if(G.activeCurses.includes('leech')&&G.coins>0){G.coins=Math.max(0,G.coins-3);}
+  // Decay curse: reduce combo streak multiplier floor
+  if(G.activeCurses.includes('decay')&&G.curseDecayStacks<20){G.curseDecayStacks++;}
   G.loadedDiceCount++;G.spinCounterCount++;
   if(G.ghostSpins>0)G.ghostSpins--;
   updateStats();
@@ -1403,6 +1609,15 @@ async function spin(){
 
   clearWinOverlays();
   const baseDur=700;
+  // Saboteur mechanic: randomly replace reel before animation
+  if(G.bossMechanic&&G.bossMechanic.id==='saboteur'&&G.bossActive){
+    for(let c=0;c<3;c++){
+      if(Math.random()<0.3){
+        const rSym=SYMS[Math.floor(Math.random()*SYMS.length)];
+        finalReels[c]=[finalReels[c][0],rSym,finalReels[c][2]];
+      }
+    }
+  }
   await Promise.all([
     G.stickyLock[0]?Promise.resolve():spinReel(0,finalReels[0],baseDur),
     G.stickyLock[1]?Promise.resolve():spinReel(1,finalReels[1],baseDur+220),
@@ -1416,22 +1631,60 @@ async function spin(){
   // Nudge phase
   if(G.nudgeTokens>0&&!G.bossActive)await showNudgeBar(cost);
 
+  // Mirror Curse: replace high symbols with 🍷
+  if(G.activeCurses.includes('mirror')){
+    for(let c=0;c<3;c++){if(BASE_MULT[G.reels[c][1]]>=20)G.reels[c][1]='🍷';}
+  }
   const results=evalAll(cost);
   const totalWin=results.reduce((s,r)=>s+r.win,0);
   const best=results.length?results.reduce((b,r)=>r.win>b.win?r:b):{win:0,type:'none'};
   const hasFeverWin=results.some(r=>r.isFeverJackpot);
 
+  // Boss mechanics pre-win
+  if(G.bossMechanic&&G.bossMechanic.id==='glitch'&&G.bossActive){
+    // Glitch: each middle-row cell 25% chance to shift to adjacent symbol
+    for(let c=0;c<3;c++){
+      if(Math.random()<0.25){
+        const idx=SYMS.indexOf(G.reels[c][1]);
+        if(idx>=0){const ni=(idx+1)%SYMS.length;G.reels[c][1]=SYMS[ni];}
+      }
+    }
+  }
   if(totalWin>0){
-    G.coins+=totalWin;G.totalWon+=totalWin;
+    let finalWin=totalWin;
+    // Auditor: takes 40% of winnings
+    if(G.bossMechanic&&G.bossMechanic.id==='auditor'&&G.bossActive){
+      const taken=Math.floor(finalWin*0.4);finalWin-=taken;
+      log('boss','⚖️ Auditor seized '+taken+' coins!');
+    }
+    // Curses
+    if(G.activeCurses.includes('greed'))finalWin=Math.floor(finalWin*0.75);
+    if(G.activeCurses.includes('hollow')){G.hollowWinCount=(G.hollowWinCount||0)+1;if(G.hollowWinCount%2===0){finalWin=0;log('lose','🕳️ Hollow Curse: this win consumed.');}}
+    if(G.activeCurses.includes('hunger')){G.hungerMinBet=(G.hungerMinBet||5)+2;}
+    if(G.activeCurses.includes('chaos')){
+      // Chaos: randomize final amount by ±30%
+      const factor=0.7+Math.random()*0.6;finalWin=Math.floor(finalWin*factor);
+    }
+    if(G.activeCurses.includes('leech')){G.coins=Math.max(0,G.coins-3);}
+    // Quota event payout modifier
+    if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.payoutMult){finalWin=Math.floor(finalWin*G.quotaEvent.mod.payoutMult);}
+    if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.overflowBonus&&totalWin>G.bet*5){finalWin=Math.floor(finalWin*1.5);}
+    if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.voidTax){finalWin=Math.floor(finalWin*(1-G.quotaEvent.mod.voidTax));}
+    G.coins+=finalWin;G.totalWon+=finalWin;
     if(G.coins>G.peakCoins)G.peakCoins=G.coins;
+    // Jackpot Echo: re-fire last triple win next spin
+    if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.jackpotEcho&&results.some(r=>r.type==='triple')){
+      if(G.jackpotEchoReady===false){G.jackpotEchoReady=true;}
+      else if(G.jackpotEchoReady===true){G.coins+=finalWin;G.totalWon+=finalWin;G.jackpotEchoReady=false;log('upgrade','🔔 Echo: +'+finalWin+' (jackpot replayed)!');}
+    }
     // Blood Crown: track best win this floor
     if(hasRelic('bloodcrown')&&!G.bloodCrownUsed&&totalWin>0&&totalWin>(G.bloodCrownBest||0)){G.bloodCrownBest=totalWin;}
     G.comboStreak++;G.consecutiveLosses=0;
     if(G.shopMods.coinMagnet){const mag=G.shopMods.coinMagnet*3;G.coins+=mag;G.totalWon+=mag;}
     highlightCells(results,G.bossActive,hasFeverWin);
-    showWinMsg(best,totalWin,hasFeverWin);spawnCoins();
+    showWinMsg(best,finalWin,hasFeverWin);spawnCoins();
     log(hasFeverWin?'fever':best.type==='triple'&&best.mult>=20?'jackpot':'win',
-      best.type==='triple'?`★ ${best.symbol}×3 ×${Math.floor(best.mult)} — +${totalWin}!`:`Won ${totalWin}.`);
+      best.type==='triple'?('★ '+best.symbol+'×3 ×'+Math.floor(best.mult)+' — +'+finalWin+'!'):('Won '+finalWin+'.'));
     // Death Wish: 💀 anywhere = +15 coins
     if(G.shopMods.deathWish){for(let c=0;c<3;c++)for(let r=0;r<3;r++)if(G.reels[c][r]==='💀'){G.coins+=15;G.totalWon+=15;}}
     // Sticky Reel: if rare landed (×12+), lock that column
@@ -1440,12 +1693,40 @@ async function spin(){
     }
     // Fever: jackpot triples increase fever
     const fvBonus=lv('feverboost')*3;
-    results.forEach(r=>{if(r.type==='triple'&&r.symbol==='💀')gainFever(15+fvBonus);else if(r.type==='triple')gainFever(5+fvBonus);else if(r.type==='pair')gainFever(1+fvBonus);});
+    const fvMult=(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.feverDouble)?2:1;
+    results.forEach(r=>{if(r.type==='triple'&&r.symbol==='💀')gainFever((15+fvBonus)*fvMult);else if(r.type==='triple')gainFever((5+fvBonus)*fvMult);else if(r.type==='pair')gainFever((1+fvBonus)*fvMult);});
     // Collector Badge
     if(hasRelic('collectorbadge'))G.collectedSymbols.add(G.reels[1][1]);
+    // Objective tracking
+    if(G.quotaObjective&&!G.quotaObjDone){
+      const obj=G.quotaObjective;
+      if(obj.type==='sym_variety'){G.objSymsHit.add(G.reels[1][1]);G.quotaObjProgress=G.objSymsHit.size;if(G.quotaObjProgress>=obj.target){G.quotaObjDone=true;G.itemCoins+=3;log('upgrade','🎯 Objective complete! +3 item coins!');}}
+      if(obj.type==='win_streak'){
+        if(totalWin>0){G.objSmallStreak++;G.quotaObjProgress=G.objSmallStreak;if(G.objSmallStreak>=obj.target){G.quotaObjDone=true;G.itemCoins+=3;log('upgrade','🎯 Objective complete! +3 item coins!');}}
+        else{G.objSmallStreak=0;G.quotaObjProgress=0;}
+      }
+      if(obj.type==='no_wilds'&&totalWin>0&&!G.reels.some(c=>c[1]==='★')){G.quotaObjDone=true;G.quotaObjProgress=1;G.itemCoins+=3;log('upgrade','🎯 Objective complete! +3 item coins!');}
+      if(obj.type==='big_single'&&totalWin>=G.bet*obj.target){G.quotaObjDone=true;G.quotaObjProgress=1;G.itemCoins+=3;log('upgrade','🎯 Objective complete! +3 item coins!');}
+      if(obj.type==='fever_reach'&&G.fever>=obj.target&&!G.quotaObjDone){G.quotaObjDone=true;G.quotaObjProgress=G.fever;G.itemCoins+=3;log('upgrade','🎯 Objective complete! +3 item coins!');}
+      if(obj.type==='high_triple'){const ht=results.find(r=>r.type==='triple'&&BASE_MULT[r.symbol]>=12);if(ht){G.quotaObjDone=true;G.quotaObjProgress=1;G.itemCoins+=3;log('upgrade','🎯 Objective complete! +3 item coins!');}}
+      // pair_count objective
+      if(obj.type==='pair_count'&&results.some(r=>r.type==='pair')&&!results.some(r=>r.type==='triple')){G.quotaObjProgress++;if(G.quotaObjProgress>=obj.target){G.quotaObjDone=true;G.itemCoins+=3;log('upgrade','🎯 Objective complete! +3 item coins!');}}
+      // fever_jackpot objective
+      if(obj.type==='fever_jackpot'&&hasFeverWin){G.quotaObjDone=true;G.quotaObjProgress=1;G.itemCoins+=3;log('upgrade','🎯 Objective complete! +3 item coins!');}
+      // no_loss_run objective
+      if(obj.type==='no_loss_run'&&totalWin>0){G.quotaObjProgress++;if(G.quotaObjProgress>=obj.target){G.quotaObjDone=true;G.itemCoins+=3;log('upgrade','🎯 Objective complete! +3 item coins!');}}
+      updateObjectiveUI();
+    }
     // Lossback relic: Combo Engine
   } else {
     G.comboStreak=0;G.consecutiveLosses++;
+    if(G.quotaObjective&&G.quotaObjective.type==='no_loss_run'){G.quotaObjProgress=0;}
+    if(G.quotaObjective&&G.quotaObjective.type==='loss_streak'){G.quotaObjProgress++;if(G.quotaObjProgress>=G.quotaObjective.target&&!G.quotaObjDone){G.quotaObjDone=true;G.itemCoins+=3;log('upgrade','🎯 Objective complete! +3 item coins!');}}
+    // Mirror Edge event: extra loss penalty
+    if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.lossExtra){
+      const penalty=Math.max(1,Math.floor(cost*G.quotaEvent.mod.lossExtra));
+      G.coins=Math.max(0,G.coins-penalty);
+    }
     // Greedy Piggy Bank
     if(hasRelic('piggybank')){G.coins+=3;log('relic','🐷 Piggy Bank: +3 on loss.');}
     // Lossback upgrade
@@ -1461,7 +1742,7 @@ async function spin(){
       const rerolled=await tryReroll(cost);
       if(!rerolled){showLoseMsg();log('lose',flavorLoss());}
     }
-    G.fever=Math.max(0,G.fever-2);updateFeverBar();
+    if(!(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.feverDouble))G.fever=Math.max(0,G.fever-2);updateFeverBar();
   }
 
   // Insurance
@@ -1568,6 +1849,8 @@ function tryPayQuota(){
   G.prevQuota=G.quota;
   G.lastQuotaPaid=Math.max(1,G.coins-G.quota);
   G.coins-=G.quota;
+  // Debt Curse tithe
+  if(G.activeCurses.includes('debt')){const tithe=Math.floor(G.coins*0.1);G.coins=Math.max(0,G.coins-tithe);log('lose','📜 Debt Curse: '+tithe+' coins tithed.');}
   G.quotasPaid++;
   G.lastWarnShown=false;
   document.getElementById('lastWarnBar').style.display='none';
@@ -1593,16 +1876,44 @@ function advFloor(){
   if(G.loanDebt>0){const d=G.loanDebt;G.coins=Math.max(15,G.coins-d);G.loanDebt=0;log('lose',`Moneylender collected ${d}.`);}
   log('floor',`✦ Descended to Floor ${G.floor}.`);
   if(G.floor%5===0){G.isBossFloor=true;showBossIntro();}
-  else{G.isBossFloor=false;G.quota=calcQuota();G.quotaSpins=calcSpins(G.floor);G.quotaSpinsLeft=G.quotaSpins;G.lastWarnShown=false;updateStats();showEvent(getScaledEvent());}
+  else{
+    G.isBossFloor=false;
+    // Roll quota event (30% chance)
+    G.quotaEvent=null;G.quotaEventMod=null;
+    if(Math.random()<0.30){
+      G.quotaEvent=QUOTA_EVENTS[Math.floor(Math.random()*QUOTA_EVENTS.length)];
+      G.quotaEventMod=G.quotaEvent.mod.payoutMult||null;
+      log(G.quotaEvent.type==='bad'?'lose':'upgrade',G.quotaEvent.icon+' Quota Event: '+G.quotaEvent.name+' — '+G.quotaEvent.desc);
+    }
+    // Roll objective (25% chance)
+    G.quotaObjective=null;G.quotaObjProgress=0;G.quotaObjDone=false;
+    G.objSymsHit=new Set();G.objSmallStreak=0;G.objWildlessWin=false;
+    if(Math.random()<0.25){
+      G.quotaObjective=QUOTA_OBJECTIVES[Math.floor(Math.random()*QUOTA_OBJECTIVES.length)];
+      log('upgrade','🎯 Objective: '+G.quotaObjective.name+' — '+G.quotaObjective.desc);
+    }
+    G.quota=calcQuota();G.quotaSpins=calcSpins(G.floor);G.quotaSpinsLeft=G.quotaSpins;
+    G.lastWarnShown=false;updateStats();showQuotaModifiers();showEvent(getScaledEvent());
+  }
 }
 function showBossIntro(){
-  const idx=Math.floor(G.floor/5)-1;G.bossName=BOSS_NAMES[idx%BOSS_NAMES.length];
+  const idx=Math.floor(G.floor/5)-1;
+  G.bossName=BOSS_NAMES[idx%BOSS_NAMES.length];
   G.bossTotalSpins=Math.max(10,16-Math.floor(G.floor*.3));G.bossSpinsLeft=G.bossTotalSpins;
-  G.bossQuota=Math.floor((G.coins*.45+G.floor*25)*(hasRelic('bloodcrown')?1.25:1));G.bossEnemyBet=Math.max(5,G.bet);
+  G.bossQuota=Math.floor((G.coins*.45+G.floor*25)*(hasRelic('bloodcrown')?1.25:1));
+  G.bossEnemyBet=Math.max(5,G.bet);
+  // Pick boss mechanic (after floor 5, always has one)
+  const mech=BOSS_MECHANICS[idx%BOSS_MECHANICS.length];
+  G.bossMechanic=mech||null;
   document.getElementById('biTitle').textContent=G.bossName;
   document.getElementById('biMsg').textContent=BOSS_QUOTES[idx%BOSS_QUOTES.length];
-  document.getElementById('biQuota').textContent=`${G.bossQuota} coins`;
+  document.getElementById('biQuota').textContent=G.bossQuota+' coins';
   document.getElementById('biSpins').textContent=G.bossTotalSpins;
+  const mechEl=document.getElementById('biMechanic');
+  if(mechEl){
+    if(G.bossMechanic){mechEl.textContent=G.bossMechanic.icon+' Special: '+G.bossMechanic.desc;mechEl.style.display='block';}
+    else{mechEl.style.display='none';}
+  }
   document.getElementById('bossIntroOverlay').classList.add('show');
 }
 function startBoss(){
@@ -1647,12 +1958,25 @@ function endBoss(youQ,enemyQ){
   const youWon=youQ||(!enemyQ&&G.bossYouCoins>G.bossEnemyCoins);
   document.getElementById('bossResYou').textContent=G.bossYouCoins+' gained';
   document.getElementById('bossResThem').textContent=G.bossEnemyCoins+' gained';
+  // Clear boss mechanic
+  G.bossMechanic=null;
   if(youWon){
     const bonus=Math.floor(G.bossQuota*.5);G.coins+=bonus;if(G.coins>G.peakCoins)G.peakCoins=G.coins;
     document.getElementById('bossResTitle').textContent='VICTORY';document.getElementById('bossResTitle').className='ov-title bw';
     document.getElementById('bossResMsg').textContent='"...Impossible. The house never loses."';
-    document.getElementById('bossResBonus').innerHTML=`Boss bonus: <span>${bonus} coins!</span>`;
-    G.itemCoins+=2;log('boss',`⚔ VICTORY! +${bonus} coins, +2 item coins.`);
+    // 35% chance to receive a curse
+    let curseText='';
+    if(Math.random()<0.35&&G.activeCurses.length<3){
+      const eligible=BOSS_CURSES.filter(c=>!G.activeCurses.includes(c.id));
+      if(eligible.length){
+        const curse=eligible[Math.floor(Math.random()*eligible.length)];
+        G.activeCurses.push(curse.id);
+        curseText='<div style="color:var(--red-light);font-size:9px;margin-top:4px;">'+curse.icon+' Cursed: '+curse.name+' — '+curse.desc+'</div>';
+        log('boss',curse.icon+' CURSED: '+curse.name+' inflicted!');
+      }
+    }
+    document.getElementById('bossResBonus').innerHTML='Boss bonus: <span>+'+bonus+' coins!</span>'+curseText;
+    G.itemCoins+=2;log('boss','VICTORY! +'+bonus+' coins, +2 item coins.');
   }else{
     const pen=Math.floor(G.coins*.25);G.coins=Math.max(15,G.coins-pen);
     document.getElementById('bossResTitle').textContent='DEFEATED';document.getElementById('bossResTitle').className='ov-title bl';
@@ -1876,6 +2200,12 @@ function openModifiers(){
   ].filter(Boolean).join(''));
   const activeU=UPG_DEFS.filter(u=>lv(u.id)>0);
   if(activeU.length)div.innerHTML+=renderModSection('Upgrades',activeU.map(u=>`<div class="mod-entry active"><div class="mod-name">${u.name}</div><div class="mod-val green">Lv.${lv(u.id)}</div></div>`).join(''));
+  // Active curses
+  const curseItems=G.activeCurses.map(cid=>{
+    const c=BOSS_CURSES.find(x=>x.id===cid);
+    return c?'<div class="mod-entry active"><div class="mod-name">'+c.icon+' '+c.name+'</div><div class="mod-val red">curse</div></div>':'';
+  });
+  if(curseItems.filter(Boolean).length)div.innerHTML+=renderModSection('Active Curses',curseItems.join(''));
   const relicItems=G.shelf.map(sr=>{const def=RELICS.find(d=>d.id===sr.id);return def?`<div class="mod-entry active"><div class="mod-name">${def.icon} ${def.name}</div><div class="mod-val${def.type==='debuff'?' red':def.type==='mixed'?' gold':' green'}">${sr.usesLeft!==null?sr.usesLeft+'q':'∞'}</div></div>`:''});
   if(relicItems.filter(Boolean).length)div.innerHTML+=renderModSection('Active Relics',relicItems.join(''));
   const util=[];
@@ -1898,7 +2228,7 @@ function closeModifiers(){document.getElementById('modOverlay').classList.remove
 // UI
 // ============================================================
 function updateStats(){
-  document.getElementById('coinDisp').textContent=G.coins;
+  document.getElementById('coinDisp').textContent=G.activeCurses&&G.activeCurses.includes('blind')?'???':G.coins;
   document.getElementById('coinBox').className='stat-box'+(G.coins<=30?' danger':G.coins>=500?' good':'');
   document.getElementById('quotaDisp').textContent=G.bossActive?G.bossQuota:G.quota;
   document.getElementById('floorDisp').textContent=G.floor;
@@ -1924,6 +2254,7 @@ function updateStats(){
   updateFeverBar();
   checkIRS();
   updateVaultUI();
+  showQuotaModifiers();
 }
 function showWinMsg(r,total,feverWin=false){
   const e=document.getElementById('winMsg');e.className='win-msg';
@@ -2088,6 +2419,82 @@ function declineLoan(){
   document.getElementById('loanPopup').style.display='none';
   log('','😈 The Collector smiles. "We will meet again."');
 }
+
+
+// ============================================================
+// QUOTA EVENTS & OBJECTIVES UI
+// ============================================================
+function showQuotaModifiers(){
+  const bar=document.getElementById('quotaModBar');
+  if(!bar)return;
+  bar.innerHTML='';
+  if(G.quotaEvent){
+    const pill=document.createElement('div');
+    const bc=G.quotaEvent.type==='bad'?'var(--red)':'var(--green)';
+    const fc=G.quotaEvent.type==='bad'?'var(--red-light)':'var(--green-light)';
+    const bg=G.quotaEvent.type==='bad'?'rgba(60,0,0,.3)':'rgba(0,40,0,.3)';
+    pill.style.cssText='display:inline-flex;align-items:center;gap:4px;padding:3px 10px;font-size:8px;letter-spacing:.1em;border:1px solid '+bc+';color:'+fc+';background:'+bg+';text-transform:uppercase;cursor:pointer;transition:opacity .15s;';
+    pill.textContent=G.quotaEvent.icon+' '+G.quotaEvent.name;
+    pill.title='Click for details';
+    pill.onmouseover=function(){this.style.opacity='.7'};
+    pill.onmouseout=function(){this.style.opacity='1'};
+    pill.onclick=()=>openDetailPopup({
+      icon:G.quotaEvent.icon, name:G.quotaEvent.name,
+      tag:'Quota Event — '+(G.quotaEvent.type==='bad'?'Penalty':'Bonus'),
+      desc:G.quotaEvent.desc, detail:G.quotaEvent.detail||G.quotaEvent.desc,
+      accentColor:G.quotaEvent.type==='bad'?'var(--red)':'var(--green)'
+    });
+    bar.appendChild(pill);
+  }
+  if(G.quotaObjective){
+    const done=G.quotaObjDone;
+    const prog=done?'DONE':G.quotaObjProgress+'/'+G.quotaObjective.target;
+    const pill=document.createElement('div');
+    pill.style.cssText='display:inline-flex;align-items:center;gap:4px;padding:3px 10px;font-size:8px;letter-spacing:.1em;border:1px solid '+(done?'var(--green)':'var(--gold-dark)')+';color:'+(done?'var(--green-light)':'var(--gold)')+';background:rgba(30,20,0,.4);text-transform:uppercase;cursor:pointer;transition:opacity .15s;';
+    pill.textContent=G.quotaObjective.icon+' '+G.quotaObjective.name+' ['+prog+']';
+    pill.title='Click for details';
+    pill.onmouseover=function(){this.style.opacity='.7'};
+    pill.onmouseout=function(){this.style.opacity='1'};
+    pill.onclick=()=>openDetailPopup({
+      icon:G.quotaObjective.icon, name:G.quotaObjective.name,
+      tag:'Quota Objective — '+prog+' complete',
+      desc:G.quotaObjective.desc, detail:G.quotaObjective.detail||G.quotaObjective.desc,
+      accentColor:done?'var(--green)':'var(--gold)'
+    });
+    bar.appendChild(pill);
+  }
+  // Active curses as pills too
+  if(G.activeCurses&&G.activeCurses.length>0){
+    G.activeCurses.forEach(cid=>{
+      const c=BOSS_CURSES.find(x=>x.id===cid);
+      if(!c)return;
+      const pill=document.createElement('div');
+      pill.style.cssText='display:inline-flex;align-items:center;gap:4px;padding:3px 10px;font-size:8px;letter-spacing:.1em;border:1px solid var(--red-light);color:var(--red-light);background:rgba(60,0,0,.3);text-transform:uppercase;cursor:pointer;transition:opacity .15s;animation:cursePulse 2s ease infinite;';
+      pill.textContent=c.icon+' '+c.name;
+      pill.title='Click for details';
+      pill.onmouseover=function(){this.style.opacity='.7'};
+      pill.onmouseout=function(){this.style.opacity='1'};
+      pill.onclick=()=>openDetailPopup({
+        icon:c.icon, name:c.name,
+        tag:'Boss Curse — Permanent until purged',
+        desc:c.desc, detail:c.detail||c.desc,
+        accentColor:'var(--red)'
+      });
+      bar.appendChild(pill);
+    });
+  }
+}
+function updateObjectiveUI(){showQuotaModifiers();}
+function openDetailPopup(data){
+  document.getElementById('detailPopupIcon').textContent=data.icon;
+  document.getElementById('detailPopupName').textContent=data.name;
+  document.getElementById('detailPopupTag').textContent=data.tag;
+  document.getElementById('detailPopupDesc').textContent=data.desc;
+  document.getElementById('detailPopupDetail').textContent=data.detail;
+  document.getElementById('detailPopupAccent').style.background='linear-gradient(90deg,transparent,'+data.accentColor+',transparent)';
+  document.getElementById('detailPopup').style.display='flex';
+}
+function closeDetailPopup(){document.getElementById('detailPopup').style.display='none';}
 
 function restartGame(){
   document.getElementById('goOverlay').classList.remove('show');
@@ -2372,6 +2779,24 @@ log('','Starting quota: 1000. Each new quota = previous + 20× your leftover coi
       <button onclick="acceptLoan()" style="padding:10px 20px;background:linear-gradient(135deg,#3a0000,#6b0000);border:1px solid #cc2200;border-top:2px solid #ff4400;color:#ff8866;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.18em;cursor:pointer;text-transform:uppercase;transition:all .2s;" onmouseover="this.style.boxShadow='0 0 20px rgba(200,40,0,.5)'" onmouseout="this.style.boxShadow=''">Sign the Contract</button>
       <button onclick="declineLoan()" style="padding:10px 20px;background:linear-gradient(135deg,#0a0808,#180808);border:1px solid #3a2020;color:#6a4040;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.18em;cursor:pointer;text-transform:uppercase;transition:all .2s;" onmouseover="this.style.borderColor='#6a3030';this.style.color='#8a5050'" onmouseout="this.style.borderColor='#3a2020';this.style.color='#6a4040'">Walk Away</button>
     </div>
+  </div>
+</div>
+
+
+<!-- QUOTA/CURSE DETAIL POPUP -->
+<div id="detailPopup" onclick="closeDetailPopup()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:700;align-items:flex-start;justify-content:center;padding:16px;padding-top:80px;">
+  <div onclick="event.stopPropagation()" style="background:var(--bg-card);border:1px solid var(--border-gold);padding:20px 22px;max-width:380px;width:100%;position:relative;">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;" id="detailPopupAccent"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div id="detailPopupIcon" style="font-size:32px;"></div>
+      <div>
+        <div id="detailPopupName" style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold);"></div>
+        <div id="detailPopupTag" style="font-size:7px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim);margin-top:2px;"></div>
+      </div>
+    </div>
+    <div id="detailPopupDesc" style="font-family:'IM Fell English',serif;font-style:italic;color:var(--text-dim);font-size:11px;line-height:1.6;margin-bottom:8px;border-left:2px solid var(--border-gold);padding-left:10px;"></div>
+    <div id="detailPopupDetail" style="font-size:9px;color:var(--text);line-height:1.6;background:var(--bg-panel);padding:8px 10px;border:1px solid var(--border);"></div>
+    <div style="text-align:right;margin-top:10px;font-size:8px;color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;">Click anywhere to close</div>
   </div>
 </div>
 
