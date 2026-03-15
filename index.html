@@ -16,292 +16,319 @@
   --purple:#8b5cf6;--purple-light:#a78bfa;--cyan:#06b6d4;
   --boss:#ff6b35;--boss-dark:#8b3510;
   --shop-light:#2ecc71;
+  --fever:#ff4da6;--fever-dark:#7a1040;
+  --irs:#1a4a8a;--irs-light:#60a0ff;
+  --relic:#c084fc;--relic-dark:#4a1a6a;
+  --itemcoin:#f59e0b;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg-deep);color:var(--text);font-family:'Cinzel',serif;min-height:100vh;overflow-x:hidden;
-  background-image:radial-gradient(ellipse at 20% 50%,rgba(180,100,20,.04) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(140,40,60,.04) 0%,transparent 60%);}
+  background-image:radial-gradient(ellipse at 20% 50%,rgba(180,100,20,.04),transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(140,40,60,.04),transparent 60%);}
 body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:1000;}
-.container{max-width:960px;margin:0 auto;padding:16px 20px;}
+.container{max-width:1020px;margin:0 auto;padding:12px 16px;}
 
-.header{text-align:center;padding:22px 0 14px;border-bottom:1px solid var(--border-gold);margin-bottom:18px;position:relative;}
+/* HEADER */
+.header{text-align:center;padding:18px 0 12px;border-bottom:1px solid var(--border-gold);margin-bottom:14px;position:relative;}
 .header::before,.header::after{content:'✦';position:absolute;bottom:-10px;color:var(--gold);font-size:14px;}
 .header::before{left:calc(50% - 80px)}.header::after{left:calc(50% + 66px)}
-.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(18px,5vw,34px);font-weight:900;letter-spacing:.12em;color:var(--gold);text-shadow:0 0 40px rgba(212,168,67,.4),0 2px 4px rgba(0,0,0,.8);}
-.game-subtitle{font-family:'IM Fell English',serif;font-style:italic;color:var(--text-dim);font-size:12px;margin-top:4px;letter-spacing:.2em;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(16px,5vw,32px);font-weight:900;letter-spacing:.12em;color:var(--gold);text-shadow:0 0 40px rgba(212,168,67,.4),0 2px 4px rgba(0,0,0,.8);}
+.game-subtitle{font-family:'IM Fell English',serif;font-style:italic;color:var(--text-dim);font-size:11px;margin-top:4px;letter-spacing:.2em;}
 
-.stats-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px;}
-.stat-box{background:var(--bg-card);border:1px solid var(--border);border-top:2px solid var(--border-gold);padding:8px 10px;text-align:center;transition:border-color .3s;}
-.stat-box.danger{border-top-color:var(--red)}.stat-box.good{border-top-color:var(--green)}
-.stat-label{font-size:8px;letter-spacing:.25em;color:var(--text-dim);text-transform:uppercase;margin-bottom:3px;}
-.stat-value{font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold);font-weight:700;}
-.stat-value.coins{color:var(--gold-light)}.stat-value.good{color:var(--green-light)}
+/* STATS */
+.stats-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:10px;}
+@media(max-width:700px){.stats-bar{grid-template-columns:repeat(3,1fr)}}
+.stat-box{background:var(--bg-card);border:1px solid var(--border);border-top:2px solid var(--border-gold);padding:6px 8px;text-align:center;transition:border-color .3s;}
+.stat-box.danger{border-top-color:var(--red)}.stat-box.good{border-top-color:var(--green)}.stat-box.fever-box{border-top-color:var(--fever);}
+.stat-label{font-size:7px;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:2px;}
+.stat-value{font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold);font-weight:700;}
+.stat-value.coins{color:var(--gold-light)}.stat-value.good{color:var(--green-light)}.stat-value.fever{color:var(--fever)}.stat-value.ic{color:var(--itemcoin);}
 
-.quota-section{background:var(--bg-card);border:1px solid var(--border);padding:12px 16px;margin-bottom:12px;}
-.quota-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;gap:10px;flex-wrap:wrap;}
-.quota-title{font-size:9px;letter-spacing:.3em;color:var(--gold-dark);text-transform:uppercase;}
+/* FEVER BAR */
+.fever-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;background:var(--bg-card);border:1px solid var(--fever-dark);padding:6px 10px;}
+.fever-label{font-size:8px;letter-spacing:.2em;color:var(--fever);text-transform:uppercase;white-space:nowrap;}
+.fever-track{flex:1;height:8px;background:#1a0010;border:1px solid var(--fever-dark);position:relative;overflow:hidden;}
+.fever-fill{height:100%;background:linear-gradient(90deg,#7a0040,var(--fever));transition:width .5s ease;position:absolute;top:0;left:0;}
+.fever-pct{font-size:9px;color:var(--fever);font-family:'Cinzel Decorative',serif;white-space:nowrap;min-width:36px;text-align:right;}
+
+/* IRS WARNING */
+.irs-warn{display:none;background:#080f1a;border:1px solid var(--irs);padding:5px 10px;margin-bottom:8px;text-align:center;}
+.irs-warn.show{display:block;}
+.irs-text{font-size:9px;letter-spacing:.15em;color:var(--irs-light);text-transform:uppercase;}
+
+/* QUOTA */
+.quota-section{background:var(--bg-card);border:1px solid var(--border);padding:10px 14px;margin-bottom:10px;}
+.quota-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:10px;flex-wrap:wrap;}
+.quota-title{font-size:8px;letter-spacing:.3em;color:var(--gold-dark);text-transform:uppercase;}
 .quota-nums{display:flex;gap:8px;align-items:baseline;}
-.quota-you{font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold-light);}
-.quota-needed{font-size:10px;color:var(--text-dim);}
-.quota-bar-wrap{height:10px;background:#080508;border:1px solid var(--border);position:relative;overflow:hidden;}
+.quota-you{font-family:'Cinzel Decorative',serif;font-size:13px;color:var(--gold-light);}
+.quota-needed{font-size:9px;color:var(--text-dim);}
+.quota-bar-wrap{height:9px;background:#080508;border:1px solid var(--border);position:relative;overflow:hidden;}
 .quota-fill{position:absolute;top:0;left:0;height:100%;background:linear-gradient(90deg,var(--gold-dark),var(--gold));transition:width .5s ease;}
 .quota-fill.boss-fill{background:linear-gradient(90deg,#8b1a00,var(--boss));opacity:.8;}
 .quota-marker{position:absolute;top:0;right:0;height:100%;width:2px;background:var(--red-light);box-shadow:0 0 6px var(--red);}
-.quota-footer{display:flex;justify-content:space-between;align-items:center;margin-top:7px;gap:8px;flex-wrap:wrap;}
-.quota-info{font-size:10px;color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;}
-.pay-quota-btn{background:linear-gradient(135deg,#1a4a20,#0f2a12);border:1px solid var(--green);color:var(--green-light);font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;padding:5px 12px;cursor:pointer;transition:all .2s;text-transform:uppercase;white-space:nowrap;}
-.pay-quota-btn:hover:not(:disabled){background:linear-gradient(135deg,#255a28,#163a18);box-shadow:0 0 12px rgba(46,204,113,.2);}
+.quota-footer{display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px;flex-wrap:wrap;}
+.quota-info{font-size:9px;color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;}
+.pay-quota-btn{background:linear-gradient(135deg,#1a4a20,#0f2a12);border:1px solid var(--green);color:var(--green-light);font-family:'Cinzel',serif;font-size:8px;letter-spacing:.12em;padding:4px 10px;cursor:pointer;transition:all .2s;text-transform:uppercase;white-space:nowrap;}
+.pay-quota-btn:hover:not(:disabled){background:linear-gradient(135deg,#255a28,#163a18);box-shadow:0 0 10px rgba(46,204,113,.2);}
 .pay-quota-btn:disabled{opacity:.35;cursor:not-allowed;}
 .pay-quota-btn.cant{border-color:var(--red);color:var(--red-light);background:linear-gradient(135deg,#3a1010,#200a0a);}
 
-.game-layout{display:grid;grid-template-columns:1fr 270px;gap:14px;}
-@media(max-width:720px){.game-layout{grid-template-columns:1fr}.stats-bar{grid-template-columns:repeat(3,1fr)}}
+/* LAYOUT */
+.game-layout{display:grid;grid-template-columns:1fr 260px;gap:12px;}
+@media(max-width:720px){.game-layout{grid-template-columns:1fr}}
 
 /* SLOT MACHINE */
-.slot-machine{background:var(--bg-card);border:1px solid var(--border);padding:20px;position:relative;}
+.slot-machine{background:var(--bg-card);border:1px solid var(--border);padding:16px;position:relative;}
 .slot-machine::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
 .slot-machine.boss-mode::before{background:linear-gradient(90deg,transparent,var(--boss),transparent);}
-/* ── REEL MACHINE ── */
-.reels-container{
-  --cell-h:clamp(56px,9vw,80px);
-  display:flex;gap:6px;justify-content:center;margin-bottom:14px;
-  background:#080508;padding:12px;border:1px solid #2a1a2a;
-  position:relative;overflow:hidden;
-}
-.reels-container::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(8,5,8,.85) 0%,transparent 22%,transparent 78%,rgba(8,5,8,.85) 100%);
-  pointer-events:none;z-index:10;
-}
-.reels-container::after{
-  content:'';position:absolute;left:0;right:0;
-  top:50%;transform:translateY(-50%);
-  height:calc(var(--cell-h, 72px) + 4px);
-  border-top:1px solid rgba(212,168,67,.25);
-  border-bottom:1px solid rgba(212,168,67,.25);
-  pointer-events:none;z-index:9;
-}
-.reel-col{
-  --cell-h:clamp(56px,9vw,80px);
-  flex:1;max-width:100px;
-  height:calc(var(--cell-h)*3);
-  position:relative;overflow:hidden;
-  border:1px solid #2a1a2a;background:#100810;
-}
-.reel-strip{
-  position:absolute;left:0;right:0;top:0;bottom:0;
-}
-.reel-strip-cell{
-  height:var(--cell-h);
-  display:flex;align-items:center;justify-content:center;
-  font-size:clamp(24px,5.5vw,40px);
-  flex-shrink:0;user-select:none;
-}
-.reel-col .cell-ov{
-  position:absolute;left:0;right:0;
-  height:var(--cell-h);pointer-events:none;z-index:11;
-  opacity:0;transition:opacity .2s;
-}
-.reel-col .cell-ov.row0{top:0}
-.reel-col .cell-ov.row1{top:var(--cell-h)}
-.reel-col .cell-ov.row2{top:calc(var(--cell-h)*2)}
+.slot-machine.fever-mode::before{background:linear-gradient(90deg,transparent,var(--fever),transparent);animation:feverGlow 1s ease infinite;}
+@keyframes feverGlow{0%,100%{opacity:.6}50%{opacity:1;box-shadow:0 0 20px var(--fever);}}
+
+/* REELS */
+.reels-container{--cell-h:clamp(52px,8.5vw,76px);display:flex;gap:5px;justify-content:center;margin-bottom:12px;background:#080508;padding:10px;border:1px solid #2a1a2a;position:relative;overflow:hidden;}
+.reels-container::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,5,8,.85) 0%,transparent 22%,transparent 78%,rgba(8,5,8,.85) 100%);pointer-events:none;z-index:10;}
+.reels-container::after{content:'';position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:calc(var(--cell-h)+4px);border-top:1px solid rgba(212,168,67,.25);border-bottom:1px solid rgba(212,168,67,.25);pointer-events:none;z-index:9;}
+.reel-col{--cell-h:clamp(52px,8.5vw,76px);flex:1;max-width:96px;height:calc(var(--cell-h)*3);position:relative;overflow:hidden;border:1px solid #2a1a2a;background:#100810;}
+.reel-strip{position:absolute;left:0;right:0;top:0;bottom:0;}
+.reel-strip-cell{height:var(--cell-h);display:flex;align-items:center;justify-content:center;font-size:clamp(22px,5vw,38px);flex-shrink:0;user-select:none;}
+.reel-col .cell-ov{position:absolute;left:0;right:0;height:var(--cell-h);pointer-events:none;z-index:11;opacity:0;transition:opacity .2s;}
+.reel-col .cell-ov.row0{top:0}.reel-col .cell-ov.row1{top:var(--cell-h)}.reel-col .cell-ov.row2{top:calc(var(--cell-h)*2)}
 .reel-col .cell-ov.win-gold{background:rgba(212,168,67,.18);box-shadow:inset 0 0 14px rgba(212,168,67,.25);border:1px solid var(--gold);opacity:1;animation:cellGold .45s ease-in-out 3;}
 .reel-col .cell-ov.win-boss{background:rgba(255,107,53,.18);box-shadow:inset 0 0 14px rgba(255,107,53,.25);border:1px solid var(--boss);opacity:1;animation:cellBoss .45s ease-in-out 3;}
+.reel-col .cell-ov.win-fever{background:rgba(255,77,166,.22);box-shadow:inset 0 0 18px rgba(255,77,166,.4);border:1px solid var(--fever);opacity:1;animation:cellFever .45s ease-in-out 3;}
 .reel-col .cell-ov.reroll-flash{background:rgba(6,182,212,.18);box-shadow:inset 0 0 14px rgba(6,182,212,.3);border:1px solid var(--cyan);opacity:1;animation:cellReroll .35s ease-in-out 3;}
-.reel-slot.win-gold{background:rgba(212,168,67,.18)!important;border-color:var(--gold)!important;box-shadow:0 0 18px rgba(212,168,67,.5),inset 0 0 10px rgba(212,168,67,.12)!important;animation:cellGold .45s ease-in-out 3;}
-.reel-slot.win-boss{background:rgba(255,107,53,.18)!important;border-color:var(--boss)!important;box-shadow:0 0 18px rgba(255,107,53,.5),inset 0 0 10px rgba(255,107,53,.12)!important;animation:cellBoss .45s ease-in-out 3;}
-/* Reroll flash — cyan for rerolled row */
-.reel-slot.reroll-flash{background:rgba(6,182,212,.18)!important;border-color:var(--cyan)!important;box-shadow:0 0 14px rgba(6,182,212,.5)!important;animation:cellReroll .35s ease-in-out 3;}
-@keyframes cellGold{0%,100%{background:rgba(212,168,67,.18);border-color:var(--gold)}50%{background:rgba(212,168,67,.35);box-shadow:0 0 28px rgba(212,168,67,.7)}}
-@keyframes cellBoss{0%,100%{background:rgba(255,107,53,.18);border-color:var(--boss)}50%{background:rgba(255,107,53,.35);box-shadow:0 0 28px rgba(255,107,53,.7)}}
+@keyframes cellGold{0%,100%{background:rgba(212,168,67,.18)}50%{background:rgba(212,168,67,.35);box-shadow:0 0 28px rgba(212,168,67,.7)}}
+@keyframes cellBoss{0%,100%{background:rgba(255,107,53,.18)}50%{background:rgba(255,107,53,.35);box-shadow:0 0 28px rgba(255,107,53,.7)}}
+@keyframes cellFever{0%,100%{background:rgba(255,77,166,.22)}50%{background:rgba(255,77,166,.45);box-shadow:0 0 32px rgba(255,77,166,.9)}}
 @keyframes cellReroll{0%,100%{background:rgba(6,182,212,.18)}50%{background:rgba(6,182,212,.4);box-shadow:0 0 22px rgba(6,182,212,.8)}}
-.payline-bar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;}
-.pl-pill{font-size:8px;letter-spacing:.12em;color:var(--text-dim);padding:2px 8px;border:1px solid var(--border);background:var(--bg-panel);text-transform:uppercase;}
+
+.payline-bar{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-bottom:7px;}
+.pl-pill{font-size:7px;letter-spacing:.1em;color:var(--text-dim);padding:2px 7px;border:1px solid var(--border);background:var(--bg-panel);text-transform:uppercase;}
 .pl-pill.on{color:var(--gold);border-color:var(--gold-dark);background:rgba(212,168,67,.06);}
 
-.controls{display:flex;flex-direction:column;gap:8px;}
-.bet-row{display:flex;align-items:center;gap:8px;justify-content:center;}
-.bet-label{font-size:10px;letter-spacing:.2em;color:var(--text-dim);}
-.bet-btn{background:var(--bg-panel);border:1px solid var(--border);color:var(--text);font-family:'Cinzel',serif;font-size:11px;padding:5px 10px;cursor:pointer;transition:all .2s;}
+/* CONTROLS */
+.controls{display:flex;flex-direction:column;gap:7px;}
+.bet-row{display:flex;align-items:center;gap:7px;justify-content:center;}
+.bet-label{font-size:9px;letter-spacing:.2em;color:var(--text-dim);}
+.bet-btn{background:var(--bg-panel);border:1px solid var(--border);color:var(--text);font-family:'Cinzel',serif;font-size:10px;padding:4px 8px;cursor:pointer;transition:all .2s;}
 .bet-btn:hover{border-color:var(--gold-dark);color:var(--gold);}
-.bet-disp{font-family:'Cinzel Decorative',serif;font-size:20px;color:var(--gold-light);min-width:70px;text-align:center;}
-.spin-btn{width:100%;padding:14px;background:linear-gradient(135deg,#8b1a2a,#5a0f1a);border:1px solid #c0392b;border-top:2px solid var(--red-light);color:#fff;font-family:'Cinzel Decorative',serif;font-size:15px;font-weight:700;letter-spacing:.2em;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.bet-disp{font-family:'Cinzel Decorative',serif;font-size:18px;color:var(--gold-light);min-width:60px;text-align:center;}
+.spin-btn{width:100%;padding:12px;background:linear-gradient(135deg,#8b1a2a,#5a0f1a);border:1px solid #c0392b;border-top:2px solid var(--red-light);color:#fff;font-family:'Cinzel Decorative',serif;font-size:14px;font-weight:700;letter-spacing:.2em;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
 .spin-btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);transition:left .4s;}
 .spin-btn:hover:not(:disabled)::before{left:100%}
 .spin-btn:hover:not(:disabled){background:linear-gradient(135deg,#a01f30,#6e1220);box-shadow:0 0 30px rgba(192,57,43,.3);transform:translateY(-1px);}
 .spin-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
 .spin-btn.boss-spin{background:linear-gradient(135deg,#8b2a10,#5a1a08);border-color:var(--boss);}
-.spin-btn.boss-spin:hover:not(:disabled){background:linear-gradient(135deg,#aa3514,#6e200a);box-shadow:0 0 30px rgba(255,107,53,.3);}
-.win-display{text-align:center;min-height:30px;display:flex;align-items:center;justify-content:center;}
-.win-msg{font-family:'Cinzel Decorative',serif;font-size:clamp(12px,3vw,19px);font-weight:700;opacity:0;transform:scale(.8);transition:all .4s cubic-bezier(.34,1.56,.64,1);}
+.win-display{text-align:center;min-height:28px;display:flex;align-items:center;justify-content:center;}
+.win-msg{font-family:'Cinzel Decorative',serif;font-size:clamp(11px,3vw,18px);font-weight:700;opacity:0;transform:scale(.8);transition:all .4s cubic-bezier(.34,1.56,.64,1);}
 .win-msg.show{opacity:1;transform:scale(1)}
-.win-msg.jackpot{color:var(--gold);text-shadow:0 0 30px rgba(212,168,67,.6)}.win-msg.big{color:var(--gold-light)}.win-msg.small{color:var(--green-light)}
-.win-msg.lose{color:var(--text-dim);font-size:12px;font-family:'IM Fell English',serif;font-style:italic;}
-.win-msg.reroll{color:var(--cyan);font-size:13px;}
+.win-msg.jackpot{color:var(--gold);text-shadow:0 0 30px rgba(212,168,67,.6)}.win-msg.fever-win{color:var(--fever);text-shadow:0 0 30px rgba(255,77,166,.6);}
+.win-msg.big{color:var(--gold-light)}.win-msg.small{color:var(--green-light)}
+.win-msg.lose{color:var(--text-dim);font-size:11px;font-family:'IM Fell English',serif;font-style:italic;}
+.win-msg.reroll{color:var(--cyan);font-size:12px;}.win-msg.irs{color:var(--irs-light);font-size:11px;}
 
-.paytable{background:var(--bg-card);border:1px solid var(--border);padding:12px;margin-top:10px;}
-.pt-title{font-size:9px;letter-spacing:.3em;color:var(--gold-dark);text-transform:uppercase;margin-bottom:9px;text-align:center;border-bottom:1px solid var(--border);padding-bottom:6px;}
-.pay-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px;border-bottom:1px solid rgba(58,42,26,.4);}
-.pay-mult{color:var(--gold);font-size:10px;}
+/* PAYTABLE */
+.paytable{background:var(--bg-card);border:1px solid var(--border);padding:10px;margin-top:8px;}
+.pt-title{font-size:8px;letter-spacing:.25em;color:var(--gold-dark);text-transform:uppercase;margin-bottom:8px;text-align:center;border-bottom:1px solid var(--border);padding-bottom:5px;}
+.pay-row{display:flex;justify-content:space-between;align-items:center;padding:2px 0;font-size:10px;border-bottom:1px solid rgba(58,42,26,.3);}
+.pay-mult{color:var(--gold);font-size:9px;}
 
-/* BOSS */
-.boss-panel{background:#0e0608;border:1px solid var(--boss-dark);padding:14px;margin-top:10px;display:none;}
-.bp-title{font-size:9px;letter-spacing:.3em;color:var(--boss);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--boss-dark);padding-bottom:7px;text-align:center;}
-.boss-vs-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:12px;}
-.boss-side{text-align:center;}.bs-label{font-size:9px;letter-spacing:.15em;color:var(--text-dim);margin-bottom:4px;}
-.bs-coins{font-family:'Cinzel Decorative',serif;font-size:20px;}
+/* BOSS PANEL */
+.boss-panel{background:#0e0608;border:1px solid var(--boss-dark);padding:12px;margin-top:8px;display:none;}
+.bp-title{font-size:8px;letter-spacing:.25em;color:var(--boss);text-transform:uppercase;margin-bottom:9px;border-bottom:1px solid var(--boss-dark);padding-bottom:6px;text-align:center;}
+.boss-vs-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;margin-bottom:10px;}
+.boss-side{text-align:center;}.bs-label{font-size:8px;letter-spacing:.12em;color:var(--text-dim);margin-bottom:3px;}
+.bs-coins{font-family:'Cinzel Decorative',serif;font-size:18px;}
 .bs-coins.you{color:var(--gold-light)}.bs-coins.them{color:var(--boss);}
-.boss-vs{font-size:11px;color:var(--text-dim);letter-spacing:.2em;}
-.boss-bars{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
-.bb-row{display:flex;flex-direction:column;gap:3px;}
-.bb-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);}
-.bb-track{height:7px;background:#080508;border:1px solid var(--border);position:relative;overflow:hidden;}
+.boss-vs{font-size:10px;color:var(--text-dim);letter-spacing:.2em;}
+.boss-bars{display:flex;flex-direction:column;gap:5px;margin-bottom:7px;}
+.bb-row{display:flex;flex-direction:column;gap:2px;}
+.bb-labels{display:flex;justify-content:space-between;font-size:8px;color:var(--text-dim);}
+.bb-track{height:6px;background:#080508;border:1px solid var(--border);position:relative;overflow:hidden;}
 .bb-fill{height:100%;transition:width .4s ease;}
 .bb-fill.you{background:linear-gradient(90deg,var(--gold-dark),var(--gold));}
 .bb-fill.them{background:linear-gradient(90deg,#8b1a00,var(--boss));}
-.boss-spins{text-align:center;font-family:'Cinzel Decorative',serif;font-size:13px;color:var(--boss);}
+.boss-spins{text-align:center;font-family:'Cinzel Decorative',serif;font-size:12px;color:var(--boss);}
 
 /* RIGHT PANEL */
-.right-panel{display:flex;flex-direction:column;gap:12px;}
-.panel-box{background:var(--bg-card);border:1px solid var(--border);padding:14px;}
-.panel-title{font-size:9px;letter-spacing:.3em;color:var(--gold-dark);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:7px;text-align:center;}
+.right-panel{display:flex;flex-direction:column;gap:10px;}
+.panel-box{background:var(--bg-card);border:1px solid var(--border);padding:12px;}
+.panel-title{font-size:8px;letter-spacing:.25em;color:var(--gold-dark);text-transform:uppercase;margin-bottom:9px;border-bottom:1px solid var(--border);padding-bottom:6px;text-align:center;}
 .floor-display{text-align:center;}
-.floor-num{font-family:'Cinzel Decorative',serif;font-size:30px;color:var(--gold);line-height:1;text-shadow:0 0 30px rgba(212,168,67,.3);}
-.floor-num.boss{color:var(--boss);text-shadow:0 0 30px rgba(255,107,53,.4);}
-.floor-lbl{font-size:8px;letter-spacing:.3em;color:var(--text-dim);margin-top:3px;}
-.floor-desc{font-size:10px;color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;margin-top:5px;}
+.floor-num{font-family:'Cinzel Decorative',serif;font-size:28px;color:var(--gold);line-height:1;text-shadow:0 0 30px rgba(212,168,67,.3);}
+.floor-num.boss{color:var(--boss);}
+.floor-lbl{font-size:7px;letter-spacing:.25em;color:var(--text-dim);margin-top:3px;}
+.floor-desc{font-size:9px;color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;margin-top:4px;}
 
-.upg-list{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border-gold) transparent;}
-.upg-item{background:var(--bg-panel);border:1px solid var(--border);padding:8px 10px;cursor:pointer;transition:all .2s;}
+.upg-list{display:flex;flex-direction:column;gap:5px;max-height:230px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border-gold) transparent;}
+.upg-item{background:var(--bg-panel);border:1px solid var(--border);padding:7px 9px;cursor:pointer;transition:all .2s;}
 .upg-item:hover:not(.gray){border-color:var(--gold-dark);}
 .upg-item.gray{opacity:.35;cursor:not-allowed;}
 .upg-item.stack{border-left:2px solid #5a2a8a;}
-.upg-name{font-size:10px;letter-spacing:.1em;margin-bottom:2px;color:var(--text);}
-.upg-lv{font-size:9px;color:var(--purple-light);margin-left:4px;}
-.upg-desc{font-size:9px;color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;margin-bottom:4px;line-height:1.3;}
-.upg-cost{font-size:9px;color:var(--gold);font-family:'Cinzel Decorative',serif;}
+.upg-name{font-size:9px;letter-spacing:.08em;margin-bottom:2px;color:var(--text);}
+.upg-lv{font-size:8px;color:var(--purple-light);margin-left:3px;}
+.upg-desc{font-size:8px;color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;margin-bottom:3px;line-height:1.3;}
+.upg-cost{font-size:8px;color:var(--gold);font-family:'Cinzel Decorative',serif;}
 
-.mod-btn{width:100%;padding:9px;background:linear-gradient(135deg,#1a1060,#0a0830);border:1px solid var(--purple);color:var(--purple-light);font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em;cursor:pointer;transition:all .2s;text-transform:uppercase;}
-.mod-btn:hover{background:linear-gradient(135deg,#22147a,#100a3e);box-shadow:0 0 14px rgba(139,92,246,.2);}
+.mod-btn{width:100%;padding:7px;background:linear-gradient(135deg,#1a1060,#0a0830);border:1px solid var(--purple);color:var(--purple-light);font-family:'Cinzel',serif;font-size:8px;letter-spacing:.18em;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+.mod-btn:hover{background:linear-gradient(135deg,#22147a,#100a3e);box-shadow:0 0 12px rgba(139,92,246,.2);}
 
-.event-log{max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border-gold) transparent;}
-.log-entry{font-size:10px;padding:3px 0;border-bottom:1px solid rgba(58,42,26,.3);color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;line-height:1.4;}
+.event-log{max-height:90px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border-gold) transparent;}
+.log-entry{font-size:9px;padding:2px 0;border-bottom:1px solid rgba(58,42,26,.3);color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;line-height:1.4;}
 .log-entry.win{color:var(--gold);font-style:normal}.log-entry.jackpot{color:var(--gold-light);font-weight:bold;font-style:normal}
 .log-entry.lose{color:var(--red-light)}.log-entry.upgrade{color:var(--purple-light);font-style:normal}
 .log-entry.floor{color:var(--cyan);font-style:normal}.log-entry.boss{color:var(--boss);font-style:normal;font-weight:bold}
 .log-entry.shop{color:var(--shop-light);font-style:normal}.log-entry.reroll{color:var(--cyan);font-style:normal}
+.log-entry.irs{color:var(--irs-light);font-weight:bold;font-style:normal}
+.log-entry.fever{color:var(--fever);font-style:normal}
+.log-entry.relic{color:var(--relic);font-style:normal}
 
-.save-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.save-btn{background:var(--bg-panel);border:1px solid var(--border);color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;padding:7px;cursor:pointer;letter-spacing:.15em;transition:all .2s;text-transform:uppercase;}
+.save-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.save-btn{background:var(--bg-panel);border:1px solid var(--border);color:var(--text-dim);font-family:'Cinzel',serif;font-size:8px;padding:6px;cursor:pointer;letter-spacing:.12em;transition:all .2s;text-transform:uppercase;}
 .save-btn:hover{border-color:var(--gold-dark);color:var(--gold);}
+
+/* ── RELIC SHELF ── */
+.shelf-section{background:var(--bg-card);border:1px solid var(--relic-dark);padding:12px;}
+.shelf-title-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;border-bottom:1px solid var(--relic-dark);padding-bottom:6px;}
+.shelf-title{font-size:8px;letter-spacing:.25em;color:var(--relic);text-transform:uppercase;}
+.shelf-ic{font-size:8px;color:var(--itemcoin);letter-spacing:.1em;}
+.shelf-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;}
+.shelf-slot{aspect-ratio:1;background:#100a18;border:1px solid var(--relic-dark);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;position:relative;transition:all .2s;}
+.shelf-slot.empty{opacity:.25;cursor:default;font-size:14px;color:var(--text-dim);}
+.shelf-slot:not(.empty):hover{border-color:var(--relic);background:#1a0a28;box-shadow:0 0 10px rgba(192,132,252,.2);}
+.shelf-slot .relic-uses{position:absolute;bottom:1px;right:2px;font-size:7px;color:var(--text-dim);font-family:'Cinzel',serif;}
+.shelf-slot.used-up{opacity:.3;filter:grayscale(1);cursor:default;}
+.shelf-slot.debuff{border-color:#5a1010;}
+.shelf-slot.debuff:not(.empty):hover{border-color:var(--red);background:#200808;}
 
 /* OVERLAYS */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;align-items:center;justify-content:center;padding:16px;}
 .overlay.show{display:flex;}
-.ov-box{background:var(--bg-card);border:1px solid var(--border-gold);padding:36px 30px;text-align:center;max-width:440px;width:100%;position:relative;}
+.ov-box{background:var(--bg-card);border:1px solid var(--border-gold);padding:30px 26px;text-align:center;max-width:440px;width:100%;position:relative;}
 .ov-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--red),transparent);}
 .ov-box.boss-ov::before{background:linear-gradient(90deg,transparent,var(--boss),transparent);}
-.ov-box.shop-ov{max-width:700px;background:#0c1610;}
+.ov-box.shop-ov{max-width:720px;background:#0c1610;}
 .ov-box.shop-ov::before{background:linear-gradient(90deg,transparent,var(--shop-light),transparent);}
-.ov-box.mod-ov{max-width:540px;}
+.ov-box.mod-ov{max-width:560px;}
 .ov-box.mod-ov::before{background:linear-gradient(90deg,transparent,var(--purple),transparent);}
-.ov-title{font-family:'Cinzel Decorative',serif;font-size:22px;color:var(--red-light);margin-bottom:8px;}
-.ov-title.bw{color:var(--gold)}.ov-title.bl{color:var(--boss)}.ov-title.bs{color:var(--shop-light)}.ov-title.bm{color:var(--purple-light)}
-.ov-msg{font-family:'IM Fell English',serif;font-style:italic;color:var(--text-dim);font-size:13px;margin-bottom:16px;line-height:1.6;}
-.ov-stat{font-size:11px;letter-spacing:.15em;color:var(--text-dim);margin-bottom:5px;}
+.ov-box.relic-ov{max-width:460px;background:#0e0818;}
+.ov-box.relic-ov::before{background:linear-gradient(90deg,transparent,var(--relic),transparent);}
+.ov-box.irs-ov{max-width:480px;background:#080e18;}
+.ov-box.irs-ov::before{background:linear-gradient(90deg,transparent,var(--irs-light),transparent);}
+.ov-title{font-family:'Cinzel Decorative',serif;font-size:20px;color:var(--red-light);margin-bottom:7px;}
+.ov-title.bw{color:var(--gold)}.ov-title.bl{color:var(--boss)}.ov-title.bs{color:var(--shop-light)}.ov-title.bm{color:var(--purple-light)}.ov-title.br{color:var(--relic)}.ov-title.bi{color:var(--irs-light)}
+.ov-msg{font-family:'IM Fell English',serif;font-style:italic;color:var(--text-dim);font-size:12px;margin-bottom:14px;line-height:1.6;}
+.ov-stat{font-size:10px;letter-spacing:.12em;color:var(--text-dim);margin-bottom:4px;}
 .ov-stat span{color:var(--gold)}
-.ov-btn{margin-top:16px;padding:11px 28px;background:linear-gradient(135deg,#3a1a0a,#5a2a0f);border:1px solid var(--gold-dark);color:var(--gold);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.2em;cursor:pointer;transition:all .2s;text-transform:uppercase;}
-.ov-btn:hover{background:linear-gradient(135deg,#4a2a0f,#6a3a1a);box-shadow:0 0 20px rgba(212,168,67,.2);}
+.ov-btn{margin-top:14px;padding:10px 24px;background:linear-gradient(135deg,#3a1a0a,#5a2a0f);border:1px solid var(--gold-dark);color:var(--gold);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.18em;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+.ov-btn:hover{background:linear-gradient(135deg,#4a2a0f,#6a3a1a);box-shadow:0 0 18px rgba(212,168,67,.2);}
 
+/* RELIC DETAIL OVERLAY */
+.relic-detail-icon{font-size:48px;margin-bottom:10px;}
+.relic-detail-name{font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--relic);margin-bottom:6px;}
+.relic-detail-type{font-size:8px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px;padding:2px 8px;display:inline-block;border:1px solid;}
+.relic-detail-type.buff{color:var(--green-light);border-color:var(--green);}
+.relic-detail-type.debuff{color:var(--red-light);border-color:var(--red);}
+.relic-detail-type.mixed{color:var(--gold);border-color:var(--gold-dark);}
+.relic-lore{font-family:'IM Fell English',serif;font-style:italic;color:var(--text-dim);font-size:12px;line-height:1.7;margin-bottom:10px;border-left:2px solid var(--relic-dark);padding-left:10px;text-align:left;}
+.relic-effect{font-size:10px;color:var(--text);line-height:1.6;text-align:left;background:var(--bg-panel);padding:8px 10px;border:1px solid var(--border);margin-bottom:8px;}
+.relic-effect b{color:var(--gold-light);}
+.relic-effect .debuff-text{color:var(--red-light);}
+.relic-uses-left{font-size:9px;color:var(--text-dim);margin-bottom:4px;}
+
+/* FLOOR EVENT */
 .floor-ev{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:400;align-items:center;justify-content:center;padding:16px;}
 .floor-ev.show{display:flex;}
-.ev-box{background:var(--bg-card);border:1px solid var(--border-gold);padding:28px 24px;max-width:440px;width:100%;text-align:center;position:relative;}
+.ev-box{background:var(--bg-card);border:1px solid var(--border-gold);padding:24px;max-width:440px;width:100%;text-align:center;position:relative;}
 .ev-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
-.ev-title{font-family:'Cinzel Decorative',serif;font-size:17px;color:var(--gold);margin-bottom:7px;}
-.ev-flavor{font-family:'IM Fell English',serif;font-style:italic;color:var(--text-dim);font-size:12px;margin-bottom:14px;line-height:1.6;}
-.ev-choices{display:flex;flex-direction:column;gap:7px;}
-.ev-choice{background:var(--bg-panel);border:1px solid var(--border);padding:9px 12px;cursor:pointer;transition:all .2s;text-align:left;}
+.ev-title{font-family:'Cinzel Decorative',serif;font-size:15px;color:var(--gold);margin-bottom:6px;}
+.ev-flavor{font-family:'IM Fell English',serif;font-style:italic;color:var(--text-dim);font-size:11px;margin-bottom:12px;line-height:1.6;}
+.ev-choices{display:flex;flex-direction:column;gap:6px;}
+.ev-choice{background:var(--bg-panel);border:1px solid var(--border);padding:8px 11px;cursor:pointer;transition:all .2s;text-align:left;}
 .ev-choice:hover:not(.gray){border-color:var(--gold-dark);background:rgba(212,168,67,.04);}
 .ev-choice.gray{opacity:.4;cursor:not-allowed;}
-.ec-title{font-size:11px;letter-spacing:.1em;margin-bottom:3px;}
-.ec-desc{font-size:10px;color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;}
+.ec-title{font-size:10px;letter-spacing:.08em;margin-bottom:2px;}
+.ec-desc{font-size:9px;color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;}
 
 /* SHOP */
-.shop-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
-.shop-coins{font-family:'Cinzel Decorative',serif;font-size:18px;color:var(--gold-light);}
-.shop-subtitle{font-family:'IM Fell English',serif;font-style:italic;color:var(--text-dim);font-size:12px;margin-bottom:12px;}
-/* Shop tabs */
-.shop-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
-.shop-tab{background:var(--bg-panel);border:1px solid var(--border);color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;padding:5px 12px;cursor:pointer;letter-spacing:.12em;text-transform:uppercase;transition:all .2s;}
+.shop-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+.shop-coins-row{display:flex;gap:12px;align-items:baseline;}
+.shop-coins{font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold-light);}
+.shop-ic{font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--itemcoin);}
+.shop-subtitle{font-family:'IM Fell English',serif;font-style:italic;color:var(--text-dim);font-size:11px;margin-bottom:10px;}
+.shop-tabs{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;}
+.shop-tab{background:var(--bg-panel);border:1px solid var(--border);color:var(--text-dim);font-family:'Cinzel',serif;font-size:8px;padding:4px 10px;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:all .2s;}
 .shop-tab.active{border-color:var(--shop-light);color:var(--shop-light);background:rgba(46,204,113,.05);}
-.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px;margin-bottom:12px;max-height:360px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1a5020 transparent;}
-.shop-item{background:#0f1a10;border:1px solid #1a4020;padding:11px;cursor:pointer;transition:all .2s;}
+.shop-tab.relic-tab.active{border-color:var(--relic);color:var(--relic);background:rgba(192,132,252,.05);}
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:7px;margin-bottom:10px;max-height:350px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1a5020 transparent;}
+.shop-item{background:#0f1a10;border:1px solid #1a4020;padding:10px;cursor:pointer;transition:all .2s;}
 .shop-item:hover:not(.gray){border-color:var(--shop-light);background:#121e13;}
 .shop-item.gray{opacity:.4;cursor:not-allowed;}
-.shop-item.owned{border-color:#1a5530;opacity:.65;cursor:default;}
-.si-icon{font-size:22px;margin-bottom:5px;}
-.si-name{font-size:10px;letter-spacing:.1em;color:var(--shop-light);margin-bottom:2px;}
-.si-desc{font-size:9px;color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;margin-bottom:6px;line-height:1.3;}
-.si-tag{display:inline-block;font-size:8px;letter-spacing:.08em;padding:1px 5px;border:1px solid;margin-bottom:4px;text-transform:uppercase;}
-.si-tag.mult{color:#f0cc6e;border-color:#5a4020;background:rgba(212,168,67,.05);}
-.si-tag.chance{color:#a78bfa;border-color:#5a2a8a;background:rgba(139,92,246,.05);}
-.si-tag.sym{color:#06b6d4;border-color:#0a4050;background:rgba(6,182,212,.05);}
-.si-tag.util{color:#2ecc71;border-color:#1a5020;background:rgba(46,204,113,.05);}
-.si-tag.reroll{color:#fb923c;border-color:#7c2d12;background:rgba(251,146,60,.05);}
-.si-cost{font-family:'Cinzel Decorative',serif;font-size:11px;color:var(--gold);}
-.si-owned{font-size:9px;color:var(--shop-light);margin-top:3px;}
-.shop-skip{font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:var(--text-dim);cursor:pointer;border:none;background:none;letter-spacing:.1em;margin-top:4px;display:block;width:100%;text-align:center;}
+.shop-item.relic-item{background:#10091a;border-color:#3a1a5a;}
+.shop-item.relic-item:hover:not(.gray){border-color:var(--relic);background:#180d28;}
+.shop-item.debuff-item{background:#190a0a;border-color:#4a1010;}
+.shop-item.debuff-item:hover:not(.gray){border-color:var(--red-light);background:#220d0d;}
+.si-icon{font-size:20px;margin-bottom:4px;}
+.si-name{font-size:9px;letter-spacing:.08em;color:var(--shop-light);margin-bottom:2px;}
+.si-name.relic-name{color:var(--relic);}
+.si-name.debuff-name{color:var(--red-light);}
+.si-desc{font-size:8px;color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;margin-bottom:5px;line-height:1.3;}
+.si-tag{display:inline-block;font-size:7px;letter-spacing:.07em;padding:1px 5px;border:1px solid;margin-bottom:4px;text-transform:uppercase;}
+.si-tag.mult{color:#f0cc6e;border-color:#5a4020}.si-tag.chance{color:#a78bfa;border-color:#5a2a8a}
+.si-tag.sym{color:#06b6d4;border-color:#0a4050}.si-tag.util{color:#2ecc71;border-color:#1a5020}
+.si-tag.relic{color:var(--relic);border-color:var(--relic-dark)}.si-tag.debuff{color:var(--red-light);border-color:#5a1010}
+.si-cost{font-family:'Cinzel Decorative',serif;font-size:10px;color:var(--gold);}
+.si-cost.ic-cost{color:var(--itemcoin);}
+.shop-skip{font-family:'IM Fell English',serif;font-style:italic;font-size:10px;color:var(--text-dim);cursor:pointer;border:none;background:none;letter-spacing:.08em;margin-top:2px;display:block;width:100%;text-align:center;}
 .shop-skip:hover{color:var(--text);}
 
-/* MODIFIERS PANEL */
-.mod-section{margin-bottom:14px;}
-.mod-section-title{font-size:8px;letter-spacing:.3em;color:var(--gold-dark);text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border);}
-.mod-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-.mod-entry{background:var(--bg-panel);border:1px solid var(--border);padding:8px 10px;}
-.mod-entry.active{border-color:#3a2a60;}
-.mod-name{font-size:9px;letter-spacing:.08em;color:var(--text-dim);margin-bottom:3px;}
-.mod-val{font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--purple-light);}
-.mod-val.gold{color:var(--gold-light)}.mod-val.green{color:var(--green-light)}.mod-val.cyan{color:var(--cyan)}
-.mod-empty{font-family:'IM Fell English',serif;font-style:italic;color:var(--text-dim);font-size:11px;text-align:center;padding:12px;}
-/* mod scroll */
-#modContent{max-height:380px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border-gold) transparent;}
+/* NUDGE UI */
+.nudge-bar{display:none;background:#0a1a0a;border:1px solid var(--cyan);padding:9px 11px;margin-top:7px;animation:nudgePulse 1.5s ease infinite;}
+@keyframes nudgePulse{0%,100%{border-color:var(--cyan)}50%{border-color:#06b6d480;box-shadow:0 0 10px rgba(6,182,212,.2)}}
+.nudge-bar.show{display:block;}
+.nudge-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.nudge-title{font-size:8px;letter-spacing:.25em;color:var(--cyan);text-transform:uppercase;}
+.nudge-count{font-family:'Cinzel Decorative',serif;font-size:12px;color:var(--cyan);}
+.nudge-cols{display:flex;gap:5px;justify-content:center;margin-bottom:7px;}
+.nudge-col{flex:1;max-width:96px;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.nudge-arrow{width:100%;padding:4px 0;background:#0c2020;border:1px solid #1a5040;color:var(--cyan);font-size:15px;cursor:pointer;transition:all .15s;font-family:monospace;}
+.nudge-arrow:hover:not(:disabled){background:#143030;border-color:var(--cyan);}
+.nudge-arrow:disabled{opacity:.25;cursor:not-allowed;}
+.nudge-col-label{font-size:7px;color:var(--text-dim);letter-spacing:.08em;}
+.nudge-done{width:100%;padding:7px;background:linear-gradient(135deg,#0a2020,#143030);border:1px solid var(--cyan);color:var(--cyan);font-family:'Cinzel',serif;font-size:9px;letter-spacing:.18em;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+.nudge-done:hover{background:linear-gradient(135deg,#143030,#1a4040);}
+.nudge-animating .nudge-arrow{pointer-events:none;opacity:.3;}
 
-.coin-p{position:fixed;pointer-events:none;font-size:18px;z-index:600;animation:coinUp 1s ease-out forwards;}
+/* MOD PANEL */
+.mod-section{margin-bottom:12px;}
+.mod-section-title{font-size:7px;letter-spacing:.25em;color:var(--gold-dark);text-transform:uppercase;margin-bottom:6px;padding-bottom:3px;border-bottom:1px solid var(--border);}
+.mod-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.mod-entry{background:var(--bg-panel);border:1px solid var(--border);padding:6px 8px;}
+.mod-entry.active{border-color:#3a2a60;}
+.mod-name{font-size:8px;letter-spacing:.06em;color:var(--text-dim);margin-bottom:2px;}
+.mod-val{font-family:'Cinzel Decorative',serif;font-size:13px;color:var(--purple-light);}
+.mod-val.gold{color:var(--gold-light)}.mod-val.green{color:var(--green-light)}.mod-val.cyan{color:var(--cyan)}.mod-val.red{color:var(--red-light)}
+.mod-empty{font-family:'IM Fell English',serif;font-style:italic;color:var(--text-dim);font-size:10px;text-align:center;padding:10px;}
+#modContent{max-height:400px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border-gold) transparent;}
+
+/* PARTICLES */
+.coin-p{position:fixed;pointer-events:none;font-size:16px;z-index:600;animation:coinUp 1s ease-out forwards;}
 @keyframes coinUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-70px) scale(.4)}}
 @keyframes quotaPaidFlash{0%,100%{background:var(--bg-card)}50%{background:rgba(46,204,113,.08)}}
 .quota-paid-flash{animation:quotaPaidFlash .6s ease 2;}
 
-/* ── NUDGE UI ── */
-.nudge-bar{
-  display:none;background:#0a1a0a;border:1px solid var(--cyan);
-  padding:10px 12px;margin-top:8px;
-  animation:nudgePulse 1.5s ease infinite;
-}
-@keyframes nudgePulse{0%,100%{border-color:var(--cyan)}50%{border-color:#06b6d480;box-shadow:0 0 12px rgba(6,182,212,.2)}}
-.nudge-bar.show{display:block;}
-.nudge-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.nudge-title{font-size:9px;letter-spacing:.3em;color:var(--cyan);text-transform:uppercase;}
-.nudge-count{font-family:'Cinzel Decorative',serif;font-size:13px;color:var(--cyan);}
-.nudge-cols{display:flex;gap:6px;justify-content:center;margin-bottom:8px;}
-.nudge-col{flex:1;max-width:100px;display:flex;flex-direction:column;align-items:center;gap:4px;}
-.nudge-arrow{
-  width:100%;padding:5px 0;
-  background:#0c2020;border:1px solid #1a5040;
-  color:var(--cyan);font-size:16px;
-  cursor:pointer;transition:all .15s;
-  font-family:monospace;
-}
-.nudge-arrow:hover:not(:disabled){background:#143030;border-color:var(--cyan);box-shadow:0 0 8px rgba(6,182,212,.3);}
-.nudge-arrow:disabled{opacity:.25;cursor:not-allowed;}
-.nudge-col-label{font-size:8px;color:var(--text-dim);letter-spacing:.1em;}
-.nudge-done{
-  width:100%;padding:8px;
-  background:linear-gradient(135deg,#0a2020,#143030);
-  border:1px solid var(--cyan);color:var(--cyan);
-  font-family:'Cinzel',serif;font-size:10px;letter-spacing:.2em;
-  cursor:pointer;transition:all .2s;text-transform:uppercase;
-}
-.nudge-done:hover{background:linear-gradient(135deg,#143030,#1a4040);box-shadow:0 0 12px rgba(6,182,212,.2);}
-.nudge-animating .nudge-arrow{pointer-events:none;opacity:.3;}
+@keyframes warnPulse{0%,100%{border-color:var(--red);box-shadow:0 0 6px rgba(192,57,43,.3)}50%{border-color:var(--red-light);box-shadow:0 0 18px rgba(231,76,60,.6)}}
+@keyframes feverShimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+@keyframes feverPulseAnim{0%,100%{opacity:.75;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.08)}}
+@keyframes feverFlicker{0%,100%{opacity:1}30%{opacity:.8}70%{opacity:.9}}
+.fever-fill-low{background:linear-gradient(90deg,#4a0020,#c0204a);}
+.fever-fill-med{background:linear-gradient(90deg,#7a0040,var(--fever));animation:feverPulseAnim 1.5s ease infinite;}
+.fever-fill-high{background:linear-gradient(90deg,#ff0060,#ff4da6,#ffaadd);background-size:200% 100%;animation:feverShimmer 1.2s linear infinite,feverFlicker .5s ease infinite;}
+.fever-fill-max{background:linear-gradient(90deg,#ff0044,#ff66cc,#ffffff,#ff66cc,#ff0044);background-size:300% 100%;animation:feverShimmer .6s linear infinite;}
+.fever-track-glow{box-shadow:0 0 10px rgba(255,77,166,.5);}
+.fever-track-max{box-shadow:0 0 20px rgba(255,100,200,.9),0 0 36px rgba(255,77,166,.5);}
+.bet-disp{cursor:pointer;border-bottom:1px dashed rgba(212,168,67,.3);transition:border-color .2s;}
+.bet-disp:hover{border-color:var(--gold);}
 </style>
 </head>
 <body>
@@ -312,11 +339,49 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   </div>
 
   <div class="stats-bar">
-    <div class="stat-box" id="coinBox"><div class="stat-label">Gold Coins</div><div class="stat-value coins" id="coinDisp">100</div></div>
-    <div class="stat-box"><div class="stat-label">Quota Due</div><div class="stat-value" style="color:var(--red-light)" id="quotaDisp">200</div></div>
+    <div class="stat-box" id="coinBox"><div class="stat-label">Coins</div><div class="stat-value coins" id="coinDisp">100</div></div>
+    <div class="stat-box"><div class="stat-label">Quota</div><div class="stat-value" style="color:var(--red-light)" id="quotaDisp">—</div></div>
     <div class="stat-box"><div class="stat-label">Floor</div><div class="stat-value" id="floorDisp">1</div></div>
-    <div class="stat-box"><div class="stat-label">Total Won</div><div class="stat-value good" id="wonDisp">0</div></div>
+    <div class="stat-box"><div class="stat-label">Won</div><div class="stat-value good" id="wonDisp">0</div></div>
     <div class="stat-box"><div class="stat-label">Spins</div><div class="stat-value" id="spinDisp">0</div></div>
+    <div class="stat-box"><div class="stat-label">Item Coins</div><div class="stat-value ic" id="icDisp">0</div></div>
+  </div>
+
+  <!-- FEVER BAR -->
+  <div class="fever-row" id="feverRow">
+    <div class="fever-label">🔥 Fever</div>
+    <div class="fever-track"><div class="fever-fill" id="feverFill" style="width:0%"></div></div>
+    <div class="fever-pct" id="feverPct">0%</div>
+  </div>
+
+  <!-- IRS WARNING -->
+  <div class="irs-warn" id="irsWarn">
+    <div class="irs-text" id="irsText">⚠ IRS RISK: 10% — You have exceeded double the quota. Each spin without paying increases your risk.</div>
+  </div>
+
+  <!-- LAST WARNING -->
+  <div id="lastWarnBar" style="display:none;background:#1a0808;border:2px solid var(--red);padding:6px 10px;margin-bottom:8px;text-align:center;animation:warnPulse 1s ease infinite;">
+    <div id="lastWarnText" style="font-size:9px;letter-spacing:.15em;color:var(--red-light);text-transform:uppercase;">⚠ LAST SPIN — Pay quota NOW or face ruin!</div>
+  </div>
+
+  <!-- VAULT SECTION -->
+  <div id="vaultSection" style="background:var(--bg-card);border:1px solid #3a2060;padding:10px 14px;margin-bottom:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <div style="font-size:8px;letter-spacing:.3em;color:#a78bfa;text-transform:uppercase;">🏦 Stash Vault</div>
+      <div id="vaultAmount" style="font-family:'Cinzel Decorative',serif;font-size:16px;color:#a78bfa;">0</div>
+    </div>
+    <div id="vaultInfo" style="font-size:9px;color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;margin-bottom:5px;">Buy a vault to stash coins safely. Expires after 5 spins — you get it all back.</div>
+    <div id="vaultStatus" style="font-size:8px;color:var(--text-dim);margin-bottom:4px;"></div>
+    <div id="vaultBuyControls">
+      <button onclick="buyVault()" style="background:linear-gradient(135deg,#1a0a30,#0e0620);border:1px solid #5a1a9a;color:#a78bfa;font-family:'Cinzel',serif;font-size:8px;letter-spacing:.1em;padding:4px 10px;cursor:pointer;text-transform:uppercase;">Buy Vault (50 coins)</button>
+    </div>
+    <div id="vaultActiveControls" style="display:none;margin-top:5px;">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <input id="vaultDepositInput" type="number" min="1" placeholder="Amount" style="background:#0a0608;border:1px solid #3a2060;color:#c4b5fd;font-family:'Cinzel Decorative',serif;font-size:13px;width:90px;text-align:center;padding:2px 4px;outline:none;">
+        <button id="vaultDepositBtn" onclick="doVaultDeposit()" style="background:var(--bg-panel);border:1px solid #3a2060;color:#a78bfa;font-family:'Cinzel',serif;font-size:8px;padding:4px 8px;cursor:pointer;text-transform:uppercase;">Deposit</button>
+        <button onclick="doVaultWithdraw()" style="background:var(--bg-panel);border:1px solid #3a2060;color:#a78bfa;font-family:'Cinzel',serif;font-size:8px;padding:4px 8px;cursor:pointer;text-transform:uppercase;">Withdraw All</button>
+      </div>
+    </div>
   </div>
 
   <div class="quota-section" id="quotaSec">
@@ -324,7 +389,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
       <div class="quota-title" id="quotaLabel">✦ Floor Quota</div>
       <div class="quota-nums">
         <span class="quota-you" id="quotaYou">100</span>
-        <span class="quota-needed">/ <span id="quotaTarget">200</span> needed</span>
+        <span class="quota-needed">/ <span id="quotaTarget">—</span> needed</span>
       </div>
     </div>
     <div class="quota-bar-wrap">
@@ -333,19 +398,19 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
       <div class="quota-marker"></div>
     </div>
     <div class="quota-footer">
-      <div class="quota-info" id="quotaInfo">Earn coins, then pay the quota to descend.</div>
+      <div class="quota-info" id="quotaInfo">Earn coins, then pay when ready.</div>
       <button class="pay-quota-btn" id="payQuotaBtn" onclick="tryPayQuota()" disabled>Pay Quota</button>
     </div>
   </div>
 
   <div class="game-layout">
+    <!-- LEFT: slot machine -->
     <div>
       <div class="slot-machine" id="slotMachine">
         <div class="payline-bar" id="paylineBar"></div>
         <div class="reels-container" id="reelsCont"></div>
         <div class="win-display"><div class="win-msg" id="winMsg">—</div></div>
-
-        <!-- NUDGE BAR — shown after spin if nudge tokens available -->
+        <!-- NUDGE BAR -->
         <div class="nudge-bar" id="nudgeBar">
           <div class="nudge-header">
             <div class="nudge-title">☝️ Nudge the Reels</div>
@@ -374,9 +439,20 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
           <div class="bet-row">
             <span class="bet-label">BET</span>
             <button class="bet-btn" onclick="chBet(-5)">◀</button>
-            <div class="bet-disp" id="betDisp">10</div>
+            <span id="betDispWrap">
+              <span class="bet-disp" id="betDisp" onclick="openBetInput()" title="Click to type bet">10</span>
+            </span>
+            <span id="betInputWrap" style="display:none;align-items:center;gap:3px;">
+              <input id="betInput" type="number" min="1" style="background:#0a0608;border:1px solid var(--gold-dark);color:var(--gold-light);font-family:'Cinzel Decorative',serif;font-size:14px;width:72px;text-align:center;padding:2px 4px;outline:none;" onkeydown="betInputKey(event)">
+              <button class="bet-btn" onclick="confirmBetInput()" style="padding:2px 6px;font-size:11px;color:var(--green-light);border-color:var(--green);">✓</button>
+            </span>
             <button class="bet-btn" onclick="chBet(5)">▶</button>
             <button class="bet-btn" onclick="maxBet()">MAX</button>
+          </div>
+          <div class="bet-row" style="justify-content:center;gap:5px;flex-wrap:wrap;">
+            <button class="bet-btn" onclick="betHalf()">½</button>
+            <button class="bet-btn" onclick="betPct(25)">+25%</button>
+            <button class="bet-btn" onclick="betPct(-25)">-25%</button>
           </div>
           <button class="spin-btn" id="spinBtn" onclick="spin()">SPIN THE REELS</button>
         </div>
@@ -390,8 +466,8 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
           <div class="boss-side"><div class="bs-label" id="bsName">THE HOUSE</div><div class="bs-coins them" id="bsThem">+0</div></div>
         </div>
         <div class="boss-bars">
-          <div class="bb-row"><div class="bb-labels"><span>Your coins</span><span id="bsYouPct">0%</span></div><div class="bb-track"><div class="bb-fill you" id="bbYou" style="width:0%"></div></div></div>
-          <div class="bb-row"><div class="bb-labels"><span id="bsThemLbl">Enemy coins</span><span id="bsThemPct">0%</span></div><div class="bb-track"><div class="bb-fill them" id="bbThem" style="width:0%"></div></div></div>
+          <div class="bb-row"><div class="bb-labels"><span>You</span><span id="bsYouPct">0%</span></div><div class="bb-track"><div class="bb-fill you" id="bbYou" style="width:0%"></div></div></div>
+          <div class="bb-row"><div class="bb-labels"><span id="bsThemLbl">Enemy</span><span id="bsThemPct">0%</span></div><div class="bb-track"><div class="bb-fill them" id="bbThem" style="width:0%"></div></div></div>
         </div>
         <div class="boss-spins" id="bsSpinsLeft">— spins left</div>
       </div>
@@ -406,11 +482,12 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
         <div class="pay-row"><span>🌙🌙🌙</span><span class="pay-mult">×8</span></div>
         <div class="pay-row"><span>🃏🃏🃏</span><span class="pay-mult">×5</span></div>
         <div class="pay-row"><span>🍷🍷🍷</span><span class="pay-mult">×4</span></div>
-        <div class="pay-row"><span>Diagonals</span><span class="pay-mult" id="diagMultDisp">×1.5 bonus</span></div>
-        <div class="pay-row"><span>Any pair (mid row)</span><span class="pay-mult">×1.5</span></div>
+        <div class="pay-row"><span>Diagonal 3-match</span><span class="pay-mult" id="diagMultDisp">×1.5 bonus</span></div>
+        <div class="pay-row"><span>Any pair (mid)</span><span class="pay-mult">×1.5</span></div>
       </div>
     </div>
 
+    <!-- RIGHT PANEL -->
     <div class="right-panel">
       <div class="panel-box">
         <div class="panel-title">✦ The Descent ✦</div>
@@ -420,6 +497,16 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
           <div class="floor-desc" id="floorDesc">The tavern reeks of smoke and desperation.</div>
         </div>
       </div>
+
+      <!-- RELIC SHELF -->
+      <div class="shelf-section">
+        <div class="shelf-title-row">
+          <div class="shelf-title">✦ Relic Shelf</div>
+          <div class="shelf-ic">🪙 <span id="shelfIcDisp">0</span> item coins</div>
+        </div>
+        <div class="shelf-grid" id="shelfGrid"></div>
+      </div>
+
       <div class="panel-box">
         <div class="panel-title">✦ Dark Blessings ✦</div>
         <div class="upg-list" id="upgList"></div>
@@ -444,11 +531,22 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 <div class="overlay" id="goOverlay">
   <div class="ov-box">
     <div class="ov-title">RUINED</div>
-    <div class="ov-msg">"The quota was not met. The house takes all."</div>
+    <div class="ov-msg" id="goMsg">"The quota was not met. The house takes all."</div>
     <div class="ov-stat">Floor reached: <span id="goFloor">—</span></div>
     <div class="ov-stat">Total spins: <span id="goSpins">—</span></div>
     <div class="ov-stat">Peak fortune: <span id="goPeak">—</span></div>
     <button class="ov-btn" id="restartBtn" onclick="restartGame()">BEGIN ANEW</button>
+  </div>
+</div>
+
+<!-- IRS RAID OVERLAY -->
+<div class="overlay" id="irsOverlay">
+  <div class="ov-box irs-ov">
+    <div class="ov-title bi">⚖ TAX AUDIT</div>
+    <div class="ov-msg">"The Internal Revenue Service has reviewed your winnings and found certain... irregularities. Your assets are hereby seized."</div>
+    <div class="ov-stat" id="irsSeized">Seized: — coins</div>
+    <div class="ov-stat" id="irsLeft">Remaining: — coins</div>
+    <button class="ov-btn" onclick="closeIrs()">Pay the Fine</button>
   </div>
 </div>
 
@@ -471,7 +569,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <div class="ov-msg" id="biMsg">—</div>
     <div class="ov-stat">Quota to reach: <span id="biQuota">—</span></div>
     <div class="ov-stat">Spins allowed: <span id="biSpins">—</span></div>
-    <div class="ov-msg" style="margin-top:10px;font-size:11px;color:var(--boss);">First to quota wins. If neither does, highest coins wins.</div>
+    <div class="ov-msg" style="margin-top:8px;font-size:10px;color:var(--boss);">First to quota wins. Neither? Highest coins wins.</div>
     <button class="ov-btn" onclick="startBoss()">ACCEPT THE CHALLENGE</button>
   </div>
 </div>
@@ -490,12 +588,28 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   <div class="ov-box shop-ov">
     <div class="shop-header">
       <div class="ov-title bs" style="margin:0">The Merchant's Den</div>
-      <div class="shop-coins">🪙 <span id="shopCoinDisp">0</span></div>
+      <div class="shop-coins-row">
+        <div class="shop-coins">🪙 <span id="shopCoinDisp">0</span></div>
+        <div class="shop-ic">🔶 <span id="shopIcDisp">0</span> IC</div>
+      </div>
     </div>
-    <div class="shop-subtitle">"Spend wisely, traveller. The next floor demands more than the last."</div>
+    <div class="shop-subtitle">"Gold buys power. Item Coins buy fate. Spend both wisely."</div>
     <div class="shop-tabs" id="shopTabs"></div>
     <div class="shop-grid" id="shopGrid"></div>
     <button class="shop-skip" onclick="closeShop()">— Skip the merchant and descend —</button>
+  </div>
+</div>
+
+<!-- RELIC DETAIL -->
+<div class="overlay" id="relicDetailOverlay">
+  <div class="ov-box relic-ov">
+    <div class="relic-detail-icon" id="rdIcon">📦</div>
+    <div class="relic-detail-name" id="rdName">—</div>
+    <div class="relic-detail-type" id="rdType">buff</div>
+    <div class="relic-lore" id="rdLore">—</div>
+    <div class="relic-effect" id="rdEffect">—</div>
+    <div class="relic-uses-left" id="rdUses"></div>
+    <button class="ov-btn" onclick="closeRelicDetail()">Close</button>
   </div>
 </div>
 
@@ -503,7 +617,6 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 <div class="overlay" id="modOverlay">
   <div class="ov-box mod-ov">
     <div class="ov-title bm">Active Modifiers</div>
-    <div class="ov-msg" style="margin-bottom:12px;">"Every blessing leaves its mark on fortune."</div>
     <div id="modContent"></div>
     <button class="ov-btn" onclick="closeModifiers()">Close</button>
   </div>
@@ -516,88 +629,235 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 const SYMS=['🍷','🃏','🌙','💎','🗝️','⚔️','👁️','💀'];
 const BASE_W=[30,25,18,14,10,7,4,2];
 const BASE_MULT={'💀':50,'👁️':30,'⚔️':20,'🗝️':15,'💎':12,'🌙':8,'🃏':5,'🍷':4};
-const FLOOR_DESCS=['The tavern reeks of smoke and desperation.','Deeper now. The walls sweat with greed.','Whispers echo of fortunes won and lost.','The light grows dim. Only gold gleams.','The abyss gambles with you now.','You can no longer tell luck from doom.','Destiny itself deals the cards here.','Few descend this far. None leave unchanged.','The walls breathe coin dust and regret.','Not even shadows descend this deep willingly.'];
+const HIGH_SYMS=['👁️','⚔️','🗝️','💎','💀']; // "high-value"
+const FLOOR_DESCS=['The tavern reeks of smoke and desperation.','Deeper now. The walls sweat with greed.','Whispers echo of fortunes won and lost.','The light grows dim. Only gold gleams.','The abyss gambles with you now.','You cannot tell luck from doom anymore.','Destiny itself deals the cards here.','Few descend this far. None leave unchanged.','The walls breathe coin dust and regret.','Not even shadows descend this deep willingly.'];
 const BOSS_NAMES=['The Iron Banker','The Fate Weaver','Lord of the Abyss','The Void Dealer','The Eternal House'];
-const BOSS_QUOTES=['"Fortune favors me. Always."','"Every thread of luck I weave — for myself."','"The deeper you fall, the more is mine."','"I have swallowed entire kingdoms. You are a coin."','"The house does not lose. Ever."'];
+const BOSS_QUOTES=['"Fortune favors me. Always."','"Every thread of luck I weave — for myself."','"The deeper you fall, the more is mine."','"I have swallowed kingdoms. You are a coin."','"The house does not lose. Ever."'];
+const SHELF_SIZE=5;
 
-// ── PERMANENT UPGRADES ──
+// ── PERMANENT UPGRADES (bought with regular coins, expensive, late-game) ──
 const UPG_DEFS=[
-  {id:'luckyreel',   name:'Cursed Reel',        desc:'Middle reel: +15% rare symbols per level.',           baseCost:50,  max:4, stack:true },
-  {id:'symbolboost', name:"Witch's Favour",      desc:'All rare symbols more common. +12% per level.',       baseCost:65,  max:4, stack:true },
-  {id:'pairbonus',   name:'Twin Omen',            desc:'+25% pair payout per level.',                        baseCost:70,  max:3, stack:true },
-  {id:'rerollchance',name:'Chaos Engine',         desc:'On a dead spin, 25% chance to reroll a row. +25% per level.',baseCost:80, max:4, stack:true },
-  {id:'doublepair',  name:"Serpent's Tongue",     desc:'Pairs pay ×3 instead of ×1.5.',                     baseCost:95,  max:1, stack:false},
-  {id:'extrapayline',name:'Third Eye',            desc:'Both diagonals (↘↗) become active paylines.',       baseCost:130, max:1, stack:false},
-  {id:'highroller',  name:'Blood Pact',           desc:'Max bet payouts ×1.5.',                              baseCost:160, max:1, stack:false},
-  {id:'nudge',       name:"Fate's Nudge",         desc:'Every 5 spins: next bet costs half.',                baseCost:180, max:1, stack:false},
-  {id:'insurance',   name:"Devil's Insurance",    desc:'Going bankrupt? Keep 15 coins once per floor.',      baseCost:110, max:1, stack:false},
-  {id:'multirow',    name:'All-Seeing Row',       desc:'Top and bottom rows also count as paylines.',        baseCost:200, max:1, stack:false},
-  {id:'lossback',    name:'Sorrow\'s Rebate',     desc:'On a loss, recover 20% of bet.',                     baseCost:120, max:1, stack:false},
-  {id:'combo',       name:'Chain Fortune',        desc:'Each consecutive win increases next win by 10%.',    baseCost:150, max:3, stack:true },
+  // Early-ish (300-600)
+  {id:'luckyreel',    name:'Cursed Reel',       desc:'Middle reel: +10% rare symbols per level.',           baseCost:300,  max:4, stack:true },
+  {id:'symbolboost',  name:"Witch's Favour",     desc:'All rares +8% per level.',                            baseCost:400,  max:4, stack:true },
+  {id:'pairbonus',    name:'Twin Omen',           desc:'+20% pair payout per level.',                        baseCost:350,  max:3, stack:true },
+  {id:'rerollchance', name:'Chaos Engine',        desc:'Dead spin: 25% chance reroll a row. +25% per lv.',   baseCost:380,  max:4, stack:true },
+  {id:'lossback',     name:"Sorrow's Rebate",     desc:'On a loss, recover 15% of bet.',                     baseCost:320,  max:1, stack:false},
+  {id:'combo',        name:'Chain Fortune',       desc:'Each consecutive win adds +8% to next win.',         baseCost:450,  max:3, stack:true },
+  // Mid (700-1200)
+  {id:'doublepair',   name:"Serpent's Tongue",    desc:'Pairs pay ×3 instead of ×1.5.',                     baseCost:700,  max:1, stack:false},
+  {id:'insurance',    name:"Devil's Insurance",   desc:'Bankrupt? Keep 20 coins once per floor.',            baseCost:600,  max:1, stack:false},
+  {id:'nudge',        name:"Fate's Nudge",        desc:'Every 5 spins: next bet costs half.',                baseCost:800,  max:1, stack:false},
+  // Late (1500+)
+  {id:'extrapayline', name:'Third Eye',           desc:'Both diagonals become active paylines.',             baseCost:1500, max:1, stack:false},
+  {id:'highroller',   name:'Blood Pact',          desc:'Max bet payouts ×1.5.',                              baseCost:1800, max:1, stack:false},
+  {id:'multirow',     name:'All-Seeing Row',      desc:'Top and bottom rows also count as paylines.',        baseCost:2200, max:1, stack:false},
+  // New upgrades
+  {id:'vaultupgrade', name:'Vault Expansion',     desc:'Vault lasts +2 extra spins per level.',              baseCost:400,  max:3, stack:true },
+  {id:'betscaling',   name:'Momentum Bet',        desc:'Each consecutive win: bet ceiling +5% of coins.',    baseCost:500,  max:3, stack:true },
+  {id:'feverboost',   name:'Fever Kindling',      desc:'Wins add +3 extra Fever per level.',                 baseCost:350,  max:4, stack:true },
+  {id:'quotabuffer',  name:'Debt Shield',         desc:'Last-spin: if within 20% of quota, get 1 free spin.',baseCost:900,  max:1, stack:false},
+  {id:'icbonus',      name:'Fortune Tithe',       desc:'+1 item coin on every quota payment.',               baseCost:600,  max:3, stack:true },
+  {id:'vaultreturn',  name:'Iron Safe',           desc:'Vault payout on expiry gives +10% bonus per level.', baseCost:700,  max:3, stack:true },
 ];
 
-// ── ALL SHOP ITEMS (grouped by tag) ──
+// ── RELIC DEFINITIONS ──
+// type: buff | debuff | mixed
+// quotas: how many quota payments it survives (undefined = permanent)
+// effect: key matched in applyRelicEffect / processRelicSpin
+const RELICS=[
+  // BUFFS
+  {id:'horseshoe',    icon:'🧲', name:'Lucky Horseshoe',    type:'buff',
+   lore:'"Worn smooth by a thousand lucky palms. Luck clings to it still."',
+   desc:'<b>+5%</b> chance for rare symbols (×8+) to appear on every reel.',
+   quotas:undefined, apply:{rareBoost:0.05}},
+  {id:'loadeddice',   icon:'🎲', name:'Loaded Dice',         type:'buff',
+   lore:'"The weight is all wrong — but who checks the dice that win?"',
+   desc:'Every <b>7th spin</b>, at least one high-value symbol (⚔️+) is guaranteed on the middle row.',
+   quotas:undefined, apply:{loadedDice:true}},
+  {id:'fatecoin',     icon:'🪙', name:'Fate Coin',           type:'buff',
+   lore:'"Heads: fortune. Tails: another chance at fortune."',
+   desc:'<b>10% chance</b> after a losing spin to completely reroll all three reels at no cost.',
+   quotas:undefined, apply:{fateCoin:true}},
+  {id:'fourcharm',    icon:'🍀', name:'Four-Leaf Charm',     type:'buff',
+   lore:'"Found in a field where lightning struck four times. Make of that what you will."',
+   desc:'If all <b>3 middle-row symbols match</b>, win payout is <b>doubled</b> (stacks with fever).',
+   quotas:5, apply:{fourCharm:true}},
+  {id:'entropyengine',icon:'⚙️', name:'Entropy Engine',     type:'buff',
+   lore:'"It counts your failures. It prepares for your victory."',
+   desc:'Each <b>consecutive losing spin</b> adds +3% rare symbol chance. Resets on any win.',
+   quotas:undefined, apply:{entropyEngine:true}},
+  {id:'stickyreel',   icon:'📌', name:'Sticky Reel',         type:'buff',
+   lore:'"The reel trembles, catches, holds. Fortune frozen in amber."',
+   desc:'If a reel lands on a <b>rare symbol</b> (×12+), that reel locks for the next spin.',
+   quotas:3, apply:{stickyReel:true}},
+  {id:'echolver',     icon:'🔁', name:'Echo Lever',          type:'buff',
+   lore:'"Pull it twice and the first pull answers."',
+   desc:'Once per floor, the <b>middle reel copies its previous spin result</b> (free echo spin).',
+   quotas:undefined, apply:{echoLever:true}},
+  {id:'symbolalch',   icon:'⚗️', name:'Symbol Alchemist',   type:'buff',
+   lore:'"Lead into copper, copper into silver... silver into what you need."',
+   desc:'After each spin, any 🍷 (wine) in the <b>middle row</b> becomes 🌙 automatically.',
+   quotas:4, apply:{symbolAlch:true}},
+  {id:'wildinjector', icon:'💉', name:'Wild Injector',       type:'buff',
+   lore:'"One pure symbol, uncorrupted by chance. Place it yourself."',
+   desc:'Once per floor, one random middle-row cell becomes a <b>★ Wild</b> (matches any symbol this spin).',
+   quotas:undefined, apply:{wildInjector:true}},
+  {id:'ghostsym',     icon:'👻', name:'Ghost Symbol',        type:'buff',
+   lore:'"It appears, counts, vanishes. You heard nothing."',
+   desc:'Adds a <b>bonus 🌙</b> to the right reel middle row once per spin. Disappears before next spin.',
+   quotas:3, apply:{ghostSym:true}},
+  {id:'piggybank',    icon:'🐷', name:'Greedy Piggy Bank',   type:'buff',
+   lore:'"Every loss feeds the pig. One day the pig pays back."',
+   desc:'Gain <b>+3 coins</b> on every losing spin.',
+   quotas:undefined, apply:{piggyBank:true}},
+  {id:'comboengine',  icon:'🔗', name:'Combo Engine',        type:'buff',
+   lore:'"Momentum is a currency. The machine remembers."',
+   desc:'Streak multiplier caps at <b>+50%</b> instead of default, and resets slower.',
+   quotas:undefined, apply:{comboEngine:true}},
+  {id:'spincounter',  icon:'🔢', name:'Spin Counter',        type:'buff',
+   lore:'"Ten turns of the wheel and the stars align."',
+   desc:'Every <b>10 spins</b>, next spin is a guaranteed jackpot roll (symbol weight heavily biased toward 💀/👁️).',
+   quotas:undefined, apply:{spinCounter:true}},
+  {id:'quantumreel',  icon:'⚛️', name:'Quantum Reel',        type:'mixed',
+   lore:'"Two futures exist until you choose. Choose wisely."',
+   desc:'After the reels stop, briefly shows an <b>alternate result</b>. Click either to choose which outcome to keep. Costs <b>1 item coin</b> per use.',
+   quotas:undefined, apply:{quantumReel:true}},
+  {id:'collectorbadge',icon:'🏅',name:'Collector\'s Badge',  type:'buff',
+   lore:'"Each new face in the machine earns another mark on the badge."',
+   desc:'Tracks unique symbols landed in the middle row. <b>+5% multiplier per unique symbol</b> collected (max 8).',
+   quotas:undefined, apply:{collectorBadge:true}},
+  {id:'mirroreel',    icon:'🪞', name:'Mirror Reel',         type:'buff',
+   lore:'"The left speaks. The right listens."',
+   desc:'The <b>right reel</b> copies the exact result of the left reel each spin.',
+   quotas:3, apply:{mirrorReel:true}},
+  {id:'goldenshard',  icon:'🌟', name:'Golden Shard',         type:'buff',
+   lore:'"A fragment of something ancient. It hums with residual fortune."',
+   desc:'After any triple win, gain <b>+5 bonus coins</b> for each floor youve descended.',
+   quotas:undefined, apply:{goldenShard:true}},
+  {id:'vaultkey',     icon:'🗝️', name:'Vault Master Key',    type:'buff',
+   lore:'"Every lock has a price. This one pays you back."',
+   desc:'Vault withdrawals gain <b>+20% bonus</b> coins on top of whats stored.',
+   quotas:4, apply:{vaultKey:true}},
+  {id:'bloodcrown',   icon:'👑', name:'Blood Crown',          type:'mixed',
+   lore:'"Wear it, and the machine bows. But the machine remembers."',
+   desc:'Your highest-earning spin each floor is <b>doubled</b>. But the boss quota is +25%.',
+   quotas:undefined, apply:{bloodCrown:true}},
+  // DEBUFFS
+  {id:'debtcontract', icon:'📜', name:'Debt Contract',       type:'debuff',
+   lore:'"Unmatched returns. Unmatched cost. The ink is binding."',
+   desc:'<b>×2 payout multiplier</b> on all wins — but <b>costs 5 coins every spin</b> in addition to your bet.',
+   quotas:undefined, apply:{debtContract:true}},
+  {id:'devilslever',  icon:'😈', name:'Devil\'s Lever',      type:'debuff',
+   lore:'"He laughs either way. The lever is his favourite joke."',
+   desc:'<b>Triple payouts</b> on wins — but each win has a <b>20% chance to be erased</b> (coins not awarded).',
+   quotas:undefined, apply:{devilsLever:true}},
+  {id:'loanshark',    icon:'🦈', name:'Loan Shark Token',    type:'debuff',
+   lore:'"The money is yours. The interest is his."',
+   desc:'Immediately gain <b>+80 coins</b>. But at the next quota payment, <b>owe 160 back</b>.',
+   quotas:1, apply:{loanShark:true}},
+  {id:'blackcat',     icon:'🐱', name:'Black Cat Token',     type:'debuff',
+   lore:'"It crossed your path. You felt it. You kept going anyway."',
+   desc:'<b>-20% to all payouts</b> unless you have won <b>2 spins in a row</b> first.',
+   quotas:undefined, apply:{blackCat:true}},
+  {id:'brokenchip',   icon:'💢', name:'Broken RNG Chip',     type:'mixed',
+   lore:'"Probability becomes suggestion. Chaos becomes law."',
+   desc:'Each spin, luck fluctuates wildly. <b>50% chance:</b> +15% rares. <b>50% chance:</b> -15% rares.',
+   quotas:undefined, apply:{brokenChip:true}},
+  {id:'doublepull',   icon:'⚖️', name:'Double Pull Lever',   type:'debuff',
+   lore:'"Every spin pulls twice. You get the lesser gift."',
+   desc:'Every spin rolls the reels <b>twice</b>. You receive the <b>worse result</b> unless your current Fever is ≥30%.',
+   quotas:undefined, apply:{doublePull:true}},
+  {id:'glitch',       icon:'📺', name:'Glitch Cartridge',    type:'mixed',
+   lore:'"The game knows it\'s broken. It leans into it."',
+   desc:'Each spin, <b>one random rule changes</b>: sometimes pairs count as triples, sometimes triples pay as pairs.',
+   quotas:3, apply:{glitchCart:true}},
+  {id:'cursedJackpot',icon:'💀', name:'Cursed Jackpot',      type:'debuff',
+   lore:'"The skull smiles. It always does."',
+   desc:'💀 jackpot pays <b>×100</b> — but landing 💀 on the <b>wrong row</b> costs you 30 coins.',
+   quotas:undefined, apply:{cursedJackpot:true}},
+  {id:'creditcard',   icon:'💳', name:'Casino Credit Card',  type:'debuff',
+   lore:'"Zero interest for the first floor. After that, it compounds."',
+   desc:'Spin for free when broke — but each free spin adds <b>+5%</b> to future quota requirements (max +50%).',
+   quotas:undefined, apply:{creditCard:true}},
+];
+
 const ALL_SHOP_ITEMS=[
-  // MULTIPLIER
-  {id:'diag_boost',   icon:'↘', name:'Crooked Angle',      desc:'Diagonal wins pay ×2.',                           cost:40,  tag:'mult',  max:1,  apply:{diagMult:2}},
-  {id:'diag_boost2',  icon:'↗', name:'Second Diagonal',    desc:'Diagonal wins pay ×3. (Needs Crooked Angle)',     cost:80,  tag:'mult',  max:1,  req:'diag_boost', apply:{diagMult:3}},
-  {id:'skull_boost',  icon:'💀',name:'Death Omen',          desc:'💀 jackpot becomes ×70.',                         cost:90,  tag:'mult',  max:1,  apply:{skullMult:70}},
-  {id:'eye_boost',    icon:'👁️',name:'Seer\'s Lens',        desc:'👁️ multiplier becomes ×40.',                      cost:70,  tag:'mult',  max:1,  apply:{eyeMult:40}},
-  {id:'sword_boost',  icon:'⚔️',name:'Blood Edge',          desc:'⚔️ multiplier becomes ×28.',                      cost:60,  tag:'mult',  max:1,  apply:{swordMult:28}},
-  {id:'gem_boost',    icon:'💎',name:'Gem Cutter',          desc:'💎 multiplier becomes ×18.',                      cost:50,  tag:'mult',  max:1,  apply:{gemMult:18}},
-  {id:'key_boost',    icon:'🗝️',name:'Skeleton Key',        desc:'🗝️ multiplier becomes ×22.',                      cost:55,  tag:'mult',  max:1,  apply:{keyMult:22}},
-  {id:'moon_boost',   icon:'🌙',name:'Blood Moon',          desc:'🌙 multiplier becomes ×14.',                      cost:40,  tag:'mult',  max:1,  apply:{moonMult:14}},
-  {id:'pair_mult2',   icon:'♊',name:'Double Mirror',       desc:'All pair payouts ×2.',                            cost:60,  tag:'mult',  max:1,  apply:{pairMult2:true}},
-  {id:'triple_all',   icon:'🔱',name:'Trinity Pact',        desc:'All triple multipliers +5.',                      cost:80,  tag:'mult',  max:1,  apply:{tripleBonus:5}},
-  {id:'triple_all2',  icon:'⚜️',name:'Greater Trinity',    desc:'All triple multipliers +10 more. (Needs Trinity)', cost:140, tag:'mult',  max:1,  req:'triple_all', apply:{tripleBonus:10}},
+  // MULTIPLIER (coin-bought)
+  {id:'diag_boost',   icon:'↘', name:'Crooked Angle',      desc:'Diagonal wins pay ×2.',                    cost:200, tag:'mult',  max:1,  apply:{diagMult:2}},
+  {id:'diag_boost2',  icon:'↗', name:'Second Diagonal',    desc:'Diagonal wins pay ×3. (Needs Crooked)',     cost:400, tag:'mult',  max:1,  req:'diag_boost', apply:{diagMult:3}},
+  {id:'skull_boost',  icon:'💀', name:'Death Omen',         desc:'💀 jackpot becomes ×70.',                  cost:500, tag:'mult',  max:1,  apply:{skullMult:70}},
+  {id:'eye_boost',    icon:'👁️', name:"Seer's Lens",        desc:'👁️ multiplier becomes ×40.',               cost:350, tag:'mult',  max:1,  apply:{eyeMult:40}},
+  {id:'sword_boost',  icon:'⚔️', name:'Blood Edge',         desc:'⚔️ multiplier becomes ×28.',               cost:300, tag:'mult',  max:1,  apply:{swordMult:28}},
+  {id:'gem_boost',    icon:'💎', name:'Gem Cutter',         desc:'💎 multiplier becomes ×18.',               cost:250, tag:'mult',  max:1,  apply:{gemMult:18}},
+  {id:'pair_mult2',   icon:'♊', name:'Double Mirror',      desc:'All pair payouts ×2.',                     cost:300, tag:'mult',  max:1,  apply:{pairMult2:true}},
+  {id:'triple_all',   icon:'🔱', name:'Trinity Pact',       desc:'All triple multipliers +5.',               cost:400, tag:'mult',  max:1,  apply:{tripleBonus:5}},
+  {id:'triple_all2',  icon:'⚜️', name:'Greater Trinity',   desc:'Triple mults +10 more. (Needs Trinity)',   cost:700, tag:'mult',  max:1,  req:'triple_all', apply:{tripleBonus:10}},
   // CHANCE
-  {id:'skull_chance', icon:'☠️',name:'Bone Market',         desc:'💀 symbol 60% more likely.',                      cost:75,  tag:'chance',max:1,  apply:{skullChance:1.6}},
-  {id:'eye_chance',   icon:'🔮',name:'Third Sight',         desc:'👁️ symbol 50% more likely.',                      cost:60,  tag:'chance',max:1,  apply:{eyeChance:1.5}},
-  {id:'sword_chance', icon:'⚔️',name:'War Blessing',        desc:'⚔️ symbol 45% more likely.',                      cost:50,  tag:'chance',max:1,  apply:{swordChance:1.45}},
-  {id:'gem_chance',   icon:'💎',name:'Jeweller\'s Eye',     desc:'💎 symbol 50% more likely.',                      cost:50,  tag:'chance',max:1,  apply:{gemChance:1.5}},
-  {id:'key_chance',   icon:'🗝️',name:'Master Key',          desc:'🗝️ symbol 60% more likely.',                      cost:45,  tag:'chance',max:1,  apply:{keyChance:1.6}},
-  {id:'moon_chance',  icon:'🌙',name:'Moon Favour',         desc:'🌙 symbol 70% more likely.',                      cost:38,  tag:'chance',max:1,  apply:{moonChance:1.7}},
-  {id:'all_rare_up',  icon:'✨',name:'Fortune Shift',       desc:'All ×8+ symbols: +20% chance. Stackable.',        cost:100, tag:'chance',max:3,  stack:true, apply:{allRareUp:0.2}},
-  {id:'card_chance',  icon:'🃏',name:'Fool\'s Luck',        desc:'🃏 symbol 80% more likely.',                      cost:30,  tag:'chance',max:1,  apply:{cardChance:1.8}},
-  // SYMBOL / REEL
-  {id:'lucky_col',    icon:'🎰',name:'Gilded Column',       desc:'Left reel copies middle reel odds.',               cost:60,  tag:'sym',   max:1,  apply:{luckyCol:true}},
-  {id:'lucky_right',  icon:'🎲',name:'Mirrored Fate',       desc:'Right reel also copies middle reel odds.',         cost:80,  tag:'sym',   max:1,  req:'lucky_col', apply:{luckyRight:true}},
-  {id:'reroll_up',    icon:'🔄',name:'Fickle Fate',         desc:'Reroll triggers become 30% more likely.',          cost:55,  tag:'sym',   max:3,  stack:true, apply:{rerollBoost:0.3}},
-  {id:'reroll_best',  icon:'🎯',name:'Aimed Chaos',         desc:'Rerolled row picks the best of 2 attempts.',       cost:90,  tag:'sym',   max:1,  apply:{rerollBest:true}},
-  {id:'wild_top',     icon:'⭐',name:'Wild Top Row',         desc:'Top row: one random cell becomes a wild (any match).', cost:110, tag:'sym', max:1, apply:{wildTop:true}},
-  // REROLL
-  {id:'reroll_free',  icon:'♻️',name:'Second Chance',       desc:'Once per 3 floors: 1 free reroll of any dead spin.',cost:70,  tag:'reroll',max:3,  stack:true, apply:{freeRerolls:1}},
-  {id:'reroll_chain', icon:'🔗',name:'Chain Reroll',        desc:'Rerolled rows also check adjacent rows for bonus.', cost:95,  tag:'reroll',max:1,  apply:{rerollChain:true}},
-  // UTILITY
-  {id:'xtra_spins',   icon:'⏳',name:'Borrowed Time',       desc:'+4 spins to each future quota deadline.',          cost:55,  tag:'util',  max:3,  stack:true, apply:{extraSpins:4}},
-  {id:'quota_reduce', icon:'💸',name:'Dark Discount',       desc:'Each future quota 10% cheaper.',                   cost:50,  tag:'util',  max:4,  stack:true, apply:{quotaReduce:0.1}},
-  {id:'half_bet',     icon:'🎭',name:'Fool\'s Gambit',      desc:'Next 6 spins cost only 40% of your bet.',          cost:55,  tag:'util',  max:3,  stack:true, apply:{halfBetSpins:6}},
-  {id:'coin_start',   icon:'🏦',name:'Coin Hoard',          desc:'Start next floor with +30 coins.',                 cost:45,  tag:'util',  max:3,  stack:true, apply:{bonusStartCoins:30}},
-  {id:'bet_size',     icon:'📈',name:'High Stakes',         desc:'Max bet cap raised by +25.',                       cost:70,  tag:'util',  max:4,  stack:true, apply:{maxBetBonus:25}},
-  {id:'insurance2',   icon:'🛡️',name:'Iron Vault',          desc:'Insurance triggers keep 30 coins instead of 15.', cost:80,  tag:'util',  max:1,  apply:{insuranceAmount:30}},
-  {id:'nudge_token',  icon:'☝️',name:'Nudge',               desc:'+1 Nudge token. After each spin, nudge any reel up or down one row. No limit — stack as many as you like.',cost:55, tag:'util', max:999, stack:true, apply:{nudgeToken:1}},
+  {id:'skull_chance', icon:'☠️', name:'Bone Market',        desc:'💀 symbol 50% more likely.',               cost:400, tag:'chance',max:1,  apply:{skullChance:1.5}},
+  {id:'all_rare_up',  icon:'✨', name:'Fortune Shift',      desc:'All ×8+ symbols: +15% chance. Stackable.', cost:500, tag:'chance',max:3,  stack:true, apply:{allRareUp:0.15}},
+  {id:'gem_chance',   icon:'💎', name:"Jeweller's Eye",     desc:'💎 symbol 40% more likely.',               cost:200, tag:'chance',max:1,  apply:{gemChance:1.4}},
+  {id:'moon_chance',  icon:'🌙', name:'Moon Favour',        desc:'🌙 symbol 60% more likely.',               cost:160, tag:'chance',max:1,  apply:{moonChance:1.6}},
+  // UTIL
+  {id:'xtra_spins',   icon:'⏳', name:'Borrowed Time',      desc:'+3 spins per quota deadline.',             cost:250, tag:'util',  max:3,  stack:true, apply:{extraSpins:3}},
+  {id:'quota_reduce', icon:'💸', name:'Dark Discount',      desc:'Each future quota 8% cheaper.',            cost:280, tag:'util',  max:4,  stack:true, apply:{quotaReduce:0.08}},
+  {id:'half_bet',     icon:'🎭', name:"Fool's Gambit",      desc:'Next 5 spins cost 40% of bet.',            cost:200, tag:'util',  max:3,  stack:true, apply:{halfBetSpins:5}},
+  {id:'bet_size',     icon:'📈', name:'High Stakes',        desc:'Max bet cap +20.',                         cost:300, tag:'util',  max:4,  stack:true, apply:{maxBetBonus:20}},
+  {id:'nudge_token',  icon:'☝️', name:'Nudge Token',        desc:'+1 nudge. After spin, nudge reel up/down.',cost:200, tag:'util',  max:999,stack:true, apply:{nudgeToken:1}},
+  {id:'fever_charge', icon:'🔥', name:'Fever Charge',       desc:'Immediately gain +20% Fever.',             cost:150, tag:'util',  max:5,  stack:true, apply:{feverCharge:20}},
+  {id:'vault_time',   icon:'⏱️', name:'Vault Extension',    desc:'Add +3 spins to active vault (or next).',  cost:180, tag:'util',  max:5,  stack:true, apply:{vaultTime:3}},
+  {id:'lucky_streak', icon:'🍀', name:'Lucky Break',        desc:'Next 4 spins: +30% rare symbol chance.',   cost:220, tag:'chance',max:3,  stack:true, apply:{ghostSpins:4}},
+  {id:'triple_threat',icon:'🎯', name:'Triple Threat',      desc:'Triples on top/bottom row pay same as mid.',cost:350, tag:'mult',  max:1,  apply:{tripleAllRows:true}},
+  {id:'coinmagnet',   icon:'🪙', name:'Coin Magnet',        desc:'Each win: +2 bonus coins per reel stopped.',cost:300, tag:'mult',  max:3,  stack:true, apply:{coinMagnet:2}},
+  {id:'death_wish',   icon:'💀', name:'Death Wish',         desc:'💀 on any row: +15 coins (not just jackpot).',cost:400,tag:'mult',  max:1,  apply:{deathWish:true}},
+  {id:'reroll_up2',   icon:'♻️', name:'Entropy Surge',      desc:'+15% chaos reroll chance. Stackable.',     cost:320, tag:'chance',max:3,  stack:true, apply:{rerollBoost:0.15}},
+  {id:'icmulti',      icon:'🔶', name:'Item Hoarder',       desc:'Overpaying quota earns 2x item coins.',    cost:500, tag:'util',  max:1,  apply:{icDouble:true}},
 ];
 
 const FLOOR_EVENTS=[
   {title:'The Moneylender',flavor:'"For a small consideration, I can offer assistance."',choices:[
-    {title:'Accept the loan',desc:'+60 coins. Owe 90 next floor.',tag:'loan'},
+    {title:'Accept the loan',desc:'+80 coins. Owe 120 next floor.',tag:'loan'},
     {title:'Decline',desc:'Nothing gained, nothing owed.',tag:'skip'}]},
   {title:"The Witch's Wager",flavor:'"Risk your silver for a chance at gold..."',choices:[
-    {title:'Wager 40 coins',desc:'50%: win 120. 50%: lose the wager.',cost:40,tag:'gamble'},
+    {title:'Wager 40 coins',desc:'50%: win 130. 50%: lose the wager.',cost:40,tag:'gamble'},
     {title:'Walk away',desc:'You keep your coins.',tag:'skip'}]},
   {title:"The Beggar's Gift",flavor:'"I found something shiny in the gutter..."',choices:[
-    {title:'Accept',desc:'Receive 25 free coins.',tag:'gift'},
-    {title:'Give generously',desc:'Donate 20 coins. Top row activates next spin.',cost:20,tag:'donate'}]},
+    {title:'Accept',desc:'Receive 30 free coins.',tag:'gift'},
+    {title:'Give generously',desc:'Donate 20 coins. Top row bonus next spin.',cost:20,tag:'donate'}]},
   {title:"The Gambler's Ghost",flavor:'"I won everything once. Let me show you my trick..."',choices:[
-    {title:'Learn the trick',desc:'Pay 30 coins. Next 5 spins: +30% rare odds.',cost:30,tag:'ghost'},
+    {title:'Learn the trick',desc:'Pay 35 coins. Next 5 spins: +25% rare odds.',cost:35,tag:'ghost'},
     {title:'Ignore the shade',desc:'Some debts stay buried.',tag:'skip'}]},
   {title:'The Crossroads Devil',flavor:'"Allow me to make your next few spins interesting."',choices:[
-    {title:'Accept the deal',desc:'Pay 50 coins. Next 3 spins guaranteed at least a pair.',cost:50,tag:'devil'},
+    {title:'Accept the deal',desc:'Pay 60 coins. Next 3 spins guaranteed pair.',cost:60,tag:'devil'},
     {title:'Refuse',desc:'You sense a trap.',tag:'skip'}]},
   {title:'The Coin Witch',flavor:'"I can double what you carry — for a price."',choices:[
-    {title:'Accept',desc:'Lose half your coins, gain double back. Net: ×1.',cost:0,tag:'coinwitch'},
-    {title:'Pay 15 for blessing',desc:'15 coins: next spin multipliers doubled.',cost:15,tag:'witchbless'}]},
+    {title:'Pay 20 for blessing',desc:'20 coins: next spin multipliers ×2.',cost:20,tag:'witchbless'},
+    {title:'Walk away',desc:'Some prices are too high.',tag:'skip'}]},
+  {title:'The Shadow Broker',flavor:'"Information is currency. Advantage is priceless."',choices:[
+    {title:'Buy insider info',desc:'Pay 5% of coins: +2 item coins.',costPct:0.05,tag:'shadowbroker'},
+    {title:'Walk away',desc:'You trust no one in the dark.',tag:'skip'}]},
+  {title:'The Alchemist',flavor:'"Gold from lead. Silk from shadow. Nothing is impossible — for a fee."',choices:[
+    {title:'Commission transmutation',desc:'Pay 10% of coins: next 3 spins pay double.',costPct:0.10,tag:'alchemist'},
+    {title:'Decline',desc:'You sense risk.',tag:'skip'}]},
+  {title:'The Mirror Merchant',flavor:'"Look closely. Your luck is not what you think."',choices:[
+    {title:'Swap luck',desc:'Pay 8% coins: middle reel locks on its best symbol for 2 spins.',costPct:0.08,tag:'mirrormerch'},
+    {title:'Keep walking',desc:'Mirrors lie.',tag:'skip'}]},
+  {title:"The Arsonist's Offer",flavor:'"Burn the past. Emerge richer."',choices:[
+    {title:'Accept the burn',desc:'Lose 15% coins. Fever instantly +30%.',costPct:0.15,tag:'arsonist'},
+    {title:'Refuse',desc:'Fire fears no one.',tag:'skip'}]},
 ];
+
+function getScaledEvent(){
+  // Pick event and scale costs/rewards by current wealth
+  const ev=FLOOR_EVENTS[Math.floor(Math.random()*FLOOR_EVENTS.length)];
+  const scaled=JSON.parse(JSON.stringify(ev));
+  // Replace costPct with actual cost
+  scaled.choices=scaled.choices.map(ch=>{
+    if(ch.costPct){ch.cost=Math.max(5,Math.floor(G.coins*ch.costPct));delete ch.costPct;}
+    return ch;
+  });
+  return scaled;
+}
 
 // ============================================================
 // GAME STATE
@@ -606,23 +866,42 @@ let G={};
 function initState(){
   G={
     coins:100,bet:10,spins:0,floor:1,
-    quota:200,quotaSpins:18,quotaSpinsLeft:18,
+    quota:0,quotaSpins:20,quotaSpinsLeft:20,
+    lastQuotaPaid:100,
     totalWon:0,peakCoins:100,
+    itemCoins:0,  // separate currency for relic shop
     upgLv:{},
     shopMods:{},shopOwned:[],
     loanDebt:0,ghostSpins:0,devilSpins:0,
-    nudgeTokens:0,
-    nudgeReady:false,nudgeCtr:0,
+    nudgeTokens:0,nudgeCtr:0,nudgeReady:false,
     bonusPL:false,
     halfBetSpinsLeft:0,
     quotaReduceStack:0,
     extraSpinsStack:0,
-    bonusStartCoins:0,
     maxBetBonus:0,
     comboStreak:0,
     insuranceUsed:false,
-    freeRerollsLeft:0,
     doubleMultNext:false,
+    creditCardDebt:0, // extra quota % from credit card
+    // Fever
+    fever:0, // 0-100 percent
+    // IRS
+    irsRisk:0,  // current IRS risk % (0-100)
+    irsActive:false, // currently above 2x quota
+    spinsSinceDouble:0,
+    // Relic state
+    shelf:[],     // array of {id, usesLeft (null=permanent), data:{}}
+    relicData:{}, // live per-relic dynamic data
+    // Relic-specific flags
+    stickyLock:[false,false,false], // per column locked
+    echoUsed:false,
+    wildInjectorUsed:false,
+    consecutiveLosses:0,
+    loadedDiceCount:0,
+    spinCounterCount:0,
+    collectedSymbols:new Set(),
+    quantumPending:false,
+    // Reels
     reels:[['🍷','🃏','🌙'],['🍷','🃏','🌙'],['🍷','🃏','🌙']],
     spinning:false,log:[],
     isBossFloor:false,bossActive:false,
@@ -630,229 +909,128 @@ function initState(){
     bossQuota:0,bossEnemyCoins:0,bossYouCoins:0,
     bossStartCoins:0,bossName:'',bossEnemyBet:10,
     currentShopTab:'all',
+    quotasPaid:0,prevQuota:0,loanDoubleNext:false,lastLoanQuota:-999,lastWarnShown:false,
+    vault:0,vaultActive:false,vaultSpinsLeft:0,vaultDeposited:false,vaultCost:50,vaultSpinInterval:5,
+    bloodCrownUsed:false,bloodCrownBest:0,
+    quotaBufferUsed:false,
   };
+  // Calculate first quota
+  G.quota = calcQuota();
+  G.quotaSpins = calcSpins(1);
+  G.quotaSpinsLeft = G.quotaSpins;
+  // Give 2 random starting relics
+  const pool = RELICS.filter(r=>r.type!=='debuff').slice();
+  shuffle(pool);
+  [pool[0],pool[1]].forEach(r=>addRelic(r.id));
 }
 
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
+
 // ============================================================
-// SCALING — harder quotas, fewer spins
+// QUOTA SCALING — next quota ~30x coins when paying
 // ============================================================
-function calcQuota(floor,coins){
-  // Exponential growth: each floor requires significantly more
-  const base=150;
-  const growth=Math.pow(1.42,floor-1); // 42% per floor
-  let q=Math.floor(base*growth);
-  // Must exceed current coins by at least floor*20
-  q=Math.max(q,coins+floor*20+50);
-  // Apply discount stack
-  if(G.quotaReduceStack>0)q=Math.floor(q*(1-Math.min(0.5,G.quotaReduceStack)));
-  return q;
+function calcQuota(){
+  let base;
+  if(G.quotasPaid===0){base=1000;}else{base=Math.floor(G.prevQuota+G.lastQuotaPaid*20);base=Math.max(base,G.prevQuota+200);}
+  if(G.loanDoubleNext)base=base*2;
+  // Apply discount
+  if(G.quotaReduceStack>0) base=Math.floor(base*(1-Math.min(0.5,G.quotaReduceStack)));
+  // Credit card penalty
+  if(G.creditCardDebt>0) base=Math.floor(base*(1+Math.min(0.5,G.creditCardDebt)));
+  return base;
 }
 function calcSpins(floor){
-  // Starts at 18, drops by 1 every 2 floors, min 10, plus any bonus
-  return Math.max(10,18-Math.floor((floor-1)/2))+G.extraSpinsStack;
+  return Math.max(12, 22 - Math.floor((floor-1)/2)) + G.extraSpinsStack;
 }
 
 // ============================================================
-// REEL BUILD
+// REEL ENGINE
 // ============================================================
-// ── REEL ENGINE ─────────────────────────────────────────────
-// Each .reel-col holds POOL_SIZE symbol cells in a strip.
-// We track a continuous `offset` (pixels scrolled so far) and
-// recycle cells that scroll off the top by moving them to the
-// bottom with a new random symbol — true infinite scroll.
-// On stop we ease into exact alignment so the 3 final symbols
-// land precisely in the 3 visible rows.
-
-const POOL_SIZE = 10; // DOM cells per reel (always > 3 visible)
-
-// Per-column state
-const reelState = [{},{},{}];
+const POOL_SIZE=10;
+const reelState=[{},{},{}];
 
 function buildReels(){
   const cont=document.getElementById('reelsCont');cont.innerHTML='';
   for(let col=0;col<3;col++){
-    const colDiv=document.createElement('div');
-    colDiv.className='reel-col';colDiv.id=`col_${col}`;
-
-    // Strip wrapper — we'll position cells absolutely inside this
-    const strip=document.createElement('div');
-    strip.className='reel-strip';strip.id=`strip_${col}`;
+    const colDiv=document.createElement('div');colDiv.className='reel-col';colDiv.id=`col_${col}`;
+    const strip=document.createElement('div');strip.className='reel-strip';strip.id=`strip_${col}`;
     strip.style.position='relative';
     colDiv.appendChild(strip);
-
-    // Win overlay divs (one per visible row)
     for(let r=0;r<3;r++){
-      const ov=document.createElement('div');
-      ov.className=`cell-ov row${r}`;ov.id=`ov_${col}_${r}`;
-      colDiv.appendChild(ov);
+      const ov=document.createElement('div');ov.className=`cell-ov row${r}`;ov.id=`ov_${col}_${r}`;colDiv.appendChild(ov);
     }
     cont.appendChild(colDiv);
   }
-
-  // After DOM is in place, measure cell height and seed strips
   requestAnimationFrame(()=>{
     for(let col=0;col<3;col++) initReelState(col);
     rebuildPills();updateDiagDisplay();
   });
 }
-
-function getCellH(){
-  // All cols same height; use col 0
-  const c=document.getElementById('col_0');
-  return c ? c.getBoundingClientRect().height/3 : 72;
-}
-
+function getCellH(){const c=document.getElementById('col_0');return c?c.getBoundingClientRect().height/3:68;}
 function initReelState(col){
   const cellH=getCellH();
   const strip=document.getElementById(`strip_${col}`);
-  if(!strip) return;
-  strip.innerHTML='';
-
-  // Create POOL_SIZE absolutely-positioned cells
+  if(!strip)return;strip.innerHTML='';
   const cells=[];
   for(let i=0;i<POOL_SIZE;i++){
-    const cell=document.createElement('div');
-    cell.className='reel-strip-cell';
-    cell.style.position='absolute';
-    cell.style.left='0';cell.style.right='0';
-    cell.style.height=cellH+'px';
-    // Start: fill top rows with G.reels values, rest random
-    if(i<3) cell.textContent=G.reels[col][i];
-    else cell.textContent=SYMS[Math.floor(Math.random()*SYMS.length)];
+    const cell=document.createElement('div');cell.className='reel-strip-cell';
+    cell.style.cssText=`position:absolute;left:0;right:0;height:${cellH}px;`;
+    cell.textContent=i<3?G.reels[col][i]:SYMS[Math.floor(Math.random()*SYMS.length)];
     cell._logicalY=i*cellH;
     cell.style.top=(i*cellH)+'px';
-    strip.appendChild(cell);
-    cells.push(cell);
+    strip.appendChild(cell);cells.push(cell);
   }
-
-  reelState[col]={
-    cells,
-    cellH,
-    offset:0,
-    nextBottom: POOL_SIZE*cellH,
-    raf:null,
-  };
-
-  // size the strip container to just the viewport (clip handled by reel-col overflow:hidden)
+  reelState[col]={cells,cellH,offset:0,nextBottom:POOL_SIZE*cellH,raf:null};
   strip.style.height=(cellH*3)+'px';
 }
-
-// Place all cells at their correct absolute positions based on reelState offset
-function layoutCells(col){
-  const s=reelState[col];
-  if(!s||!s.cells) return;
-  // Each cell has a logical index in a virtual infinite strip.
-  // We store `cell._logicalY` = its current absolute y in the virtual strip.
-  // Visual y = cell._logicalY - s.offset
-  s.cells.forEach(cell=>{
-    const vy=cell._logicalY - s.offset;
-    cell.style.top=vy+'px';
-  });
-}
-
-// Recycle any cell that has scrolled fully above the viewport top
-function recycleCells(col){
-  const s=reelState[col];
-  if(!s) return;
-  s.cells.forEach(cell=>{
-    const vy=cell._logicalY - s.offset;
-    if(vy < -s.cellH){
-      // Move to bottom
-      cell._logicalY=s.nextBottom;
-      s.nextBottom+=s.cellH;
-      cell.textContent=SYMS[Math.floor(Math.random()*SYMS.length)];
-    }
-  });
-}
-
-// After spinning stops, write the 3 final symbols into the cells
-// currently occupying visible rows 0,1,2
-function writeFinalsToVisible(col, finalSyms){
-  const s=reelState[col];
-  if(!s) return;
-  // Find which cell occupies each visible row
+function layoutCells(col){const s=reelState[col];if(!s||!s.cells)return;s.cells.forEach(c=>{c.style.top=(c._logicalY-s.offset)+'px';});}
+function recycleCells(col){const s=reelState[col];if(!s)return;s.cells.forEach(cell=>{if(cell._logicalY-s.offset<-s.cellH){cell._logicalY=s.nextBottom;s.nextBottom+=s.cellH;cell.textContent=SYMS[Math.floor(Math.random()*SYMS.length)];}});}
+function writeFinalsToVisible(col,finalSyms){
+  const s=reelState[col];if(!s)return;
   for(let row=0;row<3;row++){
-    const targetVY=row*s.cellH;
-    // Find the cell whose visual y is closest to targetVY
-    let best=null, bestDist=Infinity;
-    s.cells.forEach(cell=>{
-      const vy=cell._logicalY - s.offset;
-      const dist=Math.abs(vy - targetVY);
-      if(dist<bestDist){bestDist=dist;best=cell;}
-    });
-    if(best) best.textContent=finalSyms[row];
+    const targetVY=row*s.cellH;let best=null,bestDist=Infinity;
+    s.cells.forEach(cell=>{const dist=Math.abs(cell._logicalY-s.offset-targetVY);if(dist<bestDist){bestDist=dist;best=cell;}});
+    if(best)best.textContent=finalSyms[row];
   }
   G.reels[col]=finalSyms.slice();
 }
-
-// Spin one reel with true infinite scroll
-// Phase 1: linear full-speed scroll (symbols flying past)
-// Phase 2: ease-out decelerate to land on finalSyms[0..2]
-function spinReel(col, finalSyms, duration, _unused){
+function spinReel(col,finalSyms,duration){
   return new Promise(resolve=>{
-    const s=reelState[col];
-    if(!s || !s.cells || s.cells.length===0){resolve();return;}
-
-    // Cancel any running animation
+    const s=reelState[col];if(!s||!s.cells||!s.cells.length){resolve();return;}
     if(s.raf){cancelAnimationFrame(s.raf);s.raf=null;}
-
     const cellH=s.cellH;
-    const peakSpeed = cellH * 0.032; // px per ms
-    const phase1End = duration * 0.55;
-    let phase1Dist = Math.ceil(peakSpeed * phase1End / cellH) * cellH;
-    const phase2Dist = cellH * 3;
-    const totalDist = phase1Dist + phase2Dist;
-    const stopOffset = s.offset + totalDist;
-
-    let finalsInjected = false;
-    const startOffset = s.offset;
-    const startTime = performance.now();
-
+    const peakSpeed=cellH*0.032;
+    const phase1End=duration*0.55;
+    let phase1Dist=Math.ceil(peakSpeed*phase1End/cellH)*cellH;
+    const phase2Dist=cellH*3;
+    const totalDist=phase1Dist+phase2Dist;
+    const stopOffset=s.offset+totalDist;
+    let finalsInjected=false;
+    const startOffset=s.offset;
+    const startTime=performance.now();
     function easeOutCubic(t){return 1-Math.pow(1-t,3);}
-
     function frame(now){
-      const elapsed = now - startTime;
+      const elapsed=now-startTime;
       let newOffset;
-
-      if(elapsed < phase1End){
-        newOffset = startOffset + peakSpeed * elapsed;
-      } else {
-        const t2 = Math.min((elapsed - phase1End)/(duration - phase1End), 1);
-        newOffset = startOffset + phase1Dist + easeOutCubic(t2)*phase2Dist;
-
+      if(elapsed<phase1End){newOffset=startOffset+peakSpeed*elapsed;}
+      else{
+        const t2=Math.min((elapsed-phase1End)/(duration-phase1End),1);
+        newOffset=startOffset+phase1Dist+easeOutCubic(t2)*phase2Dist;
         if(!finalsInjected){
-          finalsInjected = true;
-          for(let row=0; row<3; row++){
-            const targetLogY = stopOffset + row*cellH;
-            let best=null, bestDist=Infinity;
-            s.cells.forEach(cell=>{
-              const dist=Math.abs(cell._logicalY - targetLogY);
-              if(dist<bestDist){bestDist=dist;best=cell;}
-            });
-            if(best){
-              best._logicalY = targetLogY;
-              best.textContent = finalSyms[row];
-            }
+          finalsInjected=true;
+          for(let row=0;row<3;row++){
+            const tly=stopOffset+row*cellH;
+            let best=null,bd=Infinity;
+            s.cells.forEach(c=>{const d=Math.abs(c._logicalY-tly);if(d<bd){bd=d;best=c;}});
+            if(best){best._logicalY=tly;best.textContent=finalSyms[row];}
           }
         }
       }
-
-      s.offset = newOffset;
-      recycleCells(col);
-      layoutCells(col);
-
-      if(elapsed < duration){
-        s.raf = requestAnimationFrame(frame);
-      } else {
-        s.offset = stopOffset;
-        writeFinalsToVisible(col, finalSyms);
-        layoutCells(col);
-        s.raf = null;
-        resolve();
-      }
+      s.offset=newOffset;recycleCells(col);layoutCells(col);
+      if(elapsed<duration){s.raf=requestAnimationFrame(frame);}
+      else{s.offset=stopOffset;writeFinalsToVisible(col,finalSyms);layoutCells(col);s.raf=null;resolve();}
     }
-
-    s.raf = requestAnimationFrame(frame);
+    s.raf=requestAnimationFrame(frame);
   });
 }
 function rebuildPills(){
@@ -863,75 +1041,75 @@ function rebuildPills(){
   if(G.bonusPL)lines.push('Top Bonus');
   lines.forEach(n=>{const p=document.createElement('div');p.className='pl-pill on';p.textContent=n;b.appendChild(p);});
 }
-function updateDiagDisplay(){
-  document.getElementById('diagMultDisp').textContent=`×${getMod('diagMult',1.5)} bonus`;
-}
+function updateDiagDisplay(){document.getElementById('diagMultDisp').textContent=`×${getMod('diagMult',1.5)} bonus`;}
 
 // ============================================================
 // MODIFIERS
 // ============================================================
 function getMod(k,def){return G.shopMods[k]!==undefined?G.shopMods[k]:def;}
 function lv(id){return G.upgLv[id]||0;}
-function maxBetVal(){return Math.min(Math.floor(G.coins/2),100+G.maxBetBonus);}
-
+function maxBetVal(){return Math.floor(G.coins);}
+function hasRelic(id){return G.shelf.some(r=>r.id===id&&(r.usesLeft===null||r.usesLeft>0));}
 function getSymChance(symIdx){
-  const keys=['cardChance','','moonChance','gemChance','keyChance','swordChance','eyeChance','skullChance'];
-  const k=keys[symIdx];
-  return k?getMod(k,1):1;
+  const keys=['','','moonChance','gemChance','','','','skullChance'];
+  const k=keys[symIdx];return k?getMod(k,1):1;
 }
-function getSymMult(sym){
+function getSymMult(sym,jackpotBoost=false){
   const base=BASE_MULT[sym];
-  const overrides={
-    '💀':getMod('skullMult',base),'👁️':getMod('eyeMult',base),
-    '⚔️':getMod('swordMult',base),'💎':getMod('gemMult',base),
-    '🗝️':getMod('keyMult',base),'🌙':getMod('moonMult',base),
-  };
+  const overrides={'💀':getMod('skullMult',base),'👁️':getMod('eyeMult',base),'⚔️':getMod('swordMult',base),'💎':getMod('gemMult',base)};
   let m=overrides[sym]!==undefined?overrides[sym]:base;
   if(getMod('tripleBonus',0))m+=getMod('tripleBonus',0);
+  // Cursed jackpot: 💀 pays ×100
+  if(sym==='💀'&&hasRelic('cursedJackpot'))m=100;
   return m;
 }
 
 // ============================================================
 // WEIGHTS
 // ============================================================
-function getW(col){
+function getW(col,overrideRaw=false){
   let w=[...BASE_W];
   const ll=lv('luckyreel'),bl=lv('symbolboost');
-  const useMidOdds=(getMod('luckyCol',false)&&col===0)||(getMod('luckyRight',false)&&col===2);
-  if(useMidOdds){
-    w=[...BASE_W];
-    if(ll>0)w=w.map((v,i)=>i>=3?v*(1+ll*.25):v);
-    if(bl>0)w=w.map((v,i)=>i>=4?v*(1+bl*.2):v);
-  } else {
-    if(ll>0&&col===1)w=w.map((v,i)=>i>=3?v*(1+ll*.25):v);
-    if(bl>0)w=w.map((v,i)=>i>=4?v*(1+bl*.2):v);
-  }
-  if(G.ghostSpins>0)w=w.map((v,i)=>i>=3?v*1.3:v);
+  if(ll>0&&col===1)w=w.map((v,i)=>i>=3?v*(1+ll*.1):v);
+  if(bl>0)w=w.map((v,i)=>i>=4?v*(1+bl*.08):v);
+  if(G.ghostSpins>0)w=w.map((v,i)=>i>=3?v*1.25:v);
   w=w.map((v,i)=>v*getSymChance(i));
   const aru=getMod('allRareUp',0);
-  if(aru>0){
-    const n=G.shopOwned.filter(x=>x==='all_rare_up').length;
-    const boost=1+aru*n;
-    w=w.map((v,i)=>BASE_MULT[SYMS[i]]>=8?v*boost:v);
-  }
+  if(aru>0){const n=G.shopOwned.filter(x=>x==='all_rare_up').length;const boost=1+aru*n;w=w.map((v,i)=>BASE_MULT[SYMS[i]]>=8?v*boost:v);}
+  // Relic: Lucky Horseshoe
+  if(hasRelic('horseshoe'))w=w.map((v,i)=>BASE_MULT[SYMS[i]]>=8?v*1.05:v);
+  // Relic: Entropy Engine
+  if(hasRelic('entropyengine')&&G.consecutiveLosses>0)w=w.map((v,i)=>BASE_MULT[SYMS[i]]>=8?v*(1+G.consecutiveLosses*.03):v);
+  // Relic: Broken RNG Chip
+  if(hasRelic('brokenchip')){const lucky=Math.random()<0.5;w=w.map((v,i)=>BASE_MULT[SYMS[i]]>=8?v*(lucky?1.15:0.85):v);}
   return w;
 }
-function rndSym(col,attempts=1){
-  let best=null;
-  for(let a=0;a<attempts;a++){
-    const w=getW(col),tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;
-    let s=SYMS[0];
-    for(let i=0;i<SYMS.length;i++){r-=w[i];if(r<=0){s=SYMS[i];break;}}
-    if(!best||SYMS.indexOf(s)>SYMS.indexOf(best))best=s;
+function rndSym(col,jackpot=false){
+  if(jackpot){// bias heavily toward high-value
+    const w=BASE_W.map((v,i)=>i>=5?v*8:v*0.1);
+    const tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;
+    for(let i=0;i<SYMS.length;i++){r-=w[i];if(r<=0)return SYMS[i];}return SYMS[SYMS.length-1];
   }
-  return best;
-}
-function rndSymBoss(){
-  let w=BASE_W.map((v,i)=>i>=5?v*.65:v*1.05),tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;
+  const w=getW(col),tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;
   for(let i=0;i<SYMS.length;i++){r-=w[i];if(r<=0)return SYMS[i];}return SYMS[0];
 }
+function rndSymBoss(){let w=BASE_W.map((v,i)=>i>=5?v*.65:v*1.05),tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;for(let i=0;i<SYMS.length;i++){r-=w[i];if(r<=0)return SYMS[i];}return SYMS[0];}
 function doSpin(boss=false){
-  for(let c=0;c<3;c++)G.reels[c]=[boss?rndSymBoss():rndSym(c),boss?rndSymBoss():rndSym(c),boss?rndSymBoss():rndSym(c)];
+  const jackpot=!boss&&hasRelic('spinCounter')&&G.spinCounterCount>=9;
+  for(let c=0;c<3;c++){
+    if(G.stickyLock[c]){continue;} // sticky reel stays
+    G.reels[c]=[boss?rndSymBoss():rndSym(c,jackpot),boss?rndSymBoss():rndSym(c,jackpot),boss?rndSymBoss():rndSym(c,jackpot)];
+  }
+  if(jackpot)G.spinCounterCount=0;
+  // Relic: Mirror Reel — right copies left
+  if(hasRelic('mirroreel'))G.reels[2]=[...G.reels[0]];
+  // Relic: Echo Lever — once per floor, middle reel keeps last result (handled in spin())
+  // Relic: Ghost Symbol — add 🌙 to right reel middle row
+  if(hasRelic('ghostsym'))G.reels[2][1]='🌙';
+  // Relic: Symbol Alchemist — convert 🍷 in middle row to 🌙
+  if(hasRelic('symbolalch'))for(let c=0;c<3;c++){if(G.reels[c][1]==='🍷')G.reels[c][1]='🌙';}
+  // Relic: Wild Injector (once per floor)
+  if(hasRelic('wildinjector')&&!G.wildInjectorUsed){G.wildInjectorUsed=true;G.reels[1][1]='★';}
 }
 
 // ============================================================
@@ -951,129 +1129,233 @@ function evalAll(bet){
   if(G.bonusPL){res.push(evalLine([[0,0],[1,0],[2,0]],bet,'Bonus',false));G.bonusPL=false;}
   return res.filter(r=>r.win>0);
 }
-
 function evalLine(cells,bet,lineName,isDiag){
-  // Wild top row: if wildTop mod and all cells are in row 0, treat one mismatch as matching
-  const syms=cells.map(([c,r])=>G.reels[c][r]);
-  let[a,b,c2]=syms;
-  // Wild: in top row check, allow one cell to act as wildcard
-  if(getMod('wildTop',false)&&cells.every(([,r])=>r===0)){
-    const counts={};syms.forEach(s=>counts[s]=(counts[s]||0)+1);
-    const most=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
-    if(most[0][1]===2){a=b=c2=most[0][0];}// treat 2-of-3 as triple
-  }
+  let syms=cells.map(([c,r])=>G.reels[c][r]);
+  // Wild ★ matches any symbol
+  const nonWild=syms.filter(s=>s!=='★');
+  if(nonWild.length>0&&syms.includes('★')){const match=nonWild[0];syms=syms.map(s=>s==='★'?match:s);}
+  const[a,b,c2]=syms;
   if(a===b&&b===c2){
     let m=getSymMult(a);
     if(lv('highroller')>0&&G.bet===maxBetVal())m=Math.floor(m*1.5);
-    if(isDiag)m=m*getMod('diagMult',1.5);
+    if(isDiag)m*=getMod('diagMult',1.5);
     // Combo streak
-    if(lv('combo')>0)m=m*(1+G.comboStreak*0.1*lv('combo'));
-    // Double mult flag
+    if(G.comboStreak>0){const cap=hasRelic('comboengine')?50:30;m*=(1+Math.min(cap,G.comboStreak*(lv('combo')?8:5))/100);}
     if(G.doubleMultNext){m*=2;G.doubleMultNext=false;}
-    return{win:Math.floor(bet*m),cells,type:'triple',symbol:a,mult:m,lineName,isDiag};
+    // Four-Leaf Charm: triple middle row → double
+    if(hasRelic('fourcharm')&&lineName==='Mid')m*=2;
+    // Fever boost: fever% chance each row hits jackpot
+    let isFeverJackpot=false;
+    if(G.fever>0&&Math.random()*100<G.fever){m=getSymMult('💀')*2;isFeverJackpot=true;}
+    // Glitch Cartridge
+    if(hasRelic('glitch')&&Math.random()<0.5){if(m>20)m=m/3;else m=m*3;}
+    // Devil's Lever: 20% chance to erase win
+    if(hasRelic('devilslever')){m*=3;if(Math.random()<0.2)return{win:0,cells,type:'none',lineName,isDiag};}
+    // Black Cat: -20% unless 2-streak
+    if(hasRelic('blackcat')&&G.comboStreak<2)m*=0.8;
+    // Debt Contract: ×2 but costs 5/spin (handled in spin)
+    if(hasRelic('debtcontract'))m*=2;
+    let win=Math.floor(bet*m);
+    // Golden Shard: +5 per floor on triple
+    if(hasRelic('goldenshard'))win+=G.floor*5;
+    return{win,cells,type:'triple',symbol:a,mult:m,lineName,isDiag,isFeverJackpot};
   }
   let pc=[];
-  if(a===b)pc=[cells[0],cells[1]];
-  else if(b===c2)pc=[cells[1],cells[2]];
-  else if(a===c2)pc=[cells[0],cells[2]];
+  if(a===b)pc=[cells[0],cells[1]];else if(b===c2)pc=[cells[1],cells[2]];else if(a===c2)pc=[cells[0],cells[2]];
   if(pc.length){
     let m=lv('doublepair')>0?3:1.5;
-    const pb=lv('pairbonus');if(pb>0)m*=(1+pb*.25);
+    if(lv('pairbonus')>0)m*=(1+lv('pairbonus')*.2);
     if(getMod('pairMult2',false))m*=2;
-    if(isDiag)m=m*getMod('diagMult',1.5);
+    if(isDiag)m*=getMod('diagMult',1.5);
     if(G.doubleMultNext){m*=2;G.doubleMultNext=false;}
-    return{win:Math.floor(bet*m),cells:pc,type:'pair',mult:m,lineName,isDiag};
+    if(hasRelic('blackcat')&&G.comboStreak<2)m*=0.8;
+    if(hasRelic('debtcontract'))m*=2;
+    const win=Math.floor(bet*m);
+    return{win,cells:pc,type:'pair',mult:m,lineName,isDiag};
   }
   return{win:0,cells:[],type:'none',lineName,isDiag};
 }
 
 // ============================================================
+// FEVER
+// ============================================================
+function gainFever(amount){
+  G.fever=Math.min(100,G.fever+amount);
+  updateFeverBar();
+}
+function updateFeverBar(){
+  const fill=document.getElementById('feverFill');
+  const track=document.getElementById('feverFill').parentElement;
+  const pct=Math.floor(G.fever);
+  fill.style.width=pct+'%';
+  document.getElementById('feverPct').textContent=pct+'%';
+  fill.className='fever-fill';
+  track.className='fever-track';
+  if(pct>=100){fill.classList.add('fever-fill-max');track.classList.add('fever-track-max');}
+  else if(pct>=70){fill.classList.add('fever-fill-high');track.classList.add('fever-track-glow');}
+  else if(pct>=40){fill.classList.add('fever-fill-med');track.classList.add('fever-track-glow');}
+  else{fill.classList.add('fever-fill-low');}
+  const machine=document.getElementById('slotMachine');
+  if(G.fever>=20)machine.classList.add('fever-mode');
+  else machine.classList.remove('fever-mode');
+}
+
+// ============================================================
+// IRS
+// ============================================================
+function checkIRS(){
+  if(G.bossActive)return;
+  const doubleQuota=G.quota*2;
+  if(G.coins>=doubleQuota){
+    if(!G.irsActive){G.irsActive=true;G.irsRisk=10;G.spinsSinceDouble=0;log('irs','⚠ Warning: You\'ve exceeded double the quota. The IRS is watching.');}
+    document.getElementById('irsWarn').classList.add('show');
+    document.getElementById('irsText').textContent=`⚠ IRS RISK: ${G.irsRisk}% — You hold ${G.coins} coins (quota: ${G.quota}). Pay before they strike.`;
+  } else {
+    G.irsActive=false;G.irsRisk=0;G.spinsSinceDouble=0;
+    document.getElementById('irsWarn').classList.remove('show');
+  }
+}
+function rollIRS(){
+  if(!G.irsActive)return false;
+  G.spinsSinceDouble++;
+  G.irsRisk=Math.min(95,10+(G.spinsSinceDouble-1)*5);
+  checkIRS();
+  if(Math.random()*100<G.irsRisk){
+    // IRS strikes: take 90%, leave 10% of quota
+    const taken=G.coins-Math.floor(G.quota*0.1);
+    const left=Math.max(10,Math.floor(G.quota*0.1));
+    document.getElementById('irsSeized').innerHTML=`Seized: <span>${taken} coins</span>`;
+    document.getElementById('irsLeft').innerHTML=`Remaining: <span>${left} coins</span>`;
+    G.coins=left;
+    G.irsActive=false;G.irsRisk=0;
+    document.getElementById('irsOverlay').classList.add('show');
+    log('irs',`⚖ IRS RAID: ${taken} coins seized. Left with ${left}.`);
+    updateStats();
+    return true;
+  }
+  return false;
+}
+function closeIrs(){document.getElementById('irsOverlay').classList.remove('show');document.getElementById('irsWarn').classList.remove('show');updateStats();}
+
+// ============================================================
+// RELIC SHELF
+// ============================================================
+function addRelic(id){
+  if(G.shelf.length>=SHELF_SIZE)return false;
+  const def=RELICS.find(r=>r.id===id);
+  if(!def)return false;
+  G.shelf.push({id,usesLeft:def.quotas!==undefined?def.quotas:null,data:{}});
+  // Apply immediate effect (loanShark)
+  if(id==='loanshark'){G.coins+=80;log('relic','🦈 Loan Shark: +80 coins. Owe 160 next payment.');}
+  renderShelf();
+  return true;
+}
+function spendRelicUse(id){
+  const r=G.shelf.find(r=>r.id===id);
+  if(!r||r.usesLeft===null)return;
+  r.usesLeft--;
+  if(r.usesLeft<=0){
+    G.shelf=G.shelf.filter(s=>s.id!==id);
+    log('relic',`${RELICS.find(d=>d.id===id)?.icon} ${RELICS.find(d=>d.id===id)?.name} expired.`);
+    renderShelf();
+  }
+}
+function renderShelf(){
+  const grid=document.getElementById('shelfGrid');grid.innerHTML='';
+  for(let i=0;i<SHELF_SIZE;i++){
+    const div=document.createElement('div');
+    if(i<G.shelf.length){
+      const sr=G.shelf[i];const def=RELICS.find(d=>d.id===sr.id);
+      const used=sr.usesLeft!==null&&sr.usesLeft<=0;
+      div.className=`shelf-slot${used?' used-up':''}${def.type==='debuff'?' debuff':''}`;
+      div.textContent=def.icon;
+      if(sr.usesLeft!==null)div.innerHTML+=`<span class="relic-uses">${sr.usesLeft}q</span>`;
+      div.onclick=()=>openRelicDetail(sr.id);
+    } else {
+      div.className='shelf-slot empty';div.textContent='·';
+    }
+    grid.appendChild(div);
+  }
+}
+function openRelicDetail(id){
+  const def=RELICS.find(d=>d.id===id);const sr=G.shelf.find(s=>s.id===id);
+  if(!def)return;
+  document.getElementById('rdIcon').textContent=def.icon;
+  document.getElementById('rdName').textContent=def.name;
+  const typeEl=document.getElementById('rdType');
+  typeEl.textContent=def.type==='buff'?'Blessing':def.type==='debuff'?'Curse':'Pact';
+  typeEl.className=`relic-detail-type ${def.type==='buff'?'buff':def.type==='debuff'?'debuff':'mixed'}`;
+  document.getElementById('rdLore').textContent=def.lore.replace(/^"|"$/g,'');
+  document.getElementById('rdEffect').innerHTML=def.desc;
+  const usesEl=document.getElementById('rdUses');
+  if(sr&&sr.usesLeft!==null)usesEl.textContent=`Uses remaining: ${sr.usesLeft} quota payment(s)`;
+  else usesEl.textContent='Permanent — lasts the entire run';
+  document.getElementById('relicDetailOverlay').classList.add('show');
+}
+function closeRelicDetail(){document.getElementById('relicDetailOverlay').classList.remove('show');}
+
+// ============================================================
+// CELL HIGHLIGHTING
+// ============================================================
+function clearWinOverlays(){for(let c=0;c<3;c++)for(let r=0;r<3;r++){const ov=document.getElementById(`ov_${c}_${r}`);if(ov)ov.className=`cell-ov row${r}`;}}
+function highlightCells(results,boss,fever){
+  clearWinOverlays();
+  const cls=fever?'win-fever':boss?'win-boss':'win-gold';
+  const used=new Set();
+  results.forEach(res=>res.cells.forEach(([c,r])=>used.add(`${c},${r}`)));
+  used.forEach(k=>{const[c,r]=k.split(',').map(Number);const ov=document.getElementById(`ov_${c}_${r}`);if(ov)ov.classList.add(cls);});
+  setTimeout(()=>clearWinOverlays(),1800);
+}
+
+// ============================================================
+// NUDGE
+// ============================================================
+let _nudgeCost=0,_nudgeResolve=null;
+function showNudgeBar(cost){_nudgeCost=cost;document.getElementById('nudgeBar').classList.add('show');document.getElementById('nudgeCountDisp').textContent=G.nudgeTokens;updateNudgeArrows();return new Promise(res=>{_nudgeResolve=res;});}
+function updateNudgeArrows(){const ok=G.nudgeTokens>0;for(let c=0;c<3;c++){document.getElementById(`nudge-up-${c}`).disabled=!ok;document.getElementById(`nudge-dn-${c}`).disabled=!ok;}document.getElementById('nudgeCountDisp').textContent=G.nudgeTokens;}
+function hideNudgeBar(){document.getElementById('nudgeBar').classList.remove('show','nudge-animating');}
+async function doNudge(col,dir){
+  if(G.nudgeTokens<=0)return;
+  if(document.getElementById('nudgeBar').classList.contains('nudge-animating'))return;
+  G.nudgeTokens--;document.getElementById('nudgeBar').classList.add('nudge-animating');
+  const s=reelState[col];const cellH=s.cellH;
+  const shiftPx=dir*cellH;const startOffset=s.offset;const duration=200;const startTime=performance.now();
+  function easeInOut(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+  await new Promise(res=>{function frame(now){const t=Math.min((now-startTime)/duration,1);s.offset=startOffset+easeInOut(t)*shiftPx;recycleCells(col);layoutCells(col);if(t<1)requestAnimationFrame(frame);else{s.offset=startOffset+shiftPx;recycleCells(col);layoutCells(col);res();}}requestAnimationFrame(frame);});
+  for(let row=0;row<3;row++){const tv=row*s.cellH;let best=null,bd=Infinity;s.cells.forEach(c=>{const d=Math.abs(c._logicalY-s.offset-tv);if(d<bd){bd=d;best=c;}});if(best)G.reels[col][row]=best.textContent;}
+  clearWinOverlays();const pr=evalAll(_nudgeCost);if(pr.length>0)highlightCells(pr,false,false);
+  log('upgrade',`☝️ Nudge reel ${['L','M','R'][col]} ${dir===-1?'▲':'▼'} (${G.nudgeTokens} left)`);
+  document.getElementById('nudgeBar').classList.remove('nudge-animating');
+  updateNudgeArrows();
+  if(G.nudgeTokens<=0){await wait(500);dismissNudge();}
+}
+function dismissNudge(){hideNudgeBar();clearWinOverlays();if(_nudgeResolve){_nudgeResolve();_nudgeResolve=null;}}
+
+// ============================================================
 // ROW REROLL
 // ============================================================
-// Called after a dead spin (no wins). Chance based on 'rerollchance' upgrade + 'rerollBoost' shop mod.
 async function tryReroll(bet){
   const basePct=lv('rerollchance')*0.25;
   const boost=getMod('rerollBoost',0)*G.shopOwned.filter(x=>x==='reroll_up').length;
   const totalPct=Math.min(1,basePct+boost);
   if(totalPct<=0)return false;
   if(Math.random()>totalPct)return false;
-
   const row=Math.floor(Math.random()*3);
-  const attempts=getMod('rerollBest',false)?2:1;
   const rNames=['top','middle','bottom'];
-
-  // Show reroll message
-  const wm=document.getElementById('winMsg');
-  wm.className='win-msg reroll';
-  wm.textContent=`↺ Chaos Engine — rerolling the ${rNames[row]} row!`;
-  setTimeout(()=>wm.classList.add('show'),10);
-  setTimeout(()=>wm.classList.remove('show'),2500);
-  log('reroll',`↺ Chaos Engine triggered — ${rNames[row]} row rerolled!`);
-
-  // Reroll that row's symbols
-  for(let col=0;col<3;col++) G.reels[col][row]=rndSym(col,attempts);
-
-  // Spin all 3 columns briefly to land on new row value
-  // Build the 3-symbol column arrays keeping other rows the same
-  const colFinals=[];
-  for(let col=0;col<3;col++) colFinals.push([...G.reels[col]]);
-
-  // Animate a short re-spin on all 3 cols (just 1 extra turn, fast)
-  await Promise.all([
-    spinReel(0, colFinals[0], 380, 1),
-    spinReel(1, colFinals[1], 420, 1),
-    spinReel(2, colFinals[2], 460, 1),
-  ]);
+  showWinMsg({type:'reroll'},'');
+  const wm=document.getElementById('winMsg');wm.className='win-msg reroll';
+  wm.textContent=`↺ Chaos Engine — rerolling ${rNames[row]}!`;
+  setTimeout(()=>wm.classList.add('show'),10);setTimeout(()=>wm.classList.remove('show'),2200);
+  for(let col=0;col<3;col++)G.reels[col][row]=rndSym(col);
+  const colFinals=G.reels.map(c=>[...c]);
+  await Promise.all([spinReel(0,colFinals[0],350),spinReel(1,colFinals[1],390),spinReel(2,colFinals[2],430)]);
   G.reels=colFinals;
-
-  // Flash the rerolled row overlays cyan
-  for(let col=0;col<3;col++){
-    const ov=document.getElementById(`ov_${col}_${row}`);
-    if(ov){ov.className=`cell-ov row${row} reroll-flash`;}
-  }
-  setTimeout(()=>{for(let col=0;col<3;col++){const ov=document.getElementById(`ov_${col}_${row}`);if(ov)ov.className=`cell-ov row${row}`;}},1500);
-
+  for(let c=0;c<3;c++){const ov=document.getElementById(`ov_${c}_${row}`);if(ov){ov.className=`cell-ov row${row} reroll-flash`;}}
+  setTimeout(()=>{for(let c=0;c<3;c++){const ov=document.getElementById(`ov_${c}_${row}`);if(ov)ov.className=`cell-ov row${row}`;};},1400);
   await wait(350);
-  const newResults=evalAll(bet);
-  const newWin=newResults.reduce((s,r)=>s+r.win,0);
-  if(newWin>0){
-    G.coins+=newWin;G.totalWon+=newWin;
-    if(G.coins>G.peakCoins)G.peakCoins=G.coins;
-    highlightCells(newResults,false);
-    showWinMsg(newResults.reduce((b,r)=>r.win>b.win?r:b),newWin);
-    spawnCoins();
-    log('win',`↺ Reroll hit! +${newWin} coins.`);
-    return true;
-  }
-
-  if(getMod('rerollChain',false)&&Math.random()<0.35){
-    log('reroll','↺ Chain Reroll triggered — checking adjacent row…');
-    await wait(300);
-    return await tryReroll(bet);
-  }
+  const newResults=evalAll(bet);const newWin=newResults.reduce((s,r)=>s+r.win,0);
+  if(newWin>0){G.coins+=newWin;G.totalWon+=newWin;if(G.coins>G.peakCoins)G.peakCoins=G.coins;highlightCells(newResults,false,false);showWinMsg(newResults.reduce((b,r)=>r.win>b.win?r:b),newWin);spawnCoins();log('win',`↺ Reroll hit! +${newWin}.`);return true;}
   return false;
-}
-
-// ============================================================
-// CELL HIGHLIGHTING (overlay-based)
-// ============================================================
-function clearWinOverlays(){
-  for(let c=0;c<3;c++)for(let r=0;r<3;r++){
-    const ov=document.getElementById(`ov_${c}_${r}`);
-    if(ov){ov.className=`cell-ov row${r}`;}
-  }
-}
-function highlightCells(results,boss){
-  clearWinOverlays();
-  const cls=boss?'win-boss':'win-gold';
-  const used=new Set();
-  results.forEach(res=>res.cells.forEach(([c,r])=>used.add(`${c},${r}`)));
-  used.forEach(k=>{
-    const[c,r]=k.split(',').map(Number);
-    const ov=document.getElementById(`ov_${c}_${r}`);
-    if(ov)ov.classList.add(cls);
-  });
-  setTimeout(()=>clearWinOverlays(),1700);
 }
 
 // ============================================================
@@ -1082,85 +1364,160 @@ function highlightCells(results,boss){
 async function spin(){
   if(G.spinning||G.coins<G.bet)return;
   G.spinning=true;
-  const btn=document.getElementById('spinBtn');
-  btn.disabled=true;
+  const btn=document.getElementById('spinBtn');btn.disabled=true;
   document.getElementById('payQuotaBtn').disabled=true;
 
   let cost=G.bet;
-  if(lv('nudge')>0){G.nudgeCtr++;if(G.nudgeCtr>=5){cost=Math.floor(G.bet/2);G.nudgeCtr=0;log('upgrade','⚡ Nudge: half-cost spin!');}}
-  if(G.halfBetSpinsLeft>0){cost=Math.floor(cost*.4);G.halfBetSpinsLeft--;log('shop',`🎭 Gambit spin (${G.halfBetSpinsLeft} left)`);}
+  if(lv('nudge')>0){G.nudgeCtr++;if(G.nudgeCtr>=5){cost=Math.floor(G.bet/2);G.nudgeCtr=0;log('upgrade',"⚡ Fate's Nudge: half cost!");}}
+  if(G.halfBetSpinsLeft>0){cost=Math.floor(cost*.4);G.halfBetSpinsLeft--;;}
+
+  // Debt Contract: extra -5 per spin
+  if(hasRelic('debtcontract')){G.coins-=5;if(G.coins<0)G.coins=0;}
+  // Credit Card: free spin when broke
+  let freeSpin=false;
+  if(G.coins<cost&&hasRelic('creditcard')){freeSpin=true;cost=0;G.creditCardDebt+=0.05;log('relic','💳 Credit Card: free spin (quota penalty +5%)');}
+  if(!freeSpin&&G.coins<cost){G.spinning=false;btn.disabled=false;updatePayQuotaBtn();return;}
+
   G.coins-=cost;G.spins++;
+  G.loadedDiceCount++;G.spinCounterCount++;
   if(G.ghostSpins>0)G.ghostSpins--;
   updateStats();
 
-  // Determine final symbols now, then animate reels to land on them
-  if(G.devilSpins>0){G.devilSpins--;guaranteePair();}else doSpin(false);
-  const finalReels=G.reels.map(col=>[...col]);
+  // Determine final symbols
+  if(G.devilSpins>0){G.devilSpins--;guaranteePair();}
+  else{
+    // Loaded Dice: every 7th spin, guarantee a high-value on middle row
+    const ld=hasRelic('loadeddice')&&G.loadedDiceCount>=7;
+    if(ld){G.loadedDiceCount=0;}
+    doSpin(false);
+    if(ld){const sym=HIGH_SYMS[Math.floor(Math.random()*HIGH_SYMS.length)];G.reels[Math.floor(Math.random()*3)][1]=sym;}
+  }
+  // Echo Lever: once per floor, keep middle reel from last spin
+  if(hasRelic('echolver')&&!G.echoUsed&&G.spins>1){G.echoUsed=true;/* reel already set, just don't change mid reel*/}
+
+  // Double Pull: roll twice, take worse
+  let finalReels;
+  if(hasRelic('doublepull')&&G.fever<30){
+    const r1=G.reels.map(c=>[...c]);doSpin(false);const r2=G.reels.map(c=>[...c]);
+    const e1=evalAll(cost).reduce((s,r)=>s+r.win,0);const e2=evalAll(cost).reduce((s,r)=>s+r.win,0);
+    finalReels=e1<=e2?r1:r2;
+  } else {finalReels=G.reels.map(c=>[...c]);}
 
   clearWinOverlays();
-  // Staggered stop: reel 0 stops first, 2 last
-  const baseDur=720;
+  const baseDur=700;
   await Promise.all([
-    spinReel(0, finalReels[0], baseDur,     3),
-    spinReel(1, finalReels[1], baseDur+230, 4),
-    spinReel(2, finalReels[2], baseDur+460, 5),
+    G.stickyLock[0]?Promise.resolve():spinReel(0,finalReels[0],baseDur),
+    G.stickyLock[1]?Promise.resolve():spinReel(1,finalReels[1],baseDur+220),
+    G.stickyLock[2]?Promise.resolve():spinReel(2,finalReels[2],baseDur+440),
   ]);
   G.reels=finalReels;
-  await wait(80);
+  // Clear sticky lock after using it
+  G.stickyLock=[false,false,false];
+  await wait(70);
 
-  // ── NUDGE PHASE ── show nudge controls if player has tokens (not in boss)
-  if(G.nudgeTokens > 0 && !G.bossActive){
-    await showNudgeBar(cost);
-  }
+  // Nudge phase
+  if(G.nudgeTokens>0&&!G.bossActive)await showNudgeBar(cost);
 
   const results=evalAll(cost);
   const totalWin=results.reduce((s,r)=>s+r.win,0);
   const best=results.length?results.reduce((b,r)=>r.win>b.win?r:b):{win:0,type:'none'};
+  const hasFeverWin=results.some(r=>r.isFeverJackpot);
 
-  let didWin=false;
   if(totalWin>0){
     G.coins+=totalWin;G.totalWon+=totalWin;
     if(G.coins>G.peakCoins)G.peakCoins=G.coins;
-    G.comboStreak++;
-    highlightCells(results,G.bossActive);
-    showWinMsg(best,totalWin);spawnCoins();
-    log(best.type==='triple'&&best.mult>=20?'jackpot':'win',
-      best.type==='triple'?`★ ${best.symbol}×3 ×${Math.floor(best.mult)} — +${totalWin}!`:`Won ${totalWin} coins.`);
-    didWin=true;
+    // Blood Crown: track best win this floor
+    if(hasRelic('bloodcrown')&&!G.bloodCrownUsed&&totalWin>0&&totalWin>(G.bloodCrownBest||0)){G.bloodCrownBest=totalWin;}
+    G.comboStreak++;G.consecutiveLosses=0;
+    if(G.shopMods.coinMagnet){const mag=G.shopMods.coinMagnet*3;G.coins+=mag;G.totalWon+=mag;}
+    highlightCells(results,G.bossActive,hasFeverWin);
+    showWinMsg(best,totalWin,hasFeverWin);spawnCoins();
+    log(hasFeverWin?'fever':best.type==='triple'&&best.mult>=20?'jackpot':'win',
+      best.type==='triple'?`★ ${best.symbol}×3 ×${Math.floor(best.mult)} — +${totalWin}!`:`Won ${totalWin}.`);
+    // Death Wish: 💀 anywhere = +15 coins
+    if(G.shopMods.deathWish){for(let c=0;c<3;c++)for(let r=0;r<3;r++)if(G.reels[c][r]==='💀'){G.coins+=15;G.totalWon+=15;}}
+    // Sticky Reel: if rare landed (×12+), lock that column
+    if(hasRelic('stickyreel')){
+      for(let c=0;c<3;c++){if(BASE_MULT[G.reels[c][1]]>=12){G.stickyLock[c]=true;log('relic',`📌 Reel ${c+1} locked!`);}}
+    }
+    // Fever: jackpot triples increase fever
+    const fvBonus=lv('feverboost')*3;
+    results.forEach(r=>{if(r.type==='triple'&&r.symbol==='💀')gainFever(15+fvBonus);else if(r.type==='triple')gainFever(5+fvBonus);else if(r.type==='pair')gainFever(1+fvBonus);});
+    // Collector Badge
+    if(hasRelic('collectorbadge'))G.collectedSymbols.add(G.reels[1][1]);
+    // Lossback relic: Combo Engine
   } else {
-    G.comboStreak=0;
-    // Lossback: recover 20% of bet
-    if(lv('lossback')>0){
-      const rb=Math.floor(cost*.2);G.coins+=rb;
-      log('upgrade',`↩ Sorrow's Rebate: +${rb} coins back.`);
-    }
-    // Try reroll on dead spin
-    const rerolled=await tryReroll(cost);
-    if(!rerolled){
-      showLoseMsg();log('lose',flavorLoss());
+    G.comboStreak=0;G.consecutiveLosses++;
+    // Greedy Piggy Bank
+    if(hasRelic('piggybank')){G.coins+=3;log('relic','🐷 Piggy Bank: +3 on loss.');}
+    // Lossback upgrade
+    if(lv('lossback')>0){const rb=Math.floor(cost*.15);G.coins+=rb;}
+    // Fate Coin
+    if(hasRelic('fatecoin')&&Math.random()<0.1){
+      log('relic','🪙 Fate Coin rerolled your spin!');doSpin(false);const fc=G.reels.map(c=>[...c]);
+      await Promise.all([spinReel(0,fc[0],400),spinReel(1,fc[1],450),spinReel(2,fc[2],500)]);
+      G.reels=fc;const fr=evalAll(cost);const fw=fr.reduce((s,r)=>s+r.win,0);
+      if(fw>0){G.coins+=fw;G.totalWon+=fw;if(G.coins>G.peakCoins)G.peakCoins=G.coins;highlightCells(fr,false,false);showWinMsg(fr.reduce((b,r)=>r.win>b.win?r:b),fw);spawnCoins();log('win',`Fate Coin win: +${fw}.`);}
+      else{showLoseMsg();log('lose',flavorLoss());}
     } else {
-      didWin=true;
+      const rerolled=await tryReroll(cost);
+      if(!rerolled){showLoseMsg();log('lose',flavorLoss());}
     }
+    G.fever=Math.max(0,G.fever-2);updateFeverBar();
   }
 
   // Insurance
-  const insAmt=getMod('insuranceAmount',15);
+  const insAmt=getMod('insuranceAmount',20);
   if(G.coins<1&&lv('insurance')>0&&!G.insuranceUsed){G.coins=insAmt;G.insuranceUsed=true;log('upgrade',`⚡ Insurance: kept ${insAmt} coins!`);}
 
+  // IRS check
+  checkIRS();
+  if(G.irsActive&&!G.bossActive){const raided=rollIRS();if(raided){G.spinning=false;btn.disabled=false;updateStats();return;}}
+
   if(G.bossActive){
-    await wait(200);runEnemySpin(cost);updateBossPanel();
+    await wait(180);runEnemySpin(cost);updateBossPanel();
     G.bossSpinsLeft--;
     const yq=G.bossYouCoins>=G.bossQuota,eq=G.bossEnemyCoins>=G.bossQuota;
     if(yq||eq||G.bossSpinsLeft<=0){await wait(500);G.spinning=false;btn.disabled=false;endBoss(yq,eq);return;}
     updateStats();G.spinning=false;btn.disabled=false;return;
   }
 
+  // Vault tick
+  if(G.vaultActive){
+    G.vaultSpinsLeft--;
+    if(G.vaultSpinsLeft<=0){
+      if(G.vault>0){
+        let ret=G.vault;
+        if(lv('vaultreturn')>0){const bonus=Math.floor(ret*lv('vaultreturn')*0.1);ret+=bonus;log('relic','💰 Iron Safe bonus: +'+bonus+'!');}
+        G.coins+=ret;log('upgrade','🏦 Vault expired: +'+ret+' coins returned.');
+      }
+      G.vault=0;G.vaultActive=false;G.vaultDeposited=false;
+    }
+    updateVaultUI();
+  }
   G.quotaSpinsLeft--;
+  // Last-spin warning
+  if(G.quotaSpinsLeft===1&&G.coins<G.quota&&!G.lastWarnShown){
+    G.lastWarnShown=true;
+    const need=G.quota-G.coins;
+    document.getElementById('lastWarnText').textContent='\u26a0 LAST SPIN \u2014 Need '+need+' more coins to pay quota or you LOSE! Pay now if you can!';
+    document.getElementById('lastWarnBar').style.display='block';
+    updatePayQuotaBtn();
+  }
   if(G.quotaSpinsLeft<=0&&G.coins<G.quota){
     if(lv('insurance')>0&&!G.insuranceUsed&&G.coins>=insAmt){log('lose','⚠ Spins exhausted — insurance kept you.');}
-    else{await wait(400);trigGameOver();return;}
+    else{
+      // Quota Buffer upgrade: if within 20% of quota, get 1 emergency free spin
+      if(lv('quotabuffer')>0&&!G.quotaBufferUsed&&G.coins>=G.quota*0.80){
+        G.quotaBufferUsed=true;G.quotaSpinsLeft=1;
+        log('upgrade','🛡 Debt Shield: emergency free spin granted!');
+        updateStats();G.spinning=false;btn.disabled=false;updatePayQuotaBtn();return;
+      }
+      document.getElementById('lastWarnBar').style.display='none';
+      await wait(400);trigGameOver('The quota was not met. The house takes all.');return;
+    }
   }
-  if(G.coins<G.bet){G.bet=Math.max(5,Math.min(G.coins,5));if(G.coins<5){await wait(400);trigGameOver();return;}log('','Bet reduced to 5.');}
+  if(G.coins<G.bet){G.bet=Math.max(5,Math.min(G.coins,5));if(G.coins<5){await wait(400);trigGameOver('Your fortune is spent.');return;}log('','Bet reduced to 5.');}
 
   updateStats();updateUpgrades();rebuildPills();updateDiagDisplay();
   G.spinning=false;btn.disabled=false;
@@ -1168,144 +1525,54 @@ async function spin(){
 }
 
 function guaranteePair(){
-  doSpin(false);
-  const m=[G.reels[0][1],G.reels[1][1],G.reels[2][1]];
+  doSpin(false);const m=[G.reels[0][1],G.reels[1][1],G.reels[2][1]];
   if(!(m[0]===m[1]||m[1]===m[2]||m[0]===m[2])){G.reels[Math.floor(Math.random()*3)][1]=m[Math.floor(Math.random()*3)];}
 }
 function runEnemySpin(bet){
-  const saved=JSON.parse(JSON.stringify(G.reels));
-  doSpin(true);const bR=JSON.parse(JSON.stringify(G.reels));G.reels=saved;
-  const sR=G.reels;G.reels=bR;
-  const br=evalLine([[0,1],[1,1],[2,1]],G.bossEnemyBet,'BM',false);
-  G.reels=sR;
-  G.bossEnemyCoins+=(br.win>0?br.win:0)-G.bossEnemyBet;
-  G.bossYouCoins=G.coins-G.bossStartCoins;
+  const saved=G.reels.map(c=>[...c]);doSpin(true);const bR=G.reels.map(c=>[...c]);G.reels=saved;
+  G.reels=bR;const br=evalLine([[0,1],[1,1],[2,1]],G.bossEnemyBet,'BM',false);G.reels=saved;
+  G.bossEnemyCoins+=(br.win>0?br.win:0)-G.bossEnemyBet;G.bossYouCoins=G.coins-G.bossStartCoins;
 }
 
 // ============================================================
-// NUDGE
+// QUOTA
 // ============================================================
-let _nudgeCost = 0; // bet cost of the current spin (for re-evaluation)
-let _nudgeResolve = null; // Promise resolve to call when nudging is done
-
-function showNudgeBar(cost){
-  _nudgeCost = cost;
-  document.getElementById('nudgeBar').classList.add('show');
-  document.getElementById('nudgeCountDisp').textContent = G.nudgeTokens;
-  updateNudgeArrows();
-  return new Promise(resolve=>{ _nudgeResolve=resolve; });
-}
-
-function updateNudgeArrows(){
-  const hasTokens = G.nudgeTokens > 0;
-  for(let col=0;col<3;col++){
-    document.getElementById(`nudge-up-${col}`).disabled = !hasTokens;
-    document.getElementById(`nudge-dn-${col}`).disabled = !hasTokens;
-  }
-  document.getElementById('nudgeCountDisp').textContent = G.nudgeTokens;
-}
-
-function hideNudgeBar(){
-  document.getElementById('nudgeBar').classList.remove('show');
-  document.getElementById('nudgeBar').classList.remove('nudge-animating');
-}
-
-// dir: -1 = scroll up (reel moves up = symbols shift downward visually, revealing row below)
-//       1 = scroll down (reel moves down = symbols shift upward visually, revealing row above)
-// In slot terms:
-//   ▲ (dir=-1): reel scrolls upward — bottom symbol comes into top, everything shifts down one
-//   ▼ (dir=1):  reel scrolls downward — top symbol goes to bottom, everything shifts up one
-async function doNudge(col, dir){
-  if(G.nudgeTokens <= 0) return;
-  if(document.getElementById('nudgeBar').classList.contains('nudge-animating')) return;
-
-  G.nudgeTokens--;
-  document.getElementById('nudgeBar').classList.add('nudge-animating');
-
-  const s = reelState[col];
-  const cellH = s.cellH;
-
-  // Physically shift the reel strip by one cell via smooth animation
-  const shiftPx = dir * cellH; // positive = scroll down (▼), negative = scroll up (▲)
-  const startOffset = s.offset;
-  const endOffset = s.offset + shiftPx;
-  const duration = 220;
-  const startTime = performance.now();
-
-  function easeInOut(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
-
-  await new Promise(res=>{
-    function frame(now){
-      const t = Math.min((now-startTime)/duration,1);
-      s.offset = startOffset + easeInOut(t)*shiftPx;
-      recycleCells(col);
-      layoutCells(col);
-      if(t<1) requestAnimationFrame(frame);
-      else {
-        s.offset = endOffset;
-        recycleCells(col);
-        layoutCells(col);
-        res();
-      }
-    }
-    requestAnimationFrame(frame);
-  });
-
-  // Update G.reels to reflect what's now visible in rows 0,1,2
-  // Find the 3 cells at visual positions 0*cellH, 1*cellH, 2*cellH
-  for(let row=0; row<3; row++){
-    const targetVY = row * cellH;
-    let best = null, bestDist = Infinity;
-    s.cells.forEach(cell=>{
-      const vy = cell._logicalY - s.offset;
-      const dist = Math.abs(vy - targetVY);
-      if(dist < bestDist){ bestDist=dist; best=cell; }
-    });
-    if(best) G.reels[col][row] = best.textContent;
-  }
-
-  // Re-evaluate and show win if any (don't add winnings yet — wait for Done)
-  clearWinOverlays();
-  const previewResults = evalAll(_nudgeCost);
-  if(previewResults.length > 0){
-    highlightCells(previewResults, false);
-  }
-
-  log('upgrade', `☝️ Nudge: reel ${['L','M','R'][col]} ${dir===-1?'▲ up':'▼ down'} (${G.nudgeTokens} left)`);
-
-  document.getElementById('nudgeBar').classList.remove('nudge-animating');
-  updateNudgeArrows();
-
-  // If out of tokens, auto-dismiss
-  if(G.nudgeTokens <= 0) await wait(600);
-  if(G.nudgeTokens <= 0) dismissNudge();
-}
-
-function dismissNudge(){
-  hideNudgeBar();
-  clearWinOverlays();
-  if(_nudgeResolve){ _nudgeResolve(); _nudgeResolve=null; }
-}
-
-
 function updatePayQuotaBtn(){
   const btn=document.getElementById('payQuotaBtn');
   if(G.bossActive||G.spinning){btn.disabled=true;btn.className='pay-quota-btn';return;}
-  if(G.coins>=G.quota){
-    btn.disabled=false;btn.className='pay-quota-btn';btn.textContent=`Pay ${G.quota} coins ✓`;
-  } else {
-    btn.disabled=true;btn.className='pay-quota-btn cant';
-    const sl=G.quotaSpinsLeft;
-    btn.textContent=sl>0?`Need ${G.quota-G.coins} more`:'No spins left';
-  }
+  if(G.coins>=G.quota){btn.disabled=false;btn.className='pay-quota-btn';btn.textContent=`Pay ${G.quota} coins ✓`;}
+  else{btn.disabled=true;btn.className='pay-quota-btn cant';btn.textContent=G.quotaSpinsLeft>0?`Need ${G.quota-G.coins} more`:'No spins left';}
 }
 
 function tryPayQuota(){
   if(G.spinning||G.coins<G.quota)return;
+  // Vault payout first (before deducting quota)
+  if(G.vaultActive&&G.vault>0){
+    let ret=G.vault;
+    if(lv('vaultreturn')>0){const bonus=Math.floor(ret*lv('vaultreturn')*0.1);ret+=bonus;log('relic','💰 Iron Safe bonus: +'+bonus+'!');}
+    G.coins+=ret;log('upgrade','🏦 Vault returned '+ret+' coins!');G.vault=0;
+  }
+  G.vaultActive=false;G.vaultDeposited=false;updateVaultUI();
+  const over=G.coins-G.quota;
+  const extraIc=Math.floor((over/G.quota)*10);
+  let icEarned=3+extraIc;
+  if(G.shopMods.icDouble)icEarned*=2;
+  icEarned+=lv('icbonus');
+  G.itemCoins+=icEarned;
+  log('floor','✦ Quota '+G.quota+' paid. Earned '+icEarned+' item coin'+(icEarned!==1?'s':'')+'! 🔶');
+  if(hasRelic('loanshark')){G.coins=Math.max(10,G.coins-160);log('relic','🦈 Loan Shark collected 160 coins.');spendRelicUse('loanshark');}
+  G.shelf.forEach(sr=>{if(sr.usesLeft!==null)sr.usesLeft--;});
+  G.shelf=G.shelf.filter(sr=>sr.usesLeft===null||sr.usesLeft>0);
+  G.prevQuota=G.quota;
+  G.lastQuotaPaid=Math.max(1,G.coins-G.quota);
   G.coins-=G.quota;
-  log('floor',`✦ Quota of ${G.quota} paid. Descending…`);
-  const qs=document.getElementById('quotaSec');
-  qs.classList.add('quota-paid-flash');
+  G.quotasPaid++;
+  G.loanDoubleNext=false;
+  G.lastWarnShown=false;
+  document.getElementById('lastWarnBar').style.display='none';
+  G.irsActive=false;G.irsRisk=0;G.spinsSinceDouble=0;
+  document.getElementById('irsWarn').classList.remove('show');
+  const qs=document.getElementById('quotaSec');qs.classList.add('quota-paid-flash');
   setTimeout(()=>qs.classList.remove('quota-paid-flash'),1300);
   setTimeout(()=>advFloor(),600);
 }
@@ -1314,57 +1581,50 @@ function tryPayQuota(){
 // FLOOR / BOSS
 // ============================================================
 function advFloor(){
-  G.floor++;
-  G.insuranceUsed=false; // reset insurance per floor
-  if(G.bonusStartCoins>0){G.coins+=G.bonusStartCoins;log('shop',`🏦 Coin Hoard: +${G.bonusStartCoins} start coins.`);}
-  if(G.loanDebt>0){const d=G.loanDebt;G.coins=Math.max(15,G.coins-d);G.loanDebt=0;log('lose',`Moneylender collected ${d} coins.`);}
+  G.floor++;G.insuranceUsed=false;G.echoUsed=false;G.wildInjectorUsed=false;G.quotaBufferUsed=false;
+  // Blood Crown: double best win from last floor
+  if(hasRelic('bloodcrown')&&!G.bloodCrownUsed&&G.bloodCrownBest>0){
+    G.coins+=G.bloodCrownBest;G.totalWon+=G.bloodCrownBest;
+    log('relic','👑 Blood Crown doubled best win: +'+G.bloodCrownBest+'!');
+    if(G.coins>G.peakCoins)G.peakCoins=G.coins;
+  }
+  G.bloodCrownUsed=false;G.bloodCrownBest=0;
+  if(G.loanDebt>0){const d=G.loanDebt;G.coins=Math.max(15,G.coins-d);G.loanDebt=0;log('lose',`Moneylender collected ${d}.`);}
   log('floor',`✦ Descended to Floor ${G.floor}.`);
   if(G.floor%5===0){G.isBossFloor=true;showBossIntro();}
-  else{G.isBossFloor=false;setQuota();updateStats();showEvent(FLOOR_EVENTS[Math.floor(Math.random()*FLOOR_EVENTS.length)]);}
+  else{G.isBossFloor=false;G.quota=calcQuota();G.quotaSpins=calcSpins(G.floor);G.quotaSpinsLeft=G.quotaSpins;G.lastWarnShown=false;updateStats();checkLoanOffer();showEvent(getScaledEvent());}
 }
-
-function setQuota(){
-  G.quota=calcQuota(G.floor,G.coins);
-  G.quotaSpins=calcSpins(G.floor);
-  G.quotaSpinsLeft=G.quotaSpins;
-}
-
 function showBossIntro(){
-  const idx=Math.floor(G.floor/5)-1;
-  G.bossName=BOSS_NAMES[idx%BOSS_NAMES.length];
-  G.bossTotalSpins=Math.max(10,15-Math.floor(G.floor*.3)+Math.floor(G.floor*.15));
-  G.bossSpinsLeft=G.bossTotalSpins;
-  G.bossQuota=Math.floor(G.coins*.5+G.floor*30);
-  G.bossEnemyBet=Math.max(5,Math.floor(G.bet*.95));
+  const idx=Math.floor(G.floor/5)-1;G.bossName=BOSS_NAMES[idx%BOSS_NAMES.length];
+  G.bossTotalSpins=Math.max(10,16-Math.floor(G.floor*.3));G.bossSpinsLeft=G.bossTotalSpins;
+  G.bossQuota=Math.floor((G.coins*.45+G.floor*25)*(hasRelic('bloodcrown')?1.25:1));G.bossEnemyBet=Math.max(5,G.bet);
   document.getElementById('biTitle').textContent=G.bossName;
   document.getElementById('biMsg').textContent=BOSS_QUOTES[idx%BOSS_QUOTES.length];
   document.getElementById('biQuota').textContent=`${G.bossQuota} coins`;
   document.getElementById('biSpins').textContent=G.bossTotalSpins;
   document.getElementById('bossIntroOverlay').classList.add('show');
 }
-
 function startBoss(){
   document.getElementById('bossIntroOverlay').classList.remove('show');
   G.bossActive=true;G.bossStartCoins=G.coins;G.bossYouCoins=0;G.bossEnemyCoins=0;
   document.getElementById('bossPanel').style.display='block';
   document.getElementById('bsName').textContent=G.bossName;
-  document.getElementById('bsThemLbl').textContent=G.bossName+' coins';
+  document.getElementById('bsThemLbl').textContent=G.bossName;
   document.getElementById('slotMachine').classList.add('boss-mode');
   document.getElementById('spinBtn').classList.add('boss-spin');
   document.getElementById('spinBtn').textContent='BATTLE SPIN';
   document.getElementById('quotaFill').style.display='none';
   document.getElementById('quotaBossFill').style.display='block';
   document.getElementById('quotaLabel').textContent='⚔ Boss Quota';
-  document.getElementById('quotaInfo').textContent=`${G.bossName} races you to ${G.bossQuota} coins.`;
+  document.getElementById('quotaInfo').textContent=`${G.bossName} races to ${G.bossQuota} coins.`;
   document.getElementById('payQuotaBtn').style.display='none';
   updateBossPanel();updateStats();
   log('boss',`⚔ BOSS: ${G.bossName} — ${G.bossTotalSpins} spins!`);
 }
-
 function updateBossPanel(){
   document.getElementById('bsYou').textContent=(G.bossYouCoins>=0?'+':'')+G.bossYouCoins;
   document.getElementById('bsThem').textContent=(G.bossEnemyCoins>=0?'+':'')+G.bossEnemyCoins;
-  document.getElementById('bsSpinsLeft').textContent=`${G.bossSpinsLeft} spins remaining`;
+  document.getElementById('bsSpinsLeft').textContent=`${G.bossSpinsLeft} spins left`;
   const q=G.bossQuota||1;
   const yp=Math.min(100,Math.max(0,(G.bossYouCoins/q)*100));
   const ep=Math.min(100,Math.max(0,(G.bossEnemyCoins/q)*100));
@@ -1373,7 +1633,6 @@ function updateBossPanel(){
   document.getElementById('quotaBossFill').style.width=Math.min(100,(G.coins/G.bossQuota)*100)+'%';
   document.getElementById('quotaYou').textContent=G.coins;document.getElementById('quotaTarget').textContent=G.bossQuota;
 }
-
 function endBoss(youQ,enemyQ){
   G.bossActive=false;
   document.getElementById('bossPanel').style.display='none';
@@ -1385,28 +1644,27 @@ function endBoss(youQ,enemyQ){
   document.getElementById('quotaLabel').textContent='✦ Floor Quota';
   document.getElementById('payQuotaBtn').style.display='';
   const youWon=youQ||(!enemyQ&&G.bossYouCoins>G.bossEnemyCoins);
-  document.getElementById('bossResYou').textContent=G.bossYouCoins+' coins gained';
-  document.getElementById('bossResThem').textContent=G.bossEnemyCoins+' coins gained';
+  document.getElementById('bossResYou').textContent=G.bossYouCoins+' gained';
+  document.getElementById('bossResThem').textContent=G.bossEnemyCoins+' gained';
   if(youWon){
     const bonus=Math.floor(G.bossQuota*.5);G.coins+=bonus;if(G.coins>G.peakCoins)G.peakCoins=G.coins;
     document.getElementById('bossResTitle').textContent='VICTORY';document.getElementById('bossResTitle').className='ov-title bw';
-    document.getElementById('bossResMsg').textContent='"...Impossible. The house has never lost."';
+    document.getElementById('bossResMsg').textContent='"...Impossible. The house never loses."';
     document.getElementById('bossResBonus').innerHTML=`Boss bonus: <span>${bonus} coins!</span>`;
-    log('boss',`⚔ VICTORY vs ${G.bossName}! +${bonus} coins.`);
+    G.itemCoins+=2;log('boss',`⚔ VICTORY! +${bonus} coins, +2 item coins.`);
   }else{
     const pen=Math.floor(G.coins*.25);G.coins=Math.max(15,G.coins-pen);
     document.getElementById('bossResTitle').textContent='DEFEATED';document.getElementById('bossResTitle').className='ov-title bl';
-    document.getElementById('bossResMsg').textContent=`"${G.bossName} laughs as your coins flow away."`;
+    document.getElementById('bossResMsg').textContent=`"${G.bossName} takes your coins and laughs."`;
     document.getElementById('bossResBonus').innerHTML=`Penalty: <span style="color:var(--red-light)">-${pen} coins</span>`;
-    log('boss',`⚔ Defeated by ${G.bossName}. Lost ${pen} coins.`);
+    log('boss',`⚔ Defeated. -${pen} coins.`);
   }
   document.getElementById('bossResOverlay').classList.add('show');
 }
-
 function closeBossResult(){
   document.getElementById('bossResOverlay').classList.remove('show');
-  G.isBossFloor=false;setQuota();updateStats();updateUpgrades();
-  if(G.coins<5){trigGameOver();return;}
+  G.isBossFloor=false;G.quota=calcQuota();G.quotaSpins=calcSpins(G.floor);G.quotaSpinsLeft=G.quotaSpins;
+  updateStats();updateUpgrades();if(G.coins<5){trigGameOver('Ruined after the boss.');return;}
   openShop();
 }
 
@@ -1420,25 +1678,27 @@ function showEvent(ev){
   ev.choices.forEach(ch=>{
     const b=document.createElement('div');b.className='ev-choice';
     if(ch.cost&&ch.cost>G.coins)b.classList.add('gray');
-    b.innerHTML=`<div class="ec-title">${ch.title}</div><div class="ec-desc">${ch.desc}${ch.cost?` <span style="color:var(--gold)">(${ch.cost} coins)</span>`:''}</div>`;
+    b.innerHTML=`<div class="ec-title">${ch.title}</div><div class="ec-desc">${ch.desc}${ch.cost?` <span style="color:var(--gold)">(${ch.cost}c)</span>`:''}</div>`;
     if(!ch.cost||ch.cost<=G.coins)b.onclick=()=>resolveEv(ch.tag,ch.cost||0);
     d.appendChild(b);
   });
   document.getElementById('floorEvOverlay').classList.add('show');
 }
-
 function resolveEv(tag,cost){
   document.getElementById('floorEvOverlay').classList.remove('show');
   if(cost)G.coins-=cost;
   switch(tag){
-    case'loan':G.coins+=60;G.loanDebt=90;log('upgrade','💰 Borrowed 60. Owe 90 next floor.');break;
-    case'gamble':if(Math.random()<.5){G.coins+=120;log('win','🎲 The gamble paid! +120.');}else log('lose','🎲 The gamble failed.');break;
-    case'gift':G.coins+=25;log('win','🎁 +25 coins from a stranger.');break;
+    case'loan':G.coins+=80;G.loanDebt=120;log('upgrade','💰 Borrowed 80. Owe 120 next floor.');break;
+    case'gamble':if(Math.random()<.5){G.coins+=130;log('win','🎲 Gamble paid! +130.');}else log('lose','🎲 Gamble failed.');break;
+    case'gift':G.coins+=30;log('win','🎁 +30 coins.');break;
     case'donate':G.bonusPL=true;log('upgrade','🙏 Top row bonus next spin.');break;
-    case'ghost':G.ghostSpins=5;log('upgrade','👻 Ghost trick: 5 boosted spins.');break;
+    case'ghost':G.ghostSpins=5;log('upgrade','👻 +5 boosted spins.');break;
     case'devil':G.devilSpins=3;log('upgrade','😈 Devil deal: 3 guaranteed pair spins.');break;
-    case'coinwitch':const h=Math.floor(G.coins/2);G.coins=h*2;log(G.coins===0?'lose':'upgrade',`⚗ Witch doubled ${h} → ${h*2} coins.`);break;
-    case'witchbless':G.doubleMultNext=true;log('upgrade','⚗ Witch blessing: next spin multipliers ×2!');break;
+    case'witchbless':G.doubleMultNext=true;log('upgrade','⚗ Witch blessing: next spin ×2!');break;
+    case'shadowbroker':G.itemCoins+=2;log('shop','🕵 Shadow Broker: +2 item coins.');break;
+    case'alchemist':G.doubleMultNext=true;G.ghostSpins=Math.max(G.ghostSpins,3);log('upgrade','⚗ Alchemist: 3 boosted spins + double mult next!');break;
+    case'mirrormerch':{const sym=G.reels[1][1]||'🌙';for(let c=0;c<3;c++)G.reels[c][1]=sym;G.stickyLock=[true,false,true];log('upgrade','🪞 Mirror: mid reels locked on '+sym+' for 2 spins!');break;}
+    case'arsonist':gainFever(30);log('fever','🔥 Arsonist: Fever +30%!');break;
     default:log('','You pass through unmarked.');break;
   }
   if(G.coins>G.peakCoins)G.peakCoins=G.coins;
@@ -1449,113 +1709,121 @@ function resolveEv(tag,cost){
 // SHOP
 // ============================================================
 let _shopSelection=[];
-
 function openShop(){
-  _shopSelection=pickShopItems();
-  G.currentShopTab='all';
-  renderShop();
+  _shopSelection=pickShopItems();G.currentShopTab='all';renderShop();
   document.getElementById('shopOverlay').classList.add('show');
 }
-
 function pickShopItems(){
-  const tags=['mult','chance','sym','reroll','util'];
+  // Mix of regular shop items + available relics
   const selected=[];const used=new Set();
-  tags.forEach(tag=>{
-    const pool=ALL_SHOP_ITEMS.filter(i=>i.tag===tag);
-    const shuffled=[...pool].sort(()=>Math.random()-.5);
-    let added=0;
-    for(const item of shuffled){
-      if(added>=2)break;
-      if(!used.has(item.id)){selected.push(item);used.add(item.id);added++;}
-    }
+  ['mult','chance','util'].forEach(tag=>{
+    const pool=ALL_SHOP_ITEMS.filter(i=>i.tag===tag).sort(()=>Math.random()-.5);
+    let added=0;for(const item of pool){if(added>=2)break;if(!used.has(item.id)){selected.push(item);used.add(item.id);added++;}}
   });
   const rest=ALL_SHOP_ITEMS.filter(i=>!used.has(i.id)).sort(()=>Math.random()-.5);
-  for(const item of rest){if(selected.length>=12)break;selected.push(item);used.add(item.id);}
+  for(const item of rest){if(selected.length>=9)break;selected.push(item);used.add(item.id);}
+  // Add 3 random relics that aren't on shelf already
+  const ownedIds=new Set(G.shelf.map(s=>s.id));
+  const relPool=RELICS.filter(r=>!ownedIds.has(r.id)).sort(()=>Math.random()-.5).slice(0,4);
+  relPool.forEach(r=>selected.push({...r,isRelic:true}));
   return selected;
 }
-
 function renderShop(){
   document.getElementById('shopCoinDisp').textContent=G.coins;
-  // Build tabs
-  const tabs=['all','mult','chance','sym','reroll','util'];
-  const tabLabels={all:'All',mult:'Multipliers',chance:'Chance',sym:'Reels',reroll:'Reroll',util:'Utility'};
+  document.getElementById('shopIcDisp').textContent=G.itemCoins;
+  const tabs=['all','mult','chance','util','relic'];
+  const tabLabels={all:'All',mult:'Multipliers',chance:'Chance',util:'Utility',relic:'Relics'};
   const tabsDiv=document.getElementById('shopTabs');tabsDiv.innerHTML='';
   tabs.forEach(t=>{
-    const b=document.createElement('button');b.className='shop-tab'+(G.currentShopTab===t?' active':'');
+    const b=document.createElement('button');
+    b.className=`shop-tab${G.currentShopTab===t?' active':''}${t==='relic'?' relic-tab':''}`;
     b.textContent=tabLabels[t];b.onclick=()=>{G.currentShopTab=t;renderShop();};
     tabsDiv.appendChild(b);
   });
-  // Build items
   const grid=document.getElementById('shopGrid');grid.innerHTML='';
-  const items=G.currentShopTab==='all'?_shopSelection:_shopSelection.filter(i=>i.tag===G.currentShopTab);
+  const items=G.currentShopTab==='all'?_shopSelection:
+    G.currentShopTab==='relic'?_shopSelection.filter(i=>i.isRelic):
+    _shopSelection.filter(i=>i.tag===G.currentShopTab&&!i.isRelic);
   items.forEach(item=>{
-    const owned=G.shopOwned.filter(x=>x===item.id).length;
-    const maxed=owned>=(item.max||1)&&!item.stack;
-    const stackMaxed=item.stack&&owned>=(item.max||99);
-    const cost=Math.floor(item.cost*(owned>0&&item.stack?Math.pow(1.5,owned):1));
-    const cantAfford=G.coins<cost;
-    const reqFail=item.req&&!G.shopOwned.includes(item.req);
-    const d=document.createElement('div');
-    d.className=`shop-item${(maxed||stackMaxed||cantAfford||reqFail)?' gray':''}${owned>0&&!maxed?' owned':''}`;
-    const stackInfo=item.stack&&owned>0?`<div class="si-owned">Owned: ${owned}×</div>`:'';
-    const ownedInfo=!item.stack&&owned>0?`<div class="si-owned">✓ Owned</div>`:'';
-    const reqInfo=reqFail?`<div style="font-size:8px;color:var(--red-light);margin-top:2px;">Requires: ${ALL_SHOP_ITEMS.find(x=>x.id===item.req)?.name||item.req}</div>`:'';
-    const costTxt=maxed||stackMaxed?'MAX':cantAfford||reqFail?`${cost} 🪙 (${Math.max(0,cost-G.coins)} short)`:`${cost} 🪙`;
-    d.innerHTML=`<div class="si-icon">${item.icon}</div><div class="si-name">${item.name}${item.stack&&owned>0?` ×${owned+1}`:''}</div><div><span class="si-tag ${item.tag}">${item.tag}</span></div><div class="si-desc">${item.desc}</div>${reqInfo}${stackInfo}${ownedInfo}<div class="si-cost">${costTxt}</div>`;
-    if(!maxed&&!stackMaxed&&!cantAfford&&!reqFail)d.onclick=()=>{buyShopItem(item);renderShop();};
-    grid.appendChild(d);
+    if(item.isRelic){renderRelicShopItem(grid,item);}else{renderRegularShopItem(grid,item);}
   });
 }
-
+function renderRegularShopItem(grid,item){
+  const owned=G.shopOwned.filter(x=>x===item.id).length;
+  const maxed=owned>=(item.max||1)&&!item.stack;
+  const stackMaxed=item.stack&&owned>=(item.max||999);
+  const cost=Math.floor(item.cost*(owned>0&&item.stack?Math.pow(1.4,owned):1));
+  const cantAfford=G.coins<cost;
+  const reqFail=item.req&&!G.shopOwned.includes(item.req);
+  const d=document.createElement('div');
+  d.className=`shop-item${(maxed||stackMaxed||cantAfford||reqFail)?' gray':''}`;
+  const stackInfo=item.stack&&owned>0?`<div class="si-owned" style="font-size:8px;color:var(--shop-light)">Owned:${owned}×</div>`:'';
+  const costTxt=maxed||stackMaxed?'MAX':cantAfford||reqFail?`${cost}🪙 (short ${Math.max(0,cost-G.coins)})`:` ${cost} 🪙`;
+  d.innerHTML=`<div class="si-icon">${item.icon}</div><div class="si-name">${item.name}</div><span class="si-tag ${item.tag}">${item.tag}</span><div class="si-desc">${item.desc}</div>${stackInfo}<div class="si-cost">${costTxt}</div>`;
+  if(!maxed&&!stackMaxed&&!cantAfford&&!reqFail)d.onclick=()=>{buyShopItem(item);renderShop();};
+  grid.appendChild(d);
+}
+function renderRelicShopItem(grid,item){
+  const shelfFull=G.shelf.length>=SHELF_SIZE;
+  const icCost=item.type==='debuff'?1:item.type==='mixed'?2:3;
+  const cantAfford=G.itemCoins<icCost;
+  const d=document.createElement('div');
+  d.className=`shop-item relic-item${(shelfFull||cantAfford)?' gray':''}${item.type==='debuff'?' debuff-item':''}`;
+  const typeLabel=item.type==='buff'?'blessing':item.type==='debuff'?'curse':'pact';
+  const quotaStr=item.quotas?`${item.quotas} quota life`:'permanent';
+  d.innerHTML=`<div class="si-icon">${item.icon}</div><div class="si-name ${item.type==='debuff'?'debuff-name':'relic-name'}">${item.name}</div><span class="si-tag relic">${typeLabel} · ${quotaStr}</span><div class="si-desc">${item.desc}</div>${shelfFull?'<div style="font-size:8px;color:var(--red-light)">Shelf full!</div>':''}<div class="si-cost ic-cost">${icCost} 🔶 item coins</div>`;
+  if(!shelfFull&&!cantAfford)d.onclick=()=>{buyRelic(item);renderShop();};
+  grid.appendChild(d);
+}
 function buyShopItem(item){
   const owned=G.shopOwned.filter(x=>x===item.id).length;
-  const cost=Math.floor(item.cost*(owned>0&&item.stack?Math.pow(1.5,owned):1));
+  const cost=Math.floor(item.cost*(owned>0&&item.stack?Math.pow(1.4,owned):1));
   if(G.coins<cost)return;
   if(item.req&&!G.shopOwned.includes(item.req))return;
   G.coins-=cost;G.shopOwned.push(item.id);
-  applyShopMod(item,owned+1);
-  log('shop',`🛒 ${item.name}`);
+  applyShopMod(item);log('shop',`🛒 ${item.name}`);
   updateStats();updateUpgrades();updateDiagDisplay();
 }
-
-function applyShopMod(item,level){
+function buyRelic(item){
+  const icCost=item.type==='debuff'?1:item.type==='mixed'?2:3;
+  if(G.itemCoins<icCost)return;
+  if(G.shelf.length>=SHELF_SIZE)return;
+  G.itemCoins-=icCost;
+  addRelic(item.id);
+  log('relic',`${item.icon} Acquired: ${item.name}`);
+  updateStats();
+}
+function applyShopMod(item){
   const a=item.apply;
   if(a.diagMult!==undefined)G.shopMods.diagMult=a.diagMult;
   if(a.skullMult!==undefined)G.shopMods.skullMult=a.skullMult;
   if(a.eyeMult!==undefined)G.shopMods.eyeMult=a.eyeMult;
   if(a.swordMult!==undefined)G.shopMods.swordMult=a.swordMult;
   if(a.gemMult!==undefined)G.shopMods.gemMult=a.gemMult;
-  if(a.keyMult!==undefined)G.shopMods.keyMult=a.keyMult;
-  if(a.moonMult!==undefined)G.shopMods.moonMult=a.moonMult;
-  if(a.skullChance!==undefined)G.shopMods.skullChance=a.skullChance;
-  if(a.eyeChance!==undefined)G.shopMods.eyeChance=a.eyeChance;
-  if(a.swordChance!==undefined)G.shopMods.swordChance=a.swordChance;
-  if(a.gemChance!==undefined)G.shopMods.gemChance=a.gemChance;
-  if(a.keyChance!==undefined)G.shopMods.keyChance=a.keyChance;
-  if(a.moonChance!==undefined)G.shopMods.moonChance=a.moonChance;
-  if(a.cardChance!==undefined)G.shopMods.cardChance=a.cardChance;
   if(a.pairMult2!==undefined)G.shopMods.pairMult2=true;
   if(a.tripleBonus!==undefined)G.shopMods.tripleBonus=(G.shopMods.tripleBonus||0)+a.tripleBonus;
-  if(a.luckyCol!==undefined)G.shopMods.luckyCol=true;
-  if(a.luckyRight!==undefined)G.shopMods.luckyRight=true;
+  if(a.skullChance!==undefined)G.shopMods.skullChance=a.skullChance;
+  if(a.gemChance!==undefined)G.shopMods.gemChance=a.gemChance;
+  if(a.moonChance!==undefined)G.shopMods.moonChance=a.moonChance;
   if(a.allRareUp!==undefined)G.shopMods.allRareUp=(G.shopMods.allRareUp||0)+a.allRareUp;
-  if(a.rerollBoost!==undefined)G.shopMods.rerollBoost=(G.shopMods.rerollBoost||0)+a.rerollBoost;
-  if(a.rerollBest!==undefined)G.shopMods.rerollBest=true;
-  if(a.rerollChain!==undefined)G.shopMods.rerollChain=true;
-  if(a.wildTop!==undefined)G.shopMods.wildTop=true;
-  if(a.freeRerolls!==undefined)G.freeRerollsLeft=(G.freeRerollsLeft||0)+a.freeRerolls;
   if(a.extraSpins!==undefined){G.extraSpinsStack=(G.extraSpinsStack||0)+a.extraSpins;G.shopMods.extraSpins=(G.shopMods.extraSpins||0)+a.extraSpins;}
   if(a.quotaReduce!==undefined){G.quotaReduceStack=(G.quotaReduceStack||0)+a.quotaReduce;G.shopMods.quotaReduce=(G.shopMods.quotaReduce||0)+a.quotaReduce;}
   if(a.halfBetSpins!==undefined)G.halfBetSpinsLeft=(G.halfBetSpinsLeft||0)+a.halfBetSpins;
-  if(a.bonusStartCoins!==undefined)G.bonusStartCoins=(G.bonusStartCoins||0)+a.bonusStartCoins;
   if(a.maxBetBonus!==undefined)G.maxBetBonus=(G.maxBetBonus||0)+a.maxBetBonus;
+  if(a.nudgeToken!==undefined)G.nudgeTokens=(G.nudgeTokens||0)+a.nudgeToken;
   if(a.insuranceAmount!==undefined)G.shopMods.insuranceAmount=a.insuranceAmount;
-  if(a.nudgeToken!==undefined){G.nudgeTokens=(G.nudgeTokens||0)+a.nudgeToken;log('shop',`☝️ Nudge token added! You have ${G.nudgeTokens} nudge(s).`);}
+  if(a.feverCharge!==undefined){gainFever(a.feverCharge);}
+  if(a.vaultTime!==undefined){if(G.vaultActive)G.vaultSpinsLeft+=a.vaultTime;else G.shopMods.pendingVaultTime=(G.shopMods.pendingVaultTime||0)+a.vaultTime;}
+  if(a.ghostSpins!==undefined){G.ghostSpins=(G.ghostSpins||0)+a.ghostSpins;}
+  if(a.tripleAllRows!==undefined){G.shopMods.tripleAllRows=true;}
+  if(a.coinMagnet!==undefined){G.shopMods.coinMagnet=(G.shopMods.coinMagnet||0)+a.coinMagnet;}
+  if(a.deathWish!==undefined){G.shopMods.deathWish=true;}
+  if(a.rerollBoost!==undefined){G.shopMods.rerollBoost=(G.shopMods.rerollBoost||0)+a.rerollBoost;}
+  if(a.icDouble!==undefined){G.shopMods.icDouble=true;}
 }
-
 function closeShop(){
   document.getElementById('shopOverlay').classList.remove('show');
-  updateStats();updateUpgrades();rebuildPills();updateDiagDisplay();
+  updateStats();updateUpgrades();rebuildPills();updateDiagDisplay();renderShelf();
   document.getElementById('spinBtn').disabled=false;
   updatePayQuotaBtn();
 }
@@ -1567,12 +1835,12 @@ function updateUpgrades(){
   const l=document.getElementById('upgList');l.innerHTML='';
   UPG_DEFS.forEach(u=>{
     const lvl=lv(u.id),maxed=lvl>=u.max,owned=!u.stack&&lvl>0;
-    const cost=Math.floor(u.baseCost*Math.pow(1.65,lvl));
+    const cost=Math.floor(u.baseCost*Math.pow(1.7,lvl));
     const cantAfford=G.coins<cost&&!owned&&!maxed;
     const d=document.createElement('div');
     d.className=`upg-item${u.stack&&!maxed?' stack':''}${(owned||maxed||cantAfford)?' gray':''}`;
     const lvLabel=u.stack&&lvl>0?`<span class="upg-lv">Lv.${lvl}</span>`:'';
-    const costTxt=maxed?'✓ MAX':owned?'✓ OWNED':`${cost} coins${u.stack&&lvl>0?' (next lv)':''}`;
+    const costTxt=maxed?'✓ MAX':owned?'✓ OWNED':`${cost}c${u.stack&&lvl>0?' (next)':''}`;
     d.innerHTML=`<div class="upg-name">${u.name}${lvLabel}</div><div class="upg-desc">${u.desc}</div><div class="upg-cost">${costTxt}</div>`;
     if(!owned&&!maxed&&!cantAfford)d.onclick=()=>buyUpg(u);
     l.appendChild(d);
@@ -1580,61 +1848,46 @@ function updateUpgrades(){
 }
 function buyUpg(u){
   const lvl=lv(u.id);if(lvl>=u.max)return;
-  const cost=Math.floor(u.baseCost*Math.pow(1.65,lvl));
+  const cost=Math.floor(u.baseCost*Math.pow(1.7,lvl));
   if(G.coins<cost)return;
   G.coins-=cost;G.upgLv[u.id]=(lvl+1);
-  log('upgrade',`🔮 ${u.name} → Lv.${lvl+1}`);
-  updateStats();updateUpgrades();rebuildPills();updateDiagDisplay();
+  log('upgrade','🔮 '+u.name+' → Lv.'+(lvl+1));
+  // Special effects on purchase
+  if(u.id==='vaultupgrade'){G.vaultSpinInterval=5+lv('vaultupgrade')*2;if(G.vaultActive)G.vaultSpinsLeft+=2;}
+  if(u.id==='icbonus'){/* applied at payment time */}
+  updateStats();updateUpgrades();rebuildPills();updateDiagDisplay();updateVaultUI();
 }
 
 // ============================================================
-// MODIFIERS PANEL
+// MODIFIERS
 // ============================================================
 function openModifiers(){
   const div=document.getElementById('modContent');div.innerHTML='';
-  // Symbol Multipliers
-  const changedMults=SYMS.filter(s=>BASE_MULT[s]).map(s=>({sym:s,base:BASE_MULT[s],cur:getSymMult(s)})).filter(x=>x.cur!==x.base);
   const allMults=SYMS.filter(s=>BASE_MULT[s]).map(s=>({sym:s,base:BASE_MULT[s],cur:getSymMult(s)}));
-  div.innerHTML+=renderModSection('Symbol Multipliers (all)',allMults.map(m=>`
-    <div class="mod-entry${m.cur!==m.base?' active':''}">
-      <div class="mod-name">${m.sym}</div>
-      <div class="mod-val${m.cur!==m.base?' gold':''}">×${Math.floor(m.cur)}</div>
-    </div>`).join(''));
-  // Payline Mods
+  div.innerHTML+=renderModSection('Symbol Multipliers',allMults.map(m=>`<div class="mod-entry${m.cur!==m.base?' active':''}"><div class="mod-name">${m.sym}</div><div class="mod-val${m.cur!==m.base?' gold':''}">×${Math.floor(m.cur)}</div></div>`).join(''));
   const diagM=getMod('diagMult',1.5);
-  let pairM=lv('doublepair')>0?3:1.5;if(lv('pairbonus')>0)pairM*=(1+lv('pairbonus')*.25);if(getMod('pairMult2',false))pairM*=2;
+  let pairM=lv('doublepair')>0?3:1.5;if(lv('pairbonus')>0)pairM*=(1+lv('pairbonus')*.2);if(getMod('pairMult2',false))pairM*=2;
   const triB=getMod('tripleBonus',0);
   div.innerHTML+=renderModSection('Payline Modifiers',[
-    `<div class="mod-entry${diagM!==1.5?' active':''}"><div class="mod-name">Diagonal bonus</div><div class="mod-val${diagM!==1.5?' gold':''}">×${diagM}</div></div>`,
-    `<div class="mod-entry${pairM!==1.5?' active':''}"><div class="mod-name">Pair payout</div><div class="mod-val${pairM!==1.5?' gold':''}">×${pairM.toFixed(2)}</div></div>`,
-    triB?`<div class="mod-entry active"><div class="mod-name">All triple +bonus</div><div class="mod-val gold">+${triB}</div></div>`:'',
-    getMod('wildTop',false)?`<div class="mod-entry active"><div class="mod-name">Wild Top Row</div><div class="mod-val cyan">ON</div></div>`:'',
+    `<div class="mod-entry${diagM!==1.5?' active':''}"><div class="mod-name">Diagonal</div><div class="mod-val${diagM!==1.5?' gold':''}">×${diagM}</div></div>`,
+    `<div class="mod-entry${pairM!==1.5?' active':''}"><div class="mod-name">Pair payout</div><div class="mod-val${pairM!==1.5?' gold':''}">×${pairM.toFixed(1)}</div></div>`,
+    triB?`<div class="mod-entry active"><div class="mod-name">Triple bonus</div><div class="mod-val gold">+${triB}</div></div>`:'',
   ].filter(Boolean).join(''));
-  // Symbol Chances
-  const chanceKeys=[['💀','skullChance'],['👁️','eyeChance'],['⚔️','swordChance'],['💎','gemChance'],['🗝️','keyChance'],['🌙','moonChance'],['🃏','cardChance']];
-  const activeChances=chanceKeys.filter(([,k])=>getMod(k,1)!==1);
-  if(activeChances.length)div.innerHTML+=renderModSection('Symbol Chance Boosts',activeChances.map(([s,k])=>
-    `<div class="mod-entry active"><div class="mod-name">${s} chance</div><div class="mod-val cyan">×${getMod(k,1).toFixed(2)}</div></div>`).join(''));
-  // Active Upgrades
   const activeU=UPG_DEFS.filter(u=>lv(u.id)>0);
-  if(activeU.length)div.innerHTML+=renderModSection('Permanent Upgrades',activeU.map(u=>
-    `<div class="mod-entry active"><div class="mod-name">${u.name}</div><div class="mod-val green">Lv.${lv(u.id)}</div></div>`).join(''));
-  // Utility / Buffs
+  if(activeU.length)div.innerHTML+=renderModSection('Upgrades',activeU.map(u=>`<div class="mod-entry active"><div class="mod-name">${u.name}</div><div class="mod-val green">Lv.${lv(u.id)}</div></div>`).join(''));
+  const relicItems=G.shelf.map(sr=>{const def=RELICS.find(d=>d.id===sr.id);return def?`<div class="mod-entry active"><div class="mod-name">${def.icon} ${def.name}</div><div class="mod-val${def.type==='debuff'?' red':def.type==='mixed'?' gold':' green'}">${sr.usesLeft!==null?sr.usesLeft+'q':'∞'}</div></div>`:''});
+  if(relicItems.filter(Boolean).length)div.innerHTML+=renderModSection('Active Relics',relicItems.join(''));
   const util=[];
-  if(G.extraSpinsStack>0)util.push(`<div class="mod-entry active"><div class="mod-name">Extra spins/floor</div><div class="mod-val green">+${G.extraSpinsStack}</div></div>`);
+  if(G.nudgeTokens>0)util.push(`<div class="mod-entry active"><div class="mod-name">Nudge tokens</div><div class="mod-val cyan">${G.nudgeTokens}</div></div>`);
+  if(G.fever>0)util.push(`<div class="mod-entry active"><div class="mod-name">Fever</div><div class="mod-val" style="color:var(--fever)">${Math.floor(G.fever)}%</div></div>`);
+  if(G.irsActive)util.push(`<div class="mod-entry active"><div class="mod-name">IRS Risk</div><div class="mod-val red">${G.irsRisk}%</div></div>`);
   if(G.quotaReduceStack>0)util.push(`<div class="mod-entry active"><div class="mod-name">Quota discount</div><div class="mod-val green">-${Math.round(G.quotaReduceStack*100)}%</div></div>`);
-  if(G.maxBetBonus>0)util.push(`<div class="mod-entry active"><div class="mod-name">Max bet cap</div><div class="mod-val gold">${100+G.maxBetBonus}</div></div>`);
-  if(G.bonusStartCoins>0)util.push(`<div class="mod-entry active"><div class="mod-name">Floor start bonus</div><div class="mod-val green">+${G.bonusStartCoins}</div></div>`);
-  if(G.halfBetSpinsLeft>0)util.push(`<div class="mod-entry active"><div class="mod-name">Gambit spins left</div><div class="mod-val cyan">${G.halfBetSpinsLeft}</div></div>`);
-  if(G.ghostSpins>0)util.push(`<div class="mod-entry active"><div class="mod-name">Ghost spins left</div><div class="mod-val cyan">${G.ghostSpins}</div></div>`);
-  if(G.devilSpins>0)util.push(`<div class="mod-entry active"><div class="mod-name">Devil pair spins</div><div class="mod-val cyan">${G.devilSpins}</div></div>`);
+  if(G.extraSpinsStack>0)util.push(`<div class="mod-entry active"><div class="mod-name">Extra spins</div><div class="mod-val green">+${G.extraSpinsStack}</div></div>`);
   if(G.comboStreak>0)util.push(`<div class="mod-entry active"><div class="mod-name">Win streak</div><div class="mod-val gold">${G.comboStreak}×</div></div>`);
-  if(G.nudgeTokens>0)util.push(`<div class="mod-entry active"><div class="mod-name">☝️ Nudge tokens</div><div class="mod-val cyan">${G.nudgeTokens}</div></div>`);
-  const nextQ=calcQuota(G.floor+1,G.coins);
-  util.push(`<div class="mod-entry"><div class="mod-name">Next floor quota</div><div class="mod-val">${nextQ}</div></div>`);
-  util.push(`<div class="mod-entry"><div class="mod-name">Next floor spins</div><div class="mod-val">${calcSpins(G.floor+1)}</div></div>`);
-  if(util.length)div.innerHTML+=renderModSection('Active Buffs & Preview',util.join(''));
-  if(!div.innerHTML)div.innerHTML='<div class="mod-empty">No modifiers yet. Spin, upgrade, and shop.</div>';
+  const nq=calcQuota();
+  util.push(`<div class="mod-entry"><div class="mod-name">Next quota ~</div><div class="mod-val">${nq}</div></div>`);
+  if(util.length)div.innerHTML+=renderModSection('Status & Preview',util.join(''));
+  if(!div.innerHTML)div.innerHTML='<div class="mod-empty">No modifiers active yet.</div>';
   document.getElementById('modOverlay').classList.add('show');
 }
 function renderModSection(t,c){return`<div class="mod-section"><div class="mod-section-title">${t}</div><div class="mod-grid">${c}</div></div>`;}
@@ -1645,12 +1898,14 @@ function closeModifiers(){document.getElementById('modOverlay').classList.remove
 // ============================================================
 function updateStats(){
   document.getElementById('coinDisp').textContent=G.coins;
-  document.getElementById('coinBox').className='stat-box'+(G.coins<=25?' danger':G.coins>=400?' good':'');
+  document.getElementById('coinBox').className='stat-box'+(G.coins<=30?' danger':G.coins>=500?' good':'');
   document.getElementById('quotaDisp').textContent=G.bossActive?G.bossQuota:G.quota;
   document.getElementById('floorDisp').textContent=G.floor;
   document.getElementById('wonDisp').textContent=G.totalWon;
   document.getElementById('spinDisp').textContent=G.spins;
   document.getElementById('betDisp').textContent=G.bet;
+  document.getElementById('icDisp').textContent=G.itemCoins;
+  document.getElementById('shelfIcDisp').textContent=G.itemCoins;
   const fb=document.getElementById('floorBig');fb.textContent=G.floor;
   fb.className='floor-num'+(G.bossActive||G.isBossFloor?' boss':'');
   document.getElementById('floorLbl').textContent=G.bossActive?'⚔ BOSS FLOOR':'FLOOR OF DESCENT';
@@ -1662,15 +1917,19 @@ function updateStats(){
     document.getElementById('quotaTarget').textContent=G.quota;
     const diff=G.quota-G.coins;
     document.getElementById('quotaInfo').textContent=
-      diff<=0?`✦ Ready to pay! ${G.quotaSpinsLeft} spins remain.`
-             :`${diff} more needed · ${G.quotaSpinsLeft} spins left`;
+      diff<=0?`✦ Ready! (${G.quotaSpinsLeft} spins left)`:`${diff} more needed · ${G.quotaSpinsLeft} spins left`;
   }
   updatePayQuotaBtn();
+  updateFeverBar();
+  checkIRS();
+  updateVaultUI();
 }
-function showWinMsg(r,total){
+function showWinMsg(r,total,feverWin=false){
   const e=document.getElementById('winMsg');e.className='win-msg';
-  if(r.type==='triple'&&r.mult>=20){e.textContent=`✦ ${r.symbol} JACKPOT — +${total} ✦`;e.classList.add('jackpot');}
+  if(feverWin){e.textContent=`🔥 FEVER WIN — +${total} 🔥`;e.classList.add('fever-win');}
+  else if(r.type==='triple'&&r.mult>=20){e.textContent=`✦ ${r.symbol} JACKPOT — +${total} ✦`;e.classList.add('jackpot');}
   else if(r.win>=G.bet*5){e.textContent=`BIG WIN — +${total}`;e.classList.add('big');}
+  else if(r.type==='reroll'){}
   else{e.textContent=`Win: +${total}`;e.classList.add('small');}
   setTimeout(()=>e.classList.add('show'),10);setTimeout(()=>e.classList.remove('show'),3000);
 }
@@ -1680,59 +1939,406 @@ function showLoseMsg(){
   e.textContent=m[Math.floor(Math.random()*m.length)];
   setTimeout(()=>e.classList.add('show'),10);setTimeout(()=>e.classList.remove('show'),1800);
 }
-function flavorLoss(){const m=['The wheel turns against you.','Luck sleeps.','The darkness hungers.','Not this time.','Fortune is fickle.','Silence from the fates.'];return m[Math.floor(Math.random()*m.length)];}
-function chBet(d){G.bet=Math.max(5,Math.min(G.coins,G.bet+d));updateStats();}
-function maxBet(){G.bet=Math.min(G.coins,maxBetVal());updateStats();}
+function flavorLoss(){const m=['The wheel turns against you.','Luck sleeps.','Darkness hungers.','Not this time.','Fortune is fickle.'];return m[Math.floor(Math.random()*m.length)];}
+function chBet(d){G.bet=Math.max(1,Math.min(G.coins,G.bet+d));updateStats();}
+function maxBet(){G.bet=maxBetVal();updateStats();}
+function betHalf(){G.bet=Math.max(1,Math.floor(G.coins/2));updateStats();}
+function betPct(pct){
+  const delta=Math.floor(G.coins*Math.abs(pct)/100);
+  if(pct>0){G.bet=Math.min(maxBetVal(),G.bet+delta);}
+  else{G.bet=Math.max(1,G.bet-delta);}
+  updateStats();
+}
+function openBetInput(){
+  if(G.spinning)return;
+  document.getElementById('betDispWrap').style.display='none';
+  const w=document.getElementById('betInputWrap');w.style.display='inline-flex';
+  const i=document.getElementById('betInput');i.value=G.bet;i.focus();i.select();
+}
+function confirmBetInput(){
+  const inp=document.getElementById('betInput');
+  let v=parseInt(inp.value,10);
+  if(isNaN(v)||v<1)v=1;
+  if(v>G.coins)v=G.coins;
+  v=Math.min(v,maxBetVal());
+  G.bet=Math.max(1,v);
+  closeBetInput();updateStats();
+}
+function closeBetInput(){
+  document.getElementById('betDispWrap').style.display='';
+  document.getElementById('betInputWrap').style.display='none';
+}
+function betInputKey(e){if(e.key==='Enter')confirmBetInput();else if(e.key==='Escape')closeBetInput();}
 function spawnCoins(){
   const btn=document.getElementById('spinBtn'),r=btn.getBoundingClientRect();
   for(let i=0;i<5;i++)setTimeout(()=>{const p=document.createElement('div');p.className='coin-p';p.textContent='🪙';p.style.left=(r.left+Math.random()*r.width)+'px';p.style.top=r.top+'px';document.body.appendChild(p);setTimeout(()=>p.remove(),1000);},i*80);
 }
 function log(type,msg){G.log.unshift({type,msg});if(G.log.length>50)G.log.pop();renderLog();}
 function renderLog(){document.getElementById('logEl').innerHTML=G.log.map(e=>`<div class="log-entry ${e.type}">${e.msg}</div>`).join('');}
-
-function trigGameOver(){
-  // Kill any in-progress spin state immediately
+function trigGameOver(msg='The quota was not met. The house takes all.'){
   G.spinning=false;
   document.getElementById('goFloor').textContent=G.floor;
   document.getElementById('goSpins').textContent=G.spins;
   document.getElementById('goPeak').textContent=G.peakCoins+' coins';
+  document.getElementById('goMsg').textContent=`"${msg}"`;
   document.getElementById('goOverlay').classList.add('show');
   document.getElementById('spinBtn').disabled=true;
 }
 
-function restartGame(){
-  document.getElementById('goOverlay').classList.remove('show');
-  initState();          // resets G.spinning=false
-  buildReels();
-  updateStats();        // calls updatePayQuotaBtn — safe because G.spinning is false
-  updateUpgrades();
-  renderLog();
-  // Force-enable spin button regardless of any leftover state
-  const btn=document.getElementById('spinBtn');
-  btn.disabled=false;
-  btn.textContent='SPIN THE REELS';
-  btn.className='spin-btn';
-  updatePayQuotaBtn();
-  log('floor','✦ A new descent begins…');
-  log('','Spin to earn. Pay the quota when ready. It only gets harder.');
+// ============================================================
+// VAULT SYSTEM
+// ============================================================
+function buyVault(){
+  if(G.vaultActive){log('','Vault already active!');return;}
+  if(G.coins<G.vaultCost){log('lose','Not enough coins to buy a vault.');return;}
+  G.coins-=G.vaultCost;
+  G.vaultActive=true;G.vault=0;G.vaultDeposited=false;
+  G.vaultSpinsLeft=G.vaultSpinInterval;
+  log('upgrade','🏦 Vault bought for '+G.vaultCost+'c. '+G.vaultSpinInterval+' spins remaining!');
+  updateStats();updateVaultUI();
+}
+function doVaultDeposit(){
+  if(!G.vaultActive){log('lose','No active vault.');return;}
+  if(G.vaultDeposited){log('','Can only deposit once per vault period.');return;}
+  const inp=document.getElementById('vaultDepositInput');
+  let amt=parseInt(inp.value,10);
+  if(isNaN(amt)||amt<1){log('lose','Enter a valid amount.');return;}
+  if(amt>G.coins)amt=G.coins;
+  G.vault+=amt;G.coins-=amt;G.vaultDeposited=true;
+  log('upgrade','🏦 Deposited '+amt+' into vault.');
+  inp.value='';updateStats();updateVaultUI();
+}
+function doVaultWithdraw(){
+  if(!G.vaultActive||G.vault<=0){log('','Vault empty.');return;}
+  let amt=G.vault;
+  if(hasRelic('vaultkey')){const bonus=Math.floor(amt*0.2);amt+=bonus;log('relic','🗝️ Vault Key bonus: +'+bonus+' extra!');}
+  G.coins+=amt;G.vault=0;
+  log('upgrade','🏦 Withdrew '+amt+' from vault.');
+  updateStats();updateVaultUI();
+}
+function updateVaultUI(){
+  const amt=document.getElementById('vaultAmount');
+  const info=document.getElementById('vaultInfo');
+  const status=document.getElementById('vaultStatus');
+  const buyCtrls=document.getElementById('vaultBuyControls');
+  const actCtrls=document.getElementById('vaultActiveControls');
+  const depositBtn=document.getElementById('vaultDepositBtn');
+  if(!amt)return;
+  amt.textContent=G.vault;
+  if(G.vaultActive){
+    buyCtrls.style.display='none';actCtrls.style.display='block';
+    info.textContent='Active — '+G.vaultSpinsLeft+' spin'+(G.vaultSpinsLeft!==1?'s':'')+' left';
+    if(G.vaultDeposited){
+      status.innerHTML='<span style="color:var(--green-light)">\u2713 Deposit locked in. Withdraw anytime.</span>';
+      depositBtn.disabled=true;depositBtn.style.opacity='.4';
+    } else {
+      status.innerHTML='<span style="color:#a78bfa">Deposit once before time runs out!</span>';
+      depositBtn.disabled=false;depositBtn.style.opacity='1';
+    }
+    document.getElementById('vaultSection').style.borderColor='#8b5cf6';
+  } else {
+    buyCtrls.style.display='block';actCtrls.style.display='none';
+    info.textContent='Buy a vault to stash coins. Expires after '+G.vaultSpinInterval+' spins — get it all back.';
+    status.textContent='';
+    document.getElementById('vaultSection').style.borderColor='#3a2060';
+    const bb=document.getElementById('vaultBuyControls').querySelector('button');
+    if(bb)bb.textContent='Buy Vault ('+G.vaultCost+' coins)';
+  }
 }
 
-function saveGame(){try{localStorage.setItem('fd_v5',JSON.stringify(G));log('','📜 Saved.');}catch(e){log('lose','Save failed.');}}
-function loadGame(){
-  try{const d=localStorage.getItem('fd_v5');if(!d){log('','No save found.');return;}
-  G=JSON.parse(d);G.spinning=false;
-  buildReels();updateStats();updateUpgrades();renderLog();
-  document.getElementById('spinBtn').disabled=false;
+// ============================================================
+// LOAN SYSTEM
+// ============================================================
+function checkLoanOffer(){
+  if(G.quotasPaid===0||G.quotasPaid%5!==0)return;
+  if(G.lastLoanQuota===G.quotasPaid)return;
+  if(G.coins/G.quota>=0.5)return;
+  G.lastLoanQuota=G.quotasPaid;
+  const loanAmt=Math.floor(G.quota*1.5);
+  document.getElementById('loanPopupMsg').textContent='"You carry only '+G.coins+' coins toward '+G.quota+' required. Take '+loanAmt+' now — but your next quota doubles."';
+  document.getElementById('loanPopupAmount').innerHTML='Loan: <span style="color:var(--gold)">'+loanAmt+' coins</span>';
+  document.getElementById('loanPopupCooldown').textContent='Offer expires. Next eligible at quota #'+(G.quotasPaid+5)+'.';
+  document.getElementById('loanPopup').style.display='flex';
+}
+function acceptLoan(){
+  const loanAmt=Math.floor(G.quota*1.5);
+  G.coins+=loanAmt;G.loanDoubleNext=true;
+  if(G.coins>G.peakCoins)G.peakCoins=G.coins;
+  document.getElementById('loanPopup').style.display='none';
+  log('upgrade','💰 Emergency Loan: +'+loanAmt+' coins. NEXT QUOTA DOUBLED!');
+  updateStats();
+}
+function declineLoan(){
+  document.getElementById('loanPopup').style.display='none';
+  log('','💰 Loan declined.');
+}
+
+function restartGame(){
+  document.getElementById('goOverlay').classList.remove('show');
+  initState();buildReels();updateStats();updateUpgrades();renderShelf();updateVaultUI();renderLog();updateVaultUI();
+  const btn=document.getElementById('spinBtn');btn.disabled=false;btn.textContent='SPIN THE REELS';btn.className='spin-btn';
   updatePayQuotaBtn();
-  log('','📜 Loaded.');
+  log('floor','✦ A new descent begins…');
+  log('','Your starting relics are on the shelf. Spin to earn. Pay the quota to descend.');
+}
+function saveGame(){try{const s=JSON.parse(JSON.stringify(G));s.collectedSymbols=[...G.collectedSymbols];localStorage.setItem('fd_v6',JSON.stringify(s));log('','📜 Saved.');}catch(e){log('lose','Save failed.');}}
+function loadGame(){
+  try{const d=localStorage.getItem('fd_v6');if(!d){log('','No save.');return;}
+  G=JSON.parse(d);G.spinning=false;if(Array.isArray(G.collectedSymbols))G.collectedSymbols=new Set(G.collectedSymbols);
+  buildReels();updateStats();updateUpgrades();renderShelf();renderLog();
+  document.getElementById('spinBtn').disabled=false;updatePayQuotaBtn();log('','📜 Loaded.');
   }catch(e){log('lose','Load failed.');}
 }
 function wait(ms){return new Promise(r=>setTimeout(r,ms));}
 
+
+// ============================================================
+// CONSOLE COMMANDS (window.fd)
+// ============================================================
+window.fd = {
+  help(){
+    console.log('%cFORTUNE\'S DESCENT — Console Commands', 'color:#d4a843;font-size:14px;font-weight:bold;');
+    console.log('%c─────────────────────────────────────────', 'color:#5a4020');
+    const cmds = [
+      ['fd.coins(n)',         'Set coins to n  (e.g. fd.coins(9999))'],
+      ['fd.addCoins(n)',      'Add n coins'],
+      ['fd.itemCoins(n)',     'Set item coins to n'],
+      ['fd.addIC(n)',         'Add n item coins'],
+      ['fd.bet(n)',           'Set bet to n'],
+      ['fd.fever(n)',         'Set fever % (0-100)'],
+      ['fd.maxFever()',       'Set fever to 100'],
+      ['fd.floor(n)',         'Jump to floor n'],
+      ['fd.quota(n)',         'Override current quota to n'],
+      ['fd.spins(n)',         'Set quota spins remaining to n'],
+      ['fd.addSpins(n)',      'Add n quota spins'],
+      ['fd.winStreak(n)',     'Set combo win streak to n'],
+      ['fd.vault(n)',         'Put n coins in vault (buys vault if needed)'],
+      ['fd.relic(id)',        'Add a relic by id (e.g. fd.relic("horseshoe"))'],
+      ['fd.listRelics()',     'Show all relic IDs'],
+      ['fd.removeRelic(id)', 'Remove a relic from shelf'],
+      ['fd.upgrade(id,lv)',  'Set upgrade level (e.g. fd.upgrade("combo",3))'],
+      ['fd.listUpgrades()',   'Show all upgrade IDs'],
+      ['fd.shopItem(id)',     'Buy a shop item by id'],
+      ['fd.listShopItems()',  'Show all shop item IDs'],
+      ['fd.payQuota()',       'Force pay quota (even if short on coins)'],
+      ['fd.nextFloor()',      'Advance to next floor immediately'],
+      ['fd.openShop()',       'Open the merchant shop'],
+      ['fd.god()',            'God mode: 999999 coins, max fever, all relics'],
+      ['fd.state()',          'Print current game state summary'],
+      ['fd.reels()',          'Show current reel values'],
+      ['fd.forceWin(sym)',    'Force all middle row reels to sym (e.g. fd.forceWin("💀"))'],
+      ['fd.clearVault()',     'Clear vault and return coins'],
+      ['fd.loan()',           'Trigger emergency loan popup'],
+      ['fd.noIRS()',          'Disable IRS this floor'],
+      ['fd.killIRS()',        'Immediately clear IRS threat'],
+    ];
+    cmds.forEach(([cmd, desc]) => {
+      console.log('%c' + cmd.padEnd(28) + '%c' + desc, 'color:#f0cc6e;font-family:monospace', 'color:#8a7560');
+    });
+    console.log('%c─────────────────────────────────────────', 'color:#5a4020');
+    return 'Type any command above to use it.';
+  },
+
+  coins(n){ G.coins=Math.max(0,Math.floor(n)); if(G.coins>G.peakCoins)G.peakCoins=G.coins; updateStats(); return 'Coins set to '+G.coins; },
+  addCoins(n){ G.coins=Math.max(0,G.coins+Math.floor(n)); if(G.coins>G.peakCoins)G.peakCoins=G.coins; updateStats(); return 'Coins: '+G.coins; },
+  itemCoins(n){ G.itemCoins=Math.max(0,Math.floor(n)); updateStats(); return 'Item coins set to '+G.itemCoins; },
+  addIC(n){ G.itemCoins=Math.max(0,G.itemCoins+Math.floor(n)); updateStats(); return 'Item coins: '+G.itemCoins; },
+  bet(n){ G.bet=Math.max(1,Math.min(G.coins,Math.floor(n))); updateStats(); return 'Bet set to '+G.bet; },
+  fever(n){ G.fever=Math.max(0,Math.min(100,parseFloat(n))); updateFeverBar(); return 'Fever set to '+G.fever+'%'; },
+  maxFever(){ G.fever=100; updateFeverBar(); return 'Fever maxed!'; },
+
+  floor(n){
+    n=Math.max(1,Math.floor(n));
+    G.floor=n; G.isBossFloor=(n%5===0);
+    G.quota=calcQuota(); G.quotaSpins=calcSpins(n); G.quotaSpinsLeft=G.quotaSpins;
+    updateStats(); updateUpgrades();
+    return 'Jumped to floor '+n+'. Quota: '+G.quota;
+  },
+  quota(n){ G.quota=Math.max(1,Math.floor(n)); updateStats(); return 'Quota set to '+G.quota; },
+  spins(n){ G.quotaSpinsLeft=Math.max(0,Math.floor(n)); updateStats(); return 'Spins left: '+G.quotaSpinsLeft; },
+  addSpins(n){ G.quotaSpinsLeft+=Math.floor(n); updateStats(); return 'Spins left: '+G.quotaSpinsLeft; },
+  winStreak(n){ G.comboStreak=Math.max(0,Math.floor(n)); updateStats(); return 'Win streak: '+G.comboStreak; },
+
+  vault(n){
+    n=Math.max(0,Math.floor(n));
+    if(!G.vaultActive){ G.vaultActive=true; G.vaultSpinsLeft=G.vaultSpinInterval; G.vaultDeposited=true; }
+    G.vault=n;
+    updateStats(); updateVaultUI();
+    return 'Vault set to '+n+' coins';
+  },
+  clearVault(){
+    if(G.vault>0){ G.coins+=G.vault; G.vault=0; }
+    G.vaultActive=false; G.vaultDeposited=false;
+    updateStats(); updateVaultUI();
+    return 'Vault cleared, coins returned.';
+  },
+
+  relic(id){
+    const def=RELICS.find(r=>r.id===id);
+    if(!def){ console.warn('Unknown relic: '+id+'. Use fd.listRelics() to see all.'); return; }
+    if(G.shelf.length>=SHELF_SIZE){ return 'Shelf full! Remove a relic first.'; }
+    if(G.shelf.some(r=>r.id===id)){ return 'Already have '+id+' on shelf.'; }
+    addRelic(id); renderShelf(); updateStats();
+    return def.icon+' '+def.name+' added!';
+  },
+  listRelics(){
+    console.log('%cAll Relic IDs:', 'color:#c084fc;font-weight:bold');
+    RELICS.forEach(r=>{
+      const owned=G.shelf.some(s=>s.id===r.id);
+      console.log('%c'+r.icon+' '+r.id.padEnd(20)+' %c'+r.name+(owned?' [ON SHELF]':''), 'color:'+(owned?'#a78bfa':'#8a7560')+';font-family:monospace', 'color:'+(owned?'#c4b5fd':'#6a5540'));
+    });
+    return RELICS.length+' relics total';
+  },
+  removeRelic(id){
+    if(!G.shelf.some(r=>r.id===id)){ return id+' not on shelf.'; }
+    G.shelf=G.shelf.filter(r=>r.id!==id);
+    renderShelf(); updateStats();
+    return id+' removed from shelf.';
+  },
+
+  upgrade(id, lv){
+    const def=UPG_DEFS.find(u=>u.id===id);
+    if(!def){ console.warn('Unknown upgrade: '+id+'. Use fd.listUpgrades()'); return; }
+    lv=Math.max(0,Math.min(def.max,Math.floor(lv||1)));
+    G.upgLv[id]=lv;
+    updateStats(); updateUpgrades(); rebuildPills(); updateDiagDisplay();
+    return id+' set to Lv.'+lv;
+  },
+  listUpgrades(){
+    console.log('%cAll Upgrade IDs:', 'color:#a78bfa;font-weight:bold');
+    UPG_DEFS.forEach(u=>{
+      const cur=G.upgLv[u.id]||0;
+      console.log('%c'+u.id.padEnd(20)+' %cLv.'+cur+'/'+u.max+'  '+u.name, 'color:#f0cc6e;font-family:monospace', 'color:'+(cur>0?'#2ecc71':'#8a7560'));
+    });
+    return UPG_DEFS.length+' upgrades total';
+  },
+
+  shopItem(id){
+    const item=ALL_SHOP_ITEMS.find(i=>i.id===id);
+    if(!item){ console.warn('Unknown shop item: '+id+'. Use fd.listShopItems()'); return; }
+    const owned=G.shopOwned.filter(x=>x===id).length;
+    const cost=Math.floor(item.cost*(owned>0&&item.stack?Math.pow(1.4,owned):1));
+    if(G.coins<cost){ return 'Need '+cost+' coins (have '+G.coins+')'; }
+    G.coins-=cost; G.shopOwned.push(id); applyShopMod(item);
+    log('shop','[DEV] '+item.name+' acquired.');
+    updateStats(); updateUpgrades(); updateDiagDisplay();
+    return item.icon+' '+item.name+' purchased for '+cost+' coins!';
+  },
+  listShopItems(){
+    console.log('%cAll Shop Item IDs:', 'color:#2ecc71;font-weight:bold');
+    ALL_SHOP_ITEMS.forEach(item=>{
+      const owned=G.shopOwned.filter(x=>x===item.id).length;
+      console.log('%c'+item.id.padEnd(22)+' %c'+item.icon+' '+item.name+(owned?' (owned:'+owned+')':''), 'color:#f0cc6e;font-family:monospace', 'color:'+(owned>0?'#2ecc71':'#8a7560'));
+    });
+    return ALL_SHOP_ITEMS.length+' items total';
+  },
+
+  payQuota(){
+    const needed=G.quota-G.coins;
+    if(needed>0){ G.coins+=needed; log('floor','[DEV] Topped up '+needed+' to pay quota.'); }
+    tryPayQuota();
+    return 'Quota paid!';
+  },
+  nextFloor(){
+    G.coins=Math.max(G.coins,G.quota);
+    tryPayQuota();
+    return 'Advancing floor...';
+  },
+  openShop(){ openShop(); return 'Shop opened.'; },
+
+  god(){
+    G.coins=999999; G.itemCoins=99; G.fever=100;
+    if(G.coins>G.peakCoins)G.peakCoins=G.coins;
+    // Add all buff relics that fit
+    const buffs=RELICS.filter(r=>r.type==='buff'&&!G.shelf.some(s=>s.id===r.id));
+    while(G.shelf.length<SHELF_SIZE&&buffs.length){ addRelic(buffs.shift().id); }
+    updateStats(); updateUpgrades(); updateFeverBar(); renderShelf();
+    return '⚡ GOD MODE — 999999 coins, 99 IC, max fever, buff relics added!';
+  },
+
+  state(){
+    const s={
+      'Coins': G.coins,
+      'Bet': G.bet,
+      'Floor': G.floor,
+      'Quota': G.quota,
+      'Spins left': G.quotaSpinsLeft,
+      'Quotas paid': G.quotasPaid,
+      'Item coins': G.itemCoins,
+      'Fever': G.fever+'%',
+      'Win streak': G.comboStreak,
+      'Vault': G.vault+(G.vaultActive?' (active, '+G.vaultSpinsLeft+' spins)':' (inactive)'),
+      'Loan double': G.loanDoubleNext,
+      'IRS active': G.irsActive,
+      'Shelf relics': G.shelf.map(r=>r.id).join(', ')||'none',
+    };
+    console.log('%cGame State', 'color:#d4a843;font-weight:bold;font-size:13px');
+    Object.entries(s).forEach(([k,v])=>{
+      console.log('%c'+k.padEnd(18)+' %c'+v, 'color:#8a7560;font-family:monospace', 'color:#e8d5b0');
+    });
+    return s;
+  },
+
+  reels(){
+    const rows=['TOP   ','MIDDLE','BOTTOM'];
+    console.log('%cReels (col 0,1,2):', 'color:#d4a843;font-weight:bold');
+    [0,1,2].forEach(row=>{
+      const cells=[G.reels[0][row],G.reels[1][row],G.reels[2][row]];
+      console.log('%c'+rows[row]+': %c'+cells.join('  '), 'color:#8a7560', 'font-size:18px');
+    });
+    return 'Reels shown above';
+  },
+
+  forceWin(sym){
+    if(!sym){ return 'Usage: fd.forceWin("💀")'; }
+    G.reels[0][1]=sym; G.reels[1][1]=sym; G.reels[2][1]=sym;
+    // Update visual cells too
+    for(let c=0;c<3;c++){
+      const s=reelState[c];
+      if(!s||!s.cells)continue;
+      const targetVY=s.cellH;
+      let best=null,bd=Infinity;
+      s.cells.forEach(cell=>{const d=Math.abs(cell._logicalY-s.offset-targetVY);if(d<bd){bd=d;best=cell;}});
+      if(best)best.textContent=sym;
+    }
+    return 'Middle row forced to '+sym;
+  },
+
+  loan(){ checkLoanOffer(); if(document.getElementById('loanPopup').style.display==='flex') return 'Loan popup opened.'; G.lastLoanQuota=-999; G.coins=0; checkLoanOffer(); return 'Forced loan popup.'; },
+
+  noIRS(){ G.irsActive=false; G.irsRisk=0; G.spinsSinceDouble=0; document.getElementById('irsWarn').classList.remove('show'); updateStats(); return 'IRS threat cleared for now.'; },
+  killIRS(){ window.fd.noIRS(); return 'IRS neutralised.'; },
+};
+
+// Print hint on load
+console.log('%c🎰 Fortune\'s Descent%c — type %cfd.help()%c for console commands', 
+  'color:#d4a843;font-weight:bold;font-size:15px', 
+  'color:#8a7560', 
+  'color:#f0cc6e;font-family:monospace;background:#1a1318;padding:1px 4px',
+  'color:#8a7560');
+
 // ── INIT ──
-initState();buildReels();updateStats();updateUpgrades();
-log('floor','✦ You stand at Floor 1. The quota grows with every descent.');
-log('','Spin to earn coins. Pay the quota when you have enough.');
+initState();buildReels();updateStats();updateUpgrades();renderShelf();updateVaultUI();
+log('floor','✦ You descend into Fortune\'s Depths.');
+log('relic','You begin with 2 relics on your shelf. Click them to inspect.');
+log('','Starting quota: 1000. Each new quota = previous + 20× your leftover coins.');
 </script>
+
+<!-- LOAN OFFER POPUP -->
+<div id="loanPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:600;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#050a16;border:1px solid var(--irs-light);padding:28px 24px;text-align:center;max-width:400px;width:100%;position:relative;">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--irs-light),transparent);"></div>
+    <div class="ov-title bi" style="font-size:16px">💰 EMERGENCY LOAN OFFER</div>
+    <div id="loanPopupMsg" class="ov-msg">"You're struggling. I can help — for a price."</div>
+    <div id="loanPopupAmount" class="ov-stat">Loan amount: — coins</div>
+    <div class="ov-stat" style="color:var(--red-light)">⚠ Next quota will be DOUBLED</div>
+    <div id="loanPopupCooldown" class="ov-stat" style="font-size:8px;color:var(--text-dim);"></div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:14px;">
+      <button class="ov-btn" onclick="acceptLoan()">Accept Loan</button>
+      <button class="ov-btn" style="background:linear-gradient(135deg,#1a0808,#2a0a0a);border-color:var(--red)" onclick="declineLoan()">Decline</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
