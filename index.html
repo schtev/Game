@@ -192,7 +192,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .shelf-title-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;border-bottom:1px solid var(--relic-dark);padding-bottom:6px;}
 .shelf-title{font-size:8px;letter-spacing:.25em;color:var(--relic);text-transform:uppercase;}
 .shelf-ic{font-size:8px;color:var(--itemcoin);letter-spacing:.1em;}
-.shelf-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;}
+.shelf-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
 .shelf-slot{aspect-ratio:1;background:#100a18;border:1px solid var(--relic-dark);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;position:relative;transition:all .2s;}
 .shelf-slot.empty{opacity:.25;cursor:default;font-size:14px;color:var(--text-dim);}
 .shelf-slot:not(.empty):hover{border-color:var(--relic);background:#1a0a28;box-shadow:0 0 10px rgba(192,132,252,.2);}
@@ -350,11 +350,18 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   </div>
 
   <!-- FEVER BAR -->
-  <div class="fever-row" id="feverRow">
-    <div class="fever-label">🔥 Fever</div>
+  <div class="fever-row" id="feverRow" style="gap:6px;">
+    <div class="fever-label" style="white-space:nowrap;">&#128293; Fever</div>
+    <div class="fever-track" style="flex:1;"><div class="fever-fill" id="feverFill" style="width:0%"></div></div>
+    <div class="fever-pct" id="feverPct" style="min-width:80px;text-align:right;font-size:8px;">0%</div>
+    <button id="feverActivateBtn" onclick="activateFever()" disabled style="background:linear-gradient(135deg,#3a0020,#7a0040);border:1px solid var(--fever-dark);color:var(--fever);font-family:'Cinzel',serif;font-size:7px;letter-spacing:.08em;padding:3px 7px;cursor:pointer;white-space:nowrap;opacity:.3;text-transform:uppercase;transition:all .2s;">FEVER</button>
+  </div>
     <div class="fever-track"><div class="fever-fill" id="feverFill" style="width:0%"></div></div>
     <div class="fever-pct" id="feverPct">0%</div>
   </div>
+
+  <!-- HOUSE WATCH INDICATOR -->
+  <div id="houseWatchIndicator" style="display:none;background:#0d0500;border:1px solid #4a2000;padding:5px 10px;margin-bottom:6px;text-align:center;font-size:9px;letter-spacing:.15em;color:#cc4400;text-transform:uppercase;"></div>
 
   <!-- IRS WARNING -->
   <div class="irs-warn" id="irsWarn">
@@ -506,15 +513,16 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
       <!-- RELIC SHELF -->
       <div class="shelf-section">
         <div class="shelf-title-row">
-          <div class="shelf-title">✦ Relic Shelf</div>
+          <div class="shelf-title">✦ Relic Shelf</div></div>
+        <div id="shelfExpRow" style="display:flex;justify-content:flex-end;margin-bottom:5px;"><button id="expandShelfBtn" onclick="expandShelf()" style="background:var(--bg-panel);border:1px solid #3a2060;color:#a78bfa;font-family:'Cinzel',serif;font-size:7px;letter-spacing:.1em;padding:3px 8px;cursor:pointer;text-transform:uppercase;" title="Pay 3x current quota to add 3 more shelf slots">Expand Shelf (3x quota)</button></div>
           <div class="shelf-ic">🪙 <span id="shelfIcDisp">0</span> item coins</div>
         </div>
         <div class="shelf-grid" id="shelfGrid"></div>
       </div>
 
       <div class="panel-box">
-        <div class="panel-title">✦ Dark Blessings ✦</div>
-        <div class="upg-list" id="upgList"></div>
+        <div class="panel-title">✦ The Cursed Tome ✦</div>
+        <div id="tomePagesList" style="display:flex;flex-direction:column;gap:5px;max-height:260px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border-gold) transparent;"></div>
       </div>
       <button class="mod-btn" onclick="openModifiers()">⟁ View Active Modifiers</button>
       <div class="panel-box">
@@ -634,7 +642,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 // CONSTANTS
 // ============================================================
 const SYMS=['🍷','🃏','🌙','💎','🗝️','⚔️','👁️','💀'];
-const BASE_W=[30,25,18,14,10,7,4,2];
+const BASE_W=[20,16,14,12,10,8,5,3];
 const BASE_MULT={'💀':50,'👁️':30,'⚔️':20,'🗝️':15,'💎':12,'🌙':8,'🃏':5,'🍷':4};
 const HIGH_SYMS=['👁️','⚔️','🗝️','💎','💀']; // "high-value"
 const FLOOR_DESCS=['The tavern reeks of smoke and desperation.','Deeper now. The walls sweat with greed.','Whispers echo of fortunes won and lost.','The light grows dim. Only gold gleams.','The abyss gambles with you now.','You cannot tell luck from doom anymore.','Destiny itself deals the cards here.','Few descend this far. None leave unchanged.','The walls breathe coin dust and regret.','Not even shadows descend this deep willingly.'];
@@ -692,9 +700,48 @@ const BOSS_CURSES=[
    apply:{cursedBlind:true}},
 ];
 const BOSS_QUOTES=['"Fortune favors me. Always."','"Every thread of luck I weave — for myself."','"The deeper you fall, the more is mine."','"I have swallowed kingdoms. You are a coin."','"The house does not lose. Ever."'];
-const SHELF_SIZE=5;
+let SHELF_SIZE=8;
 
 // ── PERMANENT UPGRADES (bought with regular coins, expensive, late-game) ──
+const TOME_PAGES=[
+  {id:'page_reroll',  name:'Page of Chaos',    icon:'0x1F300',
+   upside:'Dead spins have 35% chance to reroll a row.',
+   downside:'Each reroll costs 5% of current coins.',
+   lore:'The page shakes. Every failure feeds it.',  cost:1500},
+  {id:'page_lossback',name:'Page of Sorrow',   icon:'0x1F4A7',
+   upside:'On a loss, recover 20% of your bet.',
+   downside:'Win streak resets 1 step earlier each loss.',
+   lore:'Tears soaked this page. They taste like copper.', cost:1800},
+  {id:'page_combo',   name:'Page of Momentum', icon:'0x26D3',
+   upside:'Each consecutive win adds +12% to next win.',
+   downside:'Breaking a streak of 3+ costs the bet again.',
+   lore:'Momentum is borrowed. The debt comes due.', cost:2200},
+  {id:'page_nudge',   name:'Page of the Lever',icon:'0x261D',
+   upside:'Every 4 spins, next bet costs half.',
+   downside:'On the discounted spin, wilds are disabled.',
+   lore:'Pull it. Pull it again. Something will give.', cost:2000},
+  {id:'page_vault',   name:'Page of Iron',     icon:'0x1F3E6',
+   upside:'Vault duration +3 spins. Return bonus +15%.',
+   downside:'Buying a vault costs 50% more.',
+   lore:'Sealed tighter than a miser fist. The lock has teeth.', cost:1600},
+  {id:'page_fever',   name:'Page of Ember',    icon:'0x1F525',
+   upside:'Fever fills 50% faster. Boost +30% stronger.',
+   downside:'Fever drains 30% faster when activated.',
+   lore:'The heat never fades. Neither does the hunger.', cost:1700},
+  {id:'page_tithe',   name:'Page of Offering', icon:'0x1F536',
+   upside:'+2 item coins on every quota payment.',
+   downside:'Each quota costs 5% extra as a tithe.',
+   lore:'Give freely. The tome is never satisfied.', cost:2400},
+  {id:'page_sight',   name:'Page of Sight',    icon:'0x1F441',
+   upside:'All rare symbols x8+ appear 15% more often.',
+   downside:'Max bet capped at 60% of coins.',
+   lore:'To see more is to want more.', cost:2600},
+];
+function hasTomePage(id){return G.tomePages&&G.tomePages.includes(id);}
+function tomeCount(){return G.tomePages?G.tomePages.length:0;}
+// Tome penalty: each page beyond first adds 10% downside severity
+function tomePenalty(){return 1.0+Math.max(0,tomeCount()-1)*0.10;}
+
 const UPG_DEFS=[
   // Early-ish (300-600)
   {id:'luckyreel',    name:'Cursed Reel',       desc:'Middle reel: +10% rare symbols per level.',           baseCost:900,  max:4, stack:true },
@@ -871,6 +918,11 @@ const ALL_SHOP_ITEMS=[
   {id:'death_wish',   icon:'💀', name:'Death Wish',         desc:'💀 on any row: +15 coins (not just jackpot).',cost:1600,tag:'mult',  max:1,  apply:{deathWish:true}},
   {id:'reroll_up2',   icon:'♻️', name:'Entropy Surge',      desc:'+15% chaos reroll chance. Stackable.',     cost:1280, tag:'chance',max:3,  stack:true, apply:{rerollBoost:0.15}},
   {id:'icmulti',      icon:'🔶', name:'Item Hoarder',       desc:'Overpaying quota earns 2x item coins.',    cost:2000, tag:'util',  max:1,  apply:{icDouble:true}},
+  {id:'temp_diag1',   icon:'/', name:'Crooked Glass (temp)',  desc:'Diagonals active for 1 quota.',  cost:1200, tag:'mult',  max:3, stack:true, apply:{tempDiag:true}},
+  {id:'temp_allrows', icon:'=', name:'Triple Vision (temp)',  desc:'All 3 rows active for 1 quota.', cost:2000, tag:'mult',  max:3, stack:true, apply:{tempAllRows:true}},
+  {id:'temp_wildboost',icon:'*',name:'Wild Surge (temp)',     desc:'Rares x3 more likely for 1 quota.', cost:800, tag:'chance',max:3, stack:true, apply:{tempWildBoost:true}},
+  {id:'temp_fever',   icon:'T', name:'Fever Vial (temp)',     desc:'+25 instant Fever.',             cost:600,  tag:'util',  max:5, stack:true, apply:{instantFever:25}},
+  {id:'temp_ichoard', icon:'P', name:'Fortune Pocket (temp)', desc:'+4 item coins immediately.',     cost:1000, tag:'util',  max:5, stack:true, apply:{instantIC:4}},
 ];
 
 const QUOTA_EVENTS=[
@@ -1071,6 +1123,15 @@ function initState(){
     quotasPaid:0,prevQuota:0,loanDoubleNext:false,lastLoanQuota:-999,lastWarnShown:false,
     vault:0,vaultActive:false,vaultSpinsLeft:0,vaultDeposited:false,vaultCost:50,vaultSpinInterval:5,
     bloodCrownUsed:false,bloodCrownBest:0,
+    tomePages:[],shelfExpanded:false,tomeWildDisabledThisSpin:false,
+    // House Suspicion
+    suspicionWins:0,       // high-bet wins accumulator
+    suspicionWarned:false, // warning popup shown
+    suspicionStrike:0,     // post-warning high-bet wins (0-2)
+    houseWatchFloors:0,    // floors remaining in crackdown (0 = not active)
+    feverActive:false,feverSpinsLeft:0,feverTimer:null,feverBoostMult:1.0,
+    jackpotEchoReady:false,hollowWinCount:0,hungerMinBet:5,
+    quotaBufferUsed:false,
     jackpotEchoReady:false,hollowWinCount:0,hungerMinBet:5,
     quotaBufferUsed:false,
     // Boss mechanic
@@ -1228,7 +1289,7 @@ function rebuildPills(){
   const b=document.getElementById('paylineBar');b.innerHTML='';
   const lines=['Middle Row'];
   if(lv('extrapayline')>0){lines.push('Diag ↘');lines.push('Diag ↗');}
-  if(lv('multirow')>0){lines.push('Top Row');lines.push('Bottom Row');}
+  if(allRowsActive){lines.push('Top Row');lines.push('Bottom Row');}
   if(G.bonusPL)lines.push('Top Bonus');
   lines.forEach(n=>{const p=document.createElement('div');p.className='pl-pill on';p.textContent=n;b.appendChild(p);});
 }
@@ -1239,7 +1300,7 @@ function updateDiagDisplay(){document.getElementById('diagMultDisp').textContent
 // ============================================================
 function getMod(k,def){return G.shopMods[k]!==undefined?G.shopMods[k]:def;}
 function lv(id){return G.upgLv[id]||0;}
-function maxBetVal(){return Math.floor(G.coins);}
+function maxBetVal(){const cap=hasTomePage('page_sight')?Math.floor(G.coins*0.6):G.coins;return Math.floor(cap);}
 function hasRelic(id){return G.shelf.some(r=>r.id===id&&(r.usesLeft===null||r.usesLeft>0));}
 function getSymChance(symIdx){
   const keys=['','','moonChance','gemChance','','','','skullChance'];
@@ -1252,8 +1313,8 @@ function getSymMult(sym,jackpotBoost=false){
   if(getMod('tripleBonus',0))m+=getMod('tripleBonus',0);
   // Cursed jackpot: 💀 pays ×100
   if(sym==='💀'&&hasRelic('cursedJackpot'))m=100;
-  if(G.activeCurses.includes('decay'))m=Math.max(1,m-G.curseDecayStacks*0.5);
-  if(G.activeCurses.includes('chaos'))m=Math.max(1,m*(0.5+Math.random()));
+  if(G.activeCurses&&G.activeCurses&&G.activeCurses.includes('decay'))m=Math.max(1,m-G.curseDecayStacks*0.5);
+  if(G.activeCurses&&G.activeCurses&&G.activeCurses.includes('chaos'))m=Math.max(1,m*(0.5+Math.random()));
   return m;
 }
 
@@ -1266,6 +1327,8 @@ function getW(col,overrideRaw=false){
   if(ll>0&&col===1)w=w.map((v,i)=>i>=3?v*(1+ll*.1):v);
   if(bl>0)w=w.map((v,i)=>i>=4?v*(1+bl*.08):v);
   if(G.ghostSpins>0)w=w.map((v,i)=>i>=3?v*1.25:v);
+  // Temp wild boost: not actual wilds but helps rare hit
+  if(G.shopMods.tempWildBoost){G.shopMods.tempWildBoostUsed=true;w=w.map((v,i)=>i>=4?v*3:v);}
   if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.rareMult){const rm=G.quotaEvent.mod.rareMult;w=w.map((v,i)=>BASE_MULT[SYMS[i]]>=8?v*rm:v);}
   if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.highRareNerf){w=w.map((v,i)=>BASE_MULT[SYMS[i]]>=12?v*G.quotaEvent.mod.highRareNerf:v);}
   w=w.map((v,i)=>v*getSymChance(i));
@@ -1277,6 +1340,10 @@ function getW(col,overrideRaw=false){
   if(hasRelic('entropyengine')&&G.consecutiveLosses>0)w=w.map((v,i)=>BASE_MULT[SYMS[i]]>=8?v*(1+G.consecutiveLosses*.03):v);
   // Relic: Broken RNG Chip
   if(hasRelic('brokenchip')){const lucky=Math.random()<0.5;w=w.map((v,i)=>BASE_MULT[SYMS[i]]>=8?v*(lucky?1.15:0.85):v);}
+  // House crackdown: drastically reduce all non-lowest symbols
+  if(G.houseWatchFloors>0){
+    w=w.map((v,i)=>i===0?v*4:i===1?v*2:v*0.15); // commons dominate, rares crushed
+  }
   return w;
 }
 function rndSym(col,jackpot=false){
@@ -1313,11 +1380,13 @@ function doSpin(boss=false){
 function evalAll(bet){
   const res=[];
   res.push(evalLine([[0,1],[1,1],[2,1]],bet,'Mid',false));
-  if(lv('extrapayline')>0){
+  const diagActive=lv('extrapayline')>0||(G.shopMods.tempDiagQuotas>0);
+  const allRowsActive=lv('multirow')>0||(G.shopMods.tempAllRowsQuotas>0);
+  if(diagActive){
     res.push(evalLine([[0,0],[1,1],[2,2]],bet,'↘',true));
     res.push(evalLine([[0,2],[1,1],[2,0]],bet,'↗',true));
   }
-  if(lv('multirow')>0){
+  if(allRowsActive){
     res.push(evalLine([[0,0],[1,0],[2,0]],bet,'Top',false));
     res.push(evalLine([[0,2],[1,2],[2,2]],bet,'Bot',false));
   }
@@ -1328,7 +1397,7 @@ function evalLine(cells,bet,lineName,isDiag){
   let syms=cells.map(([c,r])=>G.reels[c][r]);
   // Wild ★ matches any symbol
   const nonWild=syms.filter(s=>s!=='★');
-  const wildsDisabled=G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.noWilds;
+  const wildsDisabled=(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.noWilds)||G.tomeWildDisabledThisSpin;
   if(!wildsDisabled&&nonWild.length>0&&syms.includes('★')){const match=nonWild[0];syms=syms.map(s=>s==='★'?match:s);}
   const[a,b,c2]=syms;
   if(a===b&&b===c2){
@@ -1336,13 +1405,12 @@ function evalLine(cells,bet,lineName,isDiag){
     if(lv('highroller')>0&&G.bet===maxBetVal())m=Math.floor(m*1.5);
     if(isDiag)m*=getMod('diagMult',1.5);
     // Combo streak
-    if(G.comboStreak>0){const cap=hasRelic('comboengine')?50:30;m*=(1+Math.min(cap,G.comboStreak*(lv('combo')?8:5))/100);}
+    if(G.comboStreak>0){const cap=hasRelic('comboengine')?50:30;const base=hasTomePage('page_combo')?12:5;m*=(1+Math.min(cap,G.comboStreak*base)/100);}
     if(G.doubleMultNext){m*=2;G.doubleMultNext=false;}
     // Four-Leaf Charm: triple middle row → double
     if(hasRelic('fourcharm')&&lineName==='Mid')m*=2;
-    // Fever boost: fever% chance each row hits jackpot
     let isFeverJackpot=false;
-    if(G.fever>0&&Math.random()*100<G.fever){m=getSymMult('💀')*2;isFeverJackpot=true;}
+    if(G.feverActive){m=m*G.feverBoostMult;isFeverJackpot=G.fever>=70||(G.feverBoostMult>=2.0);}
     // Glitch Cartridge
     if(hasRelic('glitch')&&Math.random()<0.5){if(m>20)m=m/3;else m=m*3;}
     // Devil's Lever: 20% chance to erase win
@@ -1366,6 +1434,7 @@ function evalLine(cells,bet,lineName,isDiag){
     if(G.doubleMultNext){m*=2;G.doubleMultNext=false;}
     if(hasRelic('blackcat')&&G.comboStreak<2)m*=0.8;
     if(hasRelic('debtcontract'))m*=2;
+    if(G.houseWatchFloors>0)m*=0.4; // house crackdown: pair payouts gutted
     let pairWin=Math.floor(bet*m);
     if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.pairNerf) pairWin=Math.floor(pairWin*G.quotaEvent.mod.pairNerf);
     if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.pairDouble) pairWin=Math.floor(pairWin*2);
@@ -1378,24 +1447,54 @@ function evalLine(cells,bet,lineName,isDiag){
 // FEVER
 // ============================================================
 function gainFever(amount){
-  G.fever=Math.min(100,G.fever+amount);
+  if(G.feverActive)return;
+  const rate=hasTomePage('page_fever')?1.5:1.0;
+  G.fever=Math.min(100,G.fever+amount*rate*0.35);
   updateFeverBar();
+}
+function activateFever(){
+  if(G.feverActive||G.fever<5)return;
+  G.feverActive=true;
+  const pct=G.fever/100;
+  G.feverBoostMult=1.0+pct*(hasTomePage('page_fever')?3.0:2.0);
+  G.feverSpinsLeft=5;
+  if(G.feverTimer)clearTimeout(G.feverTimer);
+  G.feverTimer=setTimeout(expireFever,30000);
+  log('fever','FEVER ACTIVATED! x'+G.feverBoostMult.toFixed(1)+' for 5 spins!');
+  updateFeverBar();
+  document.getElementById('slotMachine').classList.add('fever-mode');
+}
+function expireFever(){
+  G.feverActive=false;G.fever=0;G.feverBoostMult=1.0;G.feverSpinsLeft=0;
+  if(G.feverTimer){clearTimeout(G.feverTimer);G.feverTimer=null;}
+  updateFeverBar();
+  const m=document.getElementById('slotMachine');
+  if(m)m.classList.remove('fever-mode');
+  log('fever','Fever burned out.');
 }
 function updateFeverBar(){
   const fill=document.getElementById('feverFill');
-  const track=document.getElementById('feverFill').parentElement;
+  if(!fill)return;
+  const track=fill.parentElement;
   const pct=Math.floor(G.fever);
-  fill.style.width=pct+'%';
-  document.getElementById('feverPct').textContent=pct+'%';
+  fill.style.width=(G.feverActive?100:pct)+'%';
+  const pel=document.getElementById('feverPct');
+  if(pel){
+    if(G.feverActive)pel.textContent='x'+G.feverBoostMult.toFixed(1)+' ('+G.feverSpinsLeft+'sp)';
+    else pel.textContent=pct+'%';
+  }
   fill.className='fever-fill';
-  track.className='fever-track';
-  if(pct>=100){fill.classList.add('fever-fill-max');track.classList.add('fever-track-max');}
-  else if(pct>=70){fill.classList.add('fever-fill-high');track.classList.add('fever-track-glow');}
-  else if(pct>=40){fill.classList.add('fever-fill-med');track.classList.add('fever-track-glow');}
-  else{fill.classList.add('fever-fill-low');}
-  const machine=document.getElementById('slotMachine');
-  if(G.fever>=20)machine.classList.add('fever-mode');
-  else machine.classList.remove('fever-mode');
+  if(track)track.className='fever-track';
+  if(G.feverActive||pct>=100){fill.classList.add('fever-fill-max');if(track)track.classList.add('fever-track-max');}
+  else if(pct>=70){fill.classList.add('fever-fill-high');if(track)track.classList.add('fever-track-glow');}
+  else if(pct>=40){fill.classList.add('fever-fill-med');if(track)track.classList.add('fever-track-glow');}
+  else fill.classList.add('fever-fill-low');
+  const btn=document.getElementById('feverActivateBtn');
+  if(btn){
+    if(G.feverActive){btn.textContent='BURNING... ('+G.feverSpinsLeft+')';btn.disabled=true;btn.style.opacity='.5';}
+    else if(pct>=5){btn.textContent='IGNITE ('+pct+'%)';btn.disabled=false;btn.style.opacity='1';}
+    else{btn.textContent='FEVER';btn.disabled=true;btn.style.opacity='.3';}
+  }
 }
 
 // ============================================================
@@ -1419,15 +1518,16 @@ function rollIRS(){
   G.irsRisk=Math.min(95,10+(G.spinsSinceDouble-1)*5);
   checkIRS();
   if(Math.random()*100<G.irsRisk){
-    // IRS strikes: take 90%, leave 10% of quota
-    const taken=G.coins-Math.floor(G.quota*0.1);
-    const left=Math.max(10,Math.floor(G.quota*0.1));
-    document.getElementById('irsSeized').innerHTML=`Seized: <span>${taken} coins</span>`;
-    document.getElementById('irsLeft').innerHTML=`Remaining: <span>${left} coins</span>`;
+    const safeFloor=Math.max(G.quota,Math.floor(G.quota*1.05));
+    if(G.coins<=safeFloor){G.irsActive=false;G.irsRisk=0;return false;}
+    const taken=G.coins-safeFloor;
+    const left=safeFloor;
+    document.getElementById('irsSeized').innerHTML='Seized: <span>'+taken+' coins</span>';
+    document.getElementById('irsLeft').innerHTML='Remaining: <span>'+left+' coins</span>';
     G.coins=left;
     G.irsActive=false;G.irsRisk=0;
     document.getElementById('irsOverlay').classList.add('show');
-    log('irs',`⚖ IRS RAID: ${taken} coins seized. Left with ${left}.`);
+    log('irs','IRS RAID: '+taken+' coins seized. Left with '+left+'.');
     updateStats();
     return true;
   }
@@ -1533,9 +1633,10 @@ function dismissNudge(){hideNudgeBar();clearWinOverlays();if(_nudgeResolve){_nud
 // ROW REROLL
 // ============================================================
 async function tryReroll(bet){
+  const tomePct=hasTomePage('page_reroll')?0.35:0;
   const basePct=lv('rerollchance')*0.25;
   const boost=getMod('rerollBoost',0)*G.shopOwned.filter(x=>x==='reroll_up').length;
-  const totalPct=Math.min(1,basePct+boost);
+  const totalPct=Math.min(1,basePct+boost+tomePct);
   if(totalPct<=0)return false;
   if(Math.random()>totalPct)return false;
   const row=Math.floor(Math.random()*3);
@@ -1552,6 +1653,7 @@ async function tryReroll(bet){
   setTimeout(()=>{for(let c=0;c<3;c++){const ov=document.getElementById(`ov_${c}_${row}`);if(ov)ov.className=`cell-ov row${row}`;};},1400);
   await wait(350);
   const newResults=evalAll(bet);const newWin=newResults.reduce((s,r)=>s+r.win,0);
+  if(hasTomePage('page_reroll')){const penalty=Math.floor(G.coins*0.05);G.coins=Math.max(0,G.coins-penalty);}
   if(newWin>0){G.coins+=newWin;G.totalWon+=newWin;if(G.coins>G.peakCoins)G.peakCoins=G.coins;highlightCells(newResults,false,false);showWinMsg(newResults.reduce((b,r)=>r.win>b.win?r:b),newWin);spawnCoins();log('win',`↺ Reroll hit! +${newWin}.`);return true;}
   return false;
 }
@@ -1560,16 +1662,32 @@ async function tryReroll(bet){
 // SPIN
 // ============================================================
 async function spin(){
-  if(G.activeCurses&&G.activeCurses.includes('hunger')){G.hungerMinBet=(G.hungerMinBet||5)+2;if(G.bet<G.hungerMinBet){G.bet=Math.min(G.coins,G.hungerMinBet);updateStats();}}
   if(G.spinning||G.coins<G.bet)return;
+  // Block spin if quota spins exhausted — player must pay or game over
+  if(G.quotaSpinsLeft<=0&&!G.bossActive){
+    if(G.coins>=G.quota){
+      // Has enough but hasn't paid — force them to pay
+      document.getElementById('lastWarnText').textContent='\u26a0 NO SPINS LEFT \u2014 You have enough to pay! Pay the quota now!';
+      document.getElementById('lastWarnBar').style.display='block';
+      updatePayQuotaBtn();
+    } else {
+      trigGameOver('The quota was not met. The house takes all.');
+    }
+    return;
+  }
+  const _btn=document.getElementById('spinBtn');
+  const _releaseSpin=()=>{G.spinning=false;if(_btn)_btn.disabled=false;updatePayQuotaBtn();};
+  if(G.activeCurses&&G.activeCurses&&G.activeCurses.includes('hunger')){G.hungerMinBet=(G.hungerMinBet||5)+2;if(G.bet<G.hungerMinBet){G.bet=Math.min(G.coins,G.hungerMinBet);updateStats();}}
   G.spinning=true;
   const btn=document.getElementById('spinBtn');btn.disabled=true;
   document.getElementById('payQuotaBtn').disabled=true;
+  try{
 
   let cost=G.bet;
   if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.tripleSpinCost&&G.spins%3===0){cost*=2;log('lose','🔧 Rigged: double cost this spin!');}
   if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.bloodMarket){cost+=Math.max(1,Math.floor(G.coins*0.01));}
-  if(lv('nudge')>0){G.nudgeCtr++;if(G.nudgeCtr>=5){cost=Math.floor(G.bet/2);G.nudgeCtr=0;log('upgrade',"⚡ Fate's Nudge: half cost!");}}
+  if(lv('nudge')>0){G.nudgeCtr++;if(G.nudgeCtr>=5){cost=Math.floor(G.bet/2);G.nudgeCtr=0;log('upgrade',"Fate Nudge: half cost!");}}
+  if(hasTomePage('page_nudge')){G.nudgeCtr=(G.nudgeCtr||0)+1;if(G.nudgeCtr>=4){cost=Math.floor(G.bet/2);G.nudgeCtr=0;G.tomeWildDisabledThisSpin=true;log('upgrade','Tome Nudge: half cost (wilds disabled)!');}}
   if(G.halfBetSpinsLeft>0){cost=Math.floor(cost*.4);G.halfBetSpinsLeft--;;}
 
   // Debt Contract: extra -5 per spin
@@ -1577,12 +1695,12 @@ async function spin(){
   // Credit Card: free spin when broke
   let freeSpin=false;
   if(G.coins<cost&&hasRelic('creditcard')){freeSpin=true;cost=0;G.creditCardDebt+=0.05;log('relic','💳 Credit Card: free spin (quota penalty +5%)');}
-  if(!freeSpin&&G.coins<cost){G.spinning=false;btn.disabled=false;updatePayQuotaBtn();return;}
+  if(!freeSpin&&G.coins<cost){_releaseSpin();return;}
 
   G.coins-=cost;G.spins++;
-  if(G.activeCurses.includes('leech')&&G.coins>0){G.coins=Math.max(0,G.coins-3);}
+  if(G.activeCurses&&G.activeCurses.includes('leech')&&G.coins>0){G.coins=Math.max(0,G.coins-3);}
   // Decay curse: reduce combo streak multiplier floor
-  if(G.activeCurses.includes('decay')&&G.curseDecayStacks<20){G.curseDecayStacks++;}
+  if(G.activeCurses&&G.activeCurses.includes('decay')&&G.curseDecayStacks<20){G.curseDecayStacks++;}
   G.loadedDiceCount++;G.spinCounterCount++;
   if(G.ghostSpins>0)G.ghostSpins--;
   updateStats();
@@ -1632,7 +1750,7 @@ async function spin(){
   if(G.nudgeTokens>0&&!G.bossActive)await showNudgeBar(cost);
 
   // Mirror Curse: replace high symbols with 🍷
-  if(G.activeCurses.includes('mirror')){
+  if(G.activeCurses&&G.activeCurses.includes('mirror')){
     for(let c=0;c<3;c++){if(BASE_MULT[G.reels[c][1]]>=20)G.reels[c][1]='🍷';}
   }
   const results=evalAll(cost);
@@ -1658,14 +1776,14 @@ async function spin(){
       log('boss','⚖️ Auditor seized '+taken+' coins!');
     }
     // Curses
-    if(G.activeCurses.includes('greed'))finalWin=Math.floor(finalWin*0.75);
-    if(G.activeCurses.includes('hollow')){G.hollowWinCount=(G.hollowWinCount||0)+1;if(G.hollowWinCount%2===0){finalWin=0;log('lose','🕳️ Hollow Curse: this win consumed.');}}
-    if(G.activeCurses.includes('hunger')){G.hungerMinBet=(G.hungerMinBet||5)+2;}
-    if(G.activeCurses.includes('chaos')){
+    if(G.activeCurses&&G.activeCurses.includes('greed'))finalWin=Math.floor(finalWin*0.75);
+    if(G.activeCurses&&G.activeCurses.includes('hollow')){G.hollowWinCount=(G.hollowWinCount||0)+1;if(G.hollowWinCount%2===0){finalWin=0;log('lose','🕳️ Hollow Curse: this win consumed.');}}
+    if(G.activeCurses&&G.activeCurses.includes('hunger')){G.hungerMinBet=(G.hungerMinBet||5)+2;}
+    if(G.activeCurses&&G.activeCurses.includes('chaos')){
       // Chaos: randomize final amount by ±30%
       const factor=0.7+Math.random()*0.6;finalWin=Math.floor(finalWin*factor);
     }
-    if(G.activeCurses.includes('leech')){G.coins=Math.max(0,G.coins-3);}
+    if(G.activeCurses&&G.activeCurses.includes('leech')){G.coins=Math.max(0,G.coins-3);}
     // Quota event payout modifier
     if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.payoutMult){finalWin=Math.floor(finalWin*G.quotaEvent.mod.payoutMult);}
     if(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.overflowBonus&&totalWin>G.bet*5){finalWin=Math.floor(finalWin*1.5);}
@@ -1683,6 +1801,28 @@ async function spin(){
     if(G.shopMods.coinMagnet){const mag=G.shopMods.coinMagnet*3;G.coins+=mag;G.totalWon+=mag;}
     highlightCells(results,G.bossActive,hasFeverWin);
     showWinMsg(best,finalWin,hasFeverWin);spawnCoins();
+    // House suspicion: track high-bet wins
+    if(!G.bossActive){
+      const highBetThresh=maxBetVal()*0.75;
+      if(G.bet>=highBetThresh&&finalWin>0){
+        if(G.suspicionWarned&&G.suspicionStrike<2){
+          G.suspicionStrike++;
+          if(G.suspicionStrike>=2){
+            // Crackdown triggered
+            G.houseWatchFloors=5;
+            G.suspicionWins=0;G.suspicionWarned=false;G.suspicionStrike=0;
+            showHouseCrackdown();
+          }
+        } else if(!G.suspicionWarned){
+          G.suspicionWins++;
+          if(G.suspicionWins>=3){
+            G.suspicionWarned=true;
+            G.suspicionStrike=0;
+            showHouseWarning();
+          }
+        }
+      }
+    }
     log(hasFeverWin?'fever':best.type==='triple'&&best.mult>=20?'jackpot':'win',
       best.type==='triple'?('★ '+best.symbol+'×3 ×'+Math.floor(best.mult)+' — +'+finalWin+'!'):('Won '+finalWin+'.'));
     // Death Wish: 💀 anywhere = +15 coins
@@ -1692,15 +1832,22 @@ async function spin(){
       for(let c=0;c<3;c++){if(BASE_MULT[G.reels[c][1]]>=12){G.stickyLock[c]=true;log('relic',`📌 Reel ${c+1} locked!`);}}
     }
     // Fever: jackpot triples increase fever
-    const fvBonus=lv('feverboost')*3;
-    const fvMult=(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.feverDouble)?2:1;
-    results.forEach(r=>{if(r.type==='triple'&&r.symbol==='💀')gainFever((15+fvBonus)*fvMult);else if(r.type==='triple')gainFever((5+fvBonus)*fvMult);else if(r.type==='pair')gainFever((1+fvBonus)*fvMult);});
+    if(!G.feverActive){
+      const fvBonus=hasTomePage('page_fever')?3:0;
+      const fvMult=(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.feverDouble)?2:1;
+      results.forEach(r=>{
+        if(r.type==='triple'&&BASE_MULT[r.symbol]>=20)gainFever((4+fvBonus)*fvMult);
+        else if(r.type==='triple')gainFever((2+fvBonus)*fvMult);
+        else if(r.type==='pair')gainFever((0.4+fvBonus)*fvMult);
+      });
+    }
+    if(G.feverActive){G.feverSpinsLeft--;if(G.feverSpinsLeft<=0)expireFever();else updateFeverBar();}
     // Collector Badge
-    if(hasRelic('collectorbadge'))G.collectedSymbols.add(G.reels[1][1]);
+    if(hasRelic('collectorbadge')){if(!(G.collectedSymbols instanceof Set))G.collectedSymbols=new Set();G.collectedSymbols.add(G.reels[1][1]);}
     // Objective tracking
     if(G.quotaObjective&&!G.quotaObjDone){
       const obj=G.quotaObjective;
-      if(obj.type==='sym_variety'){G.objSymsHit.add(G.reels[1][1]);G.quotaObjProgress=G.objSymsHit.size;if(G.quotaObjProgress>=obj.target){G.quotaObjDone=true;G.itemCoins+=3;log('upgrade','🎯 Objective complete! +3 item coins!');}}
+      if(obj.type==='sym_variety'){if(!(G.objSymsHit instanceof Set))G.objSymsHit=new Set(G.objSymsHit||[]);G.objSymsHit.add(G.reels[1][1]);G.quotaObjProgress=G.objSymsHit.size;if(G.quotaObjProgress>=obj.target){G.quotaObjDone=true;G.itemCoins+=3;log('upgrade','🎯 Objective complete! +3 item coins!');}}
       if(obj.type==='win_streak'){
         if(totalWin>0){G.objSmallStreak++;G.quotaObjProgress=G.objSmallStreak;if(G.objSmallStreak>=obj.target){G.quotaObjDone=true;G.itemCoins+=3;log('upgrade','🎯 Objective complete! +3 item coins!');}}
         else{G.objSmallStreak=0;G.quotaObjProgress=0;}
@@ -1731,6 +1878,7 @@ async function spin(){
     if(hasRelic('piggybank')){G.coins+=3;log('relic','🐷 Piggy Bank: +3 on loss.');}
     // Lossback upgrade
     if(lv('lossback')>0){const rb=Math.floor(cost*.15);G.coins+=rb;}
+    if(hasTomePage('page_lossback')){G.coins+=Math.floor(cost*0.20);}
     // Fate Coin
     if(hasRelic('fatecoin')&&Math.random()<0.1){
       log('relic','🪙 Fate Coin rerolled your spin!');doSpin(false);const fc=G.reels.map(c=>[...c]);
@@ -1742,7 +1890,7 @@ async function spin(){
       const rerolled=await tryReroll(cost);
       if(!rerolled){showLoseMsg();log('lose',flavorLoss());}
     }
-    if(!(G.quotaEvent&&G.quotaEvent.mod&&G.quotaEvent.mod.feverDouble))G.fever=Math.max(0,G.fever-2);updateFeverBar();
+    if(!G.feverActive)updateFeverBar();
   }
 
   // Insurance
@@ -1751,14 +1899,14 @@ async function spin(){
 
   // IRS check
   checkIRS();
-  if(G.irsActive&&!G.bossActive){const raided=rollIRS();if(raided){G.spinning=false;btn.disabled=false;updateStats();return;}}
+  if(G.irsActive&&!G.bossActive){const raided=rollIRS();if(raided){updateStats();_releaseSpin();return;}}
 
   if(G.bossActive){
     await wait(180);runEnemySpin(cost);updateBossPanel();
     G.bossSpinsLeft--;
     const yq=G.bossYouCoins>=G.bossQuota,eq=G.bossEnemyCoins>=G.bossQuota;
-    if(yq||eq||G.bossSpinsLeft<=0){await wait(500);G.spinning=false;btn.disabled=false;endBoss(yq,eq);return;}
-    updateStats();G.spinning=false;btn.disabled=false;return;
+    if(yq||eq||G.bossSpinsLeft<=0){await wait(500);endBoss(yq,eq);_releaseSpin();return;}
+    updateStats();_releaseSpin();return;
   }
 
   // Vault tick
@@ -1787,14 +1935,20 @@ async function spin(){
     document.getElementById('lastWarnBar').style.display='block';
     updatePayQuotaBtn();
   }
+  if(G.quotaSpinsLeft<=0&&G.coins>=G.quota&&!G.bossActive){
+    // Out of spins but can pay — force-show the pay button prominently
+    document.getElementById('lastWarnText').textContent='\u26a0 SPINS EXHAUSTED \u2014 Pay the quota now to continue!';
+    document.getElementById('lastWarnBar').style.display='block';
+    updatePayQuotaBtn();
+  }
   if(G.quotaSpinsLeft<=0&&G.coins<G.quota){
     if(lv('insurance')>0&&!G.insuranceUsed&&G.coins>=insAmt){log('lose','⚠ Spins exhausted — insurance kept you.');}
     else{
       // Quota Buffer upgrade: if within 20% of quota, get 1 emergency free spin
       if(lv('quotabuffer')>0&&!G.quotaBufferUsed&&G.coins>=G.quota*0.80){
         G.quotaBufferUsed=true;G.quotaSpinsLeft=1;
-        log('upgrade','🛡 Debt Shield: emergency free spin granted!');
-        updateStats();G.spinning=false;btn.disabled=false;updatePayQuotaBtn();return;
+        log('upgrade','Debt Shield: emergency free spin granted!');
+        updateStats();_releaseSpin();return;
       }
       document.getElementById('lastWarnBar').style.display='none';
       await wait(400);trigGameOver('The quota was not met. The house takes all.');return;
@@ -1802,9 +1956,13 @@ async function spin(){
   }
   if(G.coins<G.bet){G.bet=Math.max(5,Math.min(G.coins,5));if(G.coins<5){await wait(400);trigGameOver('Your fortune is spent.');return;}log('','Bet reduced to 5.');}
 
-  updateStats();updateUpgrades();rebuildPills();updateDiagDisplay();
-  G.spinning=false;btn.disabled=false;
-  updatePayQuotaBtn();
+  if(G.tomeWildDisabledThisSpin)G.tomeWildDisabledThisSpin=false;
+  updateStats();renderTomePages();rebuildPills();updateDiagDisplay();
+  _releaseSpin();
+  }catch(e){
+    console.error('Spin error (releasing lock):', e);
+    _releaseSpin();
+  }
 }
 
 function guaranteePair(){
@@ -1829,6 +1987,11 @@ function updatePayQuotaBtn(){
 
 function tryPayQuota(){
   if(G.spinning||G.coins<G.quota)return;
+  // Mandatory objective check
+  if(G.quotaObjective&&!G.quotaObjDone){
+    showObjectiveBlockPopup();
+    return;
+  }
   // Vault payout first (before deducting quota)
   if(G.vaultActive&&G.vault>0){
     let ret=G.vault;
@@ -1841,6 +2004,7 @@ function tryPayQuota(){
   let icEarned=3+extraIc;
   if(G.shopMods.icDouble)icEarned*=2;
   icEarned+=lv('icbonus');
+  if(hasTomePage('page_tithe'))icEarned+=2;
   G.itemCoins+=icEarned;
   log('floor','✦ Quota '+G.quota+' paid. Earned '+icEarned+' item coin'+(icEarned!==1?'s':'')+'! 🔶');
   if(hasRelic('loanshark')){G.coins=Math.max(10,G.coins-160);log('relic','🦈 Loan Shark collected 160 coins.');spendRelicUse('loanshark');}
@@ -1849,9 +2013,14 @@ function tryPayQuota(){
   G.prevQuota=G.quota;
   G.lastQuotaPaid=Math.max(1,G.coins-G.quota);
   G.coins-=G.quota;
+  if(hasTomePage('page_tithe')){const tithe=Math.floor(G.coins*0.05*(1+Math.max(0,tomeCount()-1)*0.1));G.coins=Math.max(0,G.coins-tithe);log('lose','Tome tithe: '+tithe+' coins.');}
   // Debt Curse tithe
   if(G.activeCurses.includes('debt')){const tithe=Math.floor(G.coins*0.1);G.coins=Math.max(0,G.coins-tithe);log('lose','📜 Debt Curse: '+tithe+' coins tithed.');}
   G.quotasPaid++;
+  // Decay temp shop items
+  if(G.shopMods.tempDiagQuotas>0)G.shopMods.tempDiagQuotas--;
+  if(G.shopMods.tempAllRowsQuotas>0)G.shopMods.tempAllRowsQuotas--;
+  if(G.shopMods.tempWildBoost&&G.shopMods.tempWildBoostUsed){G.shopMods.tempWildBoost=false;G.shopMods.tempWildBoostUsed=false;}
   G.lastWarnShown=false;
   document.getElementById('lastWarnBar').style.display='none';
   G.irsActive=false;G.irsRisk=0;G.spinsSinceDouble=0;
@@ -1866,6 +2035,11 @@ function tryPayQuota(){
 // ============================================================
 function advFloor(){
   G.floor++;G.insuranceUsed=false;G.echoUsed=false;G.wildInjectorUsed=false;G.quotaBufferUsed=false;
+  if(G.houseWatchFloors>0){
+    G.houseWatchFloors--;
+    if(G.houseWatchFloors===0){log('floor','The House has lifted its scrutiny.');
+    } else {log('lose','House Watch: '+G.houseWatchFloors+' floors remaining.');}
+  }
   // Blood Crown: double best win from last floor
   if(hasRelic('bloodcrown')&&!G.bloodCrownUsed&&G.bloodCrownBest>0){
     G.coins+=G.bloodCrownBest;G.totalWon+=G.bloodCrownBest;
@@ -2145,10 +2319,16 @@ function applyShopMod(item){
   if(a.deathWish!==undefined){G.shopMods.deathWish=true;}
   if(a.rerollBoost!==undefined){G.shopMods.rerollBoost=(G.shopMods.rerollBoost||0)+a.rerollBoost;}
   if(a.icDouble!==undefined){G.shopMods.icDouble=true;}
+  if(a.tempDiag)     {G.shopMods.tempDiagQuotas=(G.shopMods.tempDiagQuotas||0)+1;}
+  if(a.tempAllRows)  {G.shopMods.tempAllRowsQuotas=(G.shopMods.tempAllRowsQuotas||0)+1;}
+  if(a.tempWildBoost){G.shopMods.tempWildBoost=true;}
+  if(a.instantFever) {gainFever(a.instantFever);}
+  if(a.instantIC)    {G.itemCoins+=a.instantIC;log('shop','Pocket: +'+a.instantIC+' IC!');}
 }
 function closeShop(){
   document.getElementById('shopOverlay').classList.remove('show');
-  updateStats();updateUpgrades();rebuildPills();updateDiagDisplay();renderShelf();
+  if(G.tomeWildDisabledThisSpin)G.tomeWildDisabledThisSpin=false;
+  updateStats();renderTomePages();rebuildPills();updateDiagDisplay();renderShelf();
   document.getElementById('spinBtn').disabled=false;
   updatePayQuotaBtn();
 }
@@ -2157,20 +2337,9 @@ function closeShop(){
 // PERMANENT UPGRADES
 // ============================================================
 function updateUpgrades(){
-  const l=document.getElementById('upgList');l.innerHTML='';
-  UPG_DEFS.forEach(u=>{
-    const lvl=lv(u.id),maxed=lvl>=u.max,owned=!u.stack&&lvl>0;
-    const cost=Math.floor(u.baseCost*Math.pow(1.7,lvl));
-    const cantAfford=G.coins<cost&&!owned&&!maxed;
-    const d=document.createElement('div');
-    d.className=`upg-item${u.stack&&!maxed?' stack':''}${(owned||maxed||cantAfford)?' gray':''}`;
-    const lvLabel=u.stack&&lvl>0?`<span class="upg-lv">Lv.${lvl}</span>`:'';
-    const costTxt=maxed?'✓ MAX':owned?'✓ OWNED':`${cost}c${u.stack&&lvl>0?' (next)':''}`;
-    d.innerHTML=`<div class="upg-name">${u.name}${lvLabel}</div><div class="upg-desc">${u.desc}</div><div class="upg-cost">${costTxt}</div>`;
-    if(!owned&&!maxed&&!cantAfford)d.onclick=()=>buyUpg(u);
-    l.appendChild(d);
-  });
+  renderTomePages();
 }
+
 function buyUpg(u){
   const lvl=lv(u.id);if(lvl>=u.max)return;
   const cost=Math.floor(u.baseCost*Math.pow(1.7,lvl));
@@ -2180,7 +2349,8 @@ function buyUpg(u){
   // Special effects on purchase
   if(u.id==='vaultupgrade'){G.vaultSpinInterval=5+lv('vaultupgrade')*2;if(G.vaultActive)G.vaultSpinsLeft+=2;}
   if(u.id==='icbonus'){/* applied at payment time */}
-  updateStats();updateUpgrades();rebuildPills();updateDiagDisplay();updateVaultUI();
+  if(G.tomeWildDisabledThisSpin)G.tomeWildDisabledThisSpin=false;
+  updateStats();renderTomePages();rebuildPills();updateDiagDisplay();updateVaultUI();
 }
 
 // ============================================================
@@ -2230,6 +2400,14 @@ function closeModifiers(){document.getElementById('modOverlay').classList.remove
 function updateStats(){
   document.getElementById('coinDisp').textContent=G.activeCurses&&G.activeCurses.includes('blind')?'???':G.coins;
   document.getElementById('coinBox').className='stat-box'+(G.coins<=30?' danger':G.coins>=500?' good':'');
+  // House watch indicator
+  const hw=document.getElementById('houseWatchIndicator');
+  if(hw){
+    if(G.houseWatchFloors>0){hw.textContent='🏛️ House Watch: '+G.houseWatchFloors+' floors';hw.style.display='block';}
+    else if(G.suspicionWarned){hw.textContent='🏛️ House Alert: '+G.suspicionStrike+'/2 strikes';hw.style.display='block';}
+    else if(G.suspicionWins>0){hw.textContent='🏛️ Suspicion: '+G.suspicionWins+'/3';hw.style.display='block';}
+    else{hw.style.display='none';}
+  }
   document.getElementById('quotaDisp').textContent=G.bossActive?G.bossQuota:G.quota;
   document.getElementById('floorDisp').textContent=G.floor;
   document.getElementById('wonDisp').textContent=G.totalWon;
@@ -2255,6 +2433,7 @@ function updateStats(){
   checkIRS();
   updateVaultUI();
   showQuotaModifiers();
+  updateExpandShelfBtn();
 }
 function showWinMsg(r,total,feverWin=false){
   const e=document.getElementById('winMsg');e.className='win-msg';
@@ -2424,6 +2603,23 @@ function declineLoan(){
 // ============================================================
 // QUOTA EVENTS & OBJECTIVES UI
 // ============================================================
+
+// ============================================================
+// HOUSE SUSPICION
+// ============================================================
+function showHouseWarning(){
+  const popup=document.getElementById('houseWarnPopup');
+  if(popup)popup.style.display='flex';
+  log('irs','THE HOUSE IS WATCHING. Two more high-bet wins and the machine turns against you.');
+}
+function showHouseCrackdown(){
+  const popup=document.getElementById('houseCrackPopup');
+  if(popup)popup.style.display='flex';
+  log('irs','THE HOUSE ACTS. Odds crushed for 5 floors.');
+}
+function closeHouseWarn(){document.getElementById('houseWarnPopup').style.display='none';}
+function closeHouseCrack(){document.getElementById('houseCrackPopup').style.display='none';}
+
 function showQuotaModifiers(){
   const bar=document.getElementById('quotaModBar');
   if(!bar)return;
@@ -2496,9 +2692,121 @@ function openDetailPopup(data){
 }
 function closeDetailPopup(){document.getElementById('detailPopup').style.display='none';}
 
+
+// ============================================================
+// CURSED TOME
+// ============================================================
+function renderTomePages(){
+  const el=document.getElementById('tomePagesList');
+  if(!el)return;
+  el.innerHTML='';
+  const penalty=tomeCount()>1?Math.round((tomeCount()-1)*10):0;
+  if(tomeCount()>0){
+    const header=document.createElement('div');
+    header.style.cssText='font-size:8px;color:var(--red-light);letter-spacing:.1em;padding:3px 6px;background:rgba(60,0,0,.2);border:1px solid var(--red);margin-bottom:4px;text-align:center;';
+    header.textContent='TOME BOUND: '+tomeCount()+' pages — downside severity +'+penalty+'%';
+    el.appendChild(header);
+  }
+  TOME_PAGES.forEach(page=>{
+    const owned=hasTomePage(page.id);
+    const div=document.createElement('div');
+    div.style.cssText='background:var(--bg-panel);border:1px solid '+(owned?'#5a1a1a':'var(--border)')+';padding:7px 9px;cursor:'+(owned?'default':'pointer')+';transition:all .2s;opacity:'+(owned?'.5':'1')+';';
+    if(!owned)div.onmouseenter=function(){this.style.borderColor='#8b2020'};
+    if(!owned)div.onmouseleave=function(){this.style.borderColor='var(--border)'};
+    const titleRow=document.createElement('div');
+    titleRow.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;';
+    titleRow.innerHTML='<span style="font-size:9px;letter-spacing:.08em;color:'+(owned?'var(--red-light)':'var(--text)')+';">'+page.name+(owned?' [BOUND]':'')+'</span>'+(owned?'':'<span style="font-family:\'Cinzel Decorative\',serif;font-size:9px;color:var(--gold);">'+page.cost+'c</span>');
+    const up=document.createElement('div');
+    up.style.cssText='font-size:8px;color:var(--green-light);font-family:\'IM Fell English\',serif;font-style:italic;margin-bottom:2px;';
+    up.textContent='+' +page.upside;
+    const dn=document.createElement('div');
+    dn.style.cssText='font-size:8px;color:var(--red-light);font-family:\'IM Fell English\',serif;font-style:italic;margin-bottom:3px;';
+    dn.textContent='-' +page.downside+(tomeCount()>1&&!owned?' (effects +'+penalty+'%)':'');
+    const lore=document.createElement('div');
+    lore.style.cssText='font-size:7px;color:var(--text-dim);font-style:italic;border-top:1px solid var(--border);padding-top:3px;margin-top:2px;';
+    lore.textContent='"'+page.lore+'"';
+    div.appendChild(titleRow);div.appendChild(up);div.appendChild(dn);div.appendChild(lore);
+    if(!owned)div.onclick=()=>buyTomePage(page);
+    el.appendChild(div);
+  });
+}
+function buyTomePage(page){
+  if(hasTomePage(page.id)){log('','Already bound to this page.');return;}
+  if(G.coins<page.cost){log('lose','Need '+page.cost+' coins for '+page.name+'.');return;}
+  G.coins-=page.cost;
+  G.tomePages.push(page.id);
+  log('boss','BOUND: '+page.name+' — the tome grows heavier.');
+  // Apply upside effects
+  if(page.id==='page_vault'){G.vaultSpinInterval+=3;G.vaultCost=Math.floor(G.vaultCost*1.5);}
+  if(page.id==='page_reroll'){G.shopMods.rerollBoost=(G.shopMods.rerollBoost||0)+0.35;}
+  if(page.id==='page_sight'){G.shopMods.allRareUp=(G.shopMods.allRareUp||0)+0.15;}
+  updateStats();renderTomePages();
+}
+
+// ============================================================
+// SHELF EXPANSION
+// ============================================================
+
+function updateExpandShelfBtn(){
+  const btn=document.getElementById('expandShelfBtn');
+  if(!btn)return;
+  if(G.shelfExpanded){
+    btn.textContent='Shelf Expanded (+3 slots)';
+    btn.disabled=true;btn.style.opacity='.4';
+  } else {
+    const cost=G.quota*3;
+    btn.textContent='Expand Shelf ('+cost+' coins)';
+    btn.disabled=G.coins<cost;
+    btn.style.opacity=G.coins<cost?'.4':'1';
+  }
+}
+function expandShelf(){
+  if(G.shelfExpanded){log('','Shelf already expanded this run.');return;}
+  const cost=G.quota*3;
+  if(G.coins<cost){log('lose','Need '+cost+' coins (3x quota) to expand shelf.');return;}
+  G.coins-=cost;
+  SHELF_SIZE+=3;
+  G.shelfExpanded=true;
+  renderShelf();updateStats();
+  const btn=document.getElementById('expandShelfBtn');
+  if(btn){btn.textContent='Shelf Expanded (+3 slots)';btn.disabled=true;btn.style.opacity='.4';}
+  log('upgrade','Shelf expanded! 3 new relic slots unlocked.');
+}
+
+// ============================================================
+// OBJECTIVE BLOCK POPUP
+// ============================================================
+function showObjectiveBlockPopup(){
+  const obj=G.quotaObjective;
+  if(!obj)return;
+  const prog=G.quotaObjProgress;
+  const target=obj.target;
+  const remaining=Math.max(0,target-prog);
+  const popup=document.getElementById('objBlockPopup');
+  if(popup){
+    document.getElementById('objBlockName').textContent=obj.icon+' '+obj.name;
+    document.getElementById('objBlockDesc').textContent=obj.detail||obj.desc;
+    document.getElementById('objBlockProg').textContent='Progress: '+prog+' / '+target+' ('+remaining+' remaining)';
+    popup.style.display='flex';
+  }
+}
+function closeObjBlockPopup(){
+  const p=document.getElementById('objBlockPopup');
+  if(p)p.style.display='none';
+}
+
+// ============================================================
+// TOME PAGE EFFECTS IN SPIN
+// ============================================================
+function applyTomePageEffects(){
+  // page_lossback: recover 20% on loss (handled in lose block)
+  // page_combo: applied in comboStreak logic
+  // page_nudge: handled in nudge logic
+}
 function restartGame(){
   document.getElementById('goOverlay').classList.remove('show');
-  initState();buildReels();updateStats();updateUpgrades();renderShelf();updateVaultUI();renderLog();updateVaultUI();
+  initState();buildReels();updateStats();
+  if(G.feverTimer)clearTimeout(G.feverTimer);updateUpgrades();renderShelf();updateVaultUI();renderLog();updateVaultUI();
   const btn=document.getElementById('spinBtn');btn.disabled=false;btn.textContent='SPIN THE REELS';btn.className='spin-btn';
   updatePayQuotaBtn();
   log('floor','✦ A new descent begins…');
@@ -2797,6 +3105,50 @@ log('','Starting quota: 1000. Each new quota = previous + 20× your leftover coi
     <div id="detailPopupDesc" style="font-family:'IM Fell English',serif;font-style:italic;color:var(--text-dim);font-size:11px;line-height:1.6;margin-bottom:8px;border-left:2px solid var(--border-gold);padding-left:10px;"></div>
     <div id="detailPopupDetail" style="font-size:9px;color:var(--text);line-height:1.6;background:var(--bg-panel);padding:8px 10px;border:1px solid var(--border);"></div>
     <div style="text-align:right;margin-top:10px;font-size:8px;color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;">Click anywhere to close</div>
+  </div>
+</div>
+
+
+<!-- OBJECTIVE BLOCK POPUP -->
+<div id="objBlockPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:650;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#0d0010;border:1px solid var(--gold-dark);border-top:3px solid var(--gold);padding:24px 22px;max-width:400px;width:100%;text-align:center;position:relative;">
+    <div style="font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--red-light);margin-bottom:6px;">OBJECTIVE INCOMPLETE</div>
+    <div id="objBlockName" style="font-family:'Cinzel Decorative',serif;font-size:13px;color:var(--gold);margin-bottom:8px;"></div>
+    <div id="objBlockDesc" style="font-family:'IM Fell English',serif;font-style:italic;color:var(--text-dim);font-size:11px;line-height:1.6;margin-bottom:10px;border-left:2px solid var(--gold-dark);padding-left:10px;text-align:left;"></div>
+    <div id="objBlockProg" style="font-size:9px;letter-spacing:.12em;color:var(--text-dim);margin-bottom:14px;"></div>
+    <div style="font-size:8px;color:var(--red-light);margin-bottom:14px;">Complete this objective before paying the quota.</div>
+    <button onclick="closeObjBlockPopup()" style="padding:9px 22px;background:linear-gradient(135deg,#3a1a0a,#5a2a0f);border:1px solid var(--gold-dark);color:var(--gold);font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;cursor:pointer;text-transform:uppercase;">Back to Spinning</button>
+  </div>
+</div>
+
+
+<!-- HOUSE WARNING POPUP -->
+<div id="houseWarnPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:680;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#0a0a0a;border:1px solid #4a2000;border-top:3px solid #cc4400;padding:28px 24px;max-width:420px;width:100%;text-align:center;position:relative;box-shadow:0 0 40px rgba(180,60,0,.3);">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#cc4400,transparent);"></div>
+    <div style="font-size:36px;margin-bottom:8px;">🏛️</div>
+    <div style="font-family:'Cinzel Decorative',serif;font-size:15px;color:#cc4400;letter-spacing:.12em;margin-bottom:6px;">THE HOUSE IS WATCHING</div>
+    <div style="font-size:8px;letter-spacing:.3em;color:#6a3000;text-transform:uppercase;margin-bottom:14px;">Surveillance Notice</div>
+    <div style="font-family:'IM Fell English',serif;font-style:italic;color:#c4804a;font-size:11px;line-height:1.7;margin-bottom:14px;border-left:2px solid #4a2000;padding-left:10px;text-align:left;">"Our systems have flagged unusual betting patterns. High-value bets paired with consistent wins suggest the machine is being... exploited. You have been warned. Two more such wins and we will be forced to take corrective action."</div>
+    <div style="font-size:9px;color:#cc4400;letter-spacing:.1em;margin-bottom:14px;">Win 2 more times at 75%+ max bet and the House acts.</div>
+    <button onclick="closeHouseWarn()" style="padding:9px 22px;background:linear-gradient(135deg,#2a0a00,#4a1a00);border:1px solid #cc4400;color:#ff8844;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;cursor:pointer;text-transform:uppercase;">Understood</button>
+  </div>
+</div>
+
+<!-- HOUSE CRACKDOWN POPUP -->
+<div id="houseCrackPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:680;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#080808;border:1px solid #6a0000;border-top:3px solid #ff0000;padding:28px 24px;max-width:420px;width:100%;text-align:center;position:relative;box-shadow:0 0 60px rgba(200,0,0,.4);">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#ff2200,#ff0000,#ff2200,transparent);"></div>
+    <div style="font-size:36px;margin-bottom:8px;">⚠️</div>
+    <div style="font-family:'Cinzel Decorative',serif;font-size:15px;color:#ff2200;letter-spacing:.12em;text-shadow:0 0 20px rgba(255,40,0,.5);margin-bottom:6px;">MACHINE RECALIBRATED</div>
+    <div style="font-size:8px;letter-spacing:.3em;color:#6a0000;text-transform:uppercase;margin-bottom:14px;">House Corrective Action</div>
+    <div style="font-family:'IM Fell English',serif;font-style:italic;color:#c46040;font-size:11px;line-height:1.7;margin-bottom:14px;border-left:2px solid #6a0000;padding-left:10px;text-align:left;">"The machine has been adjusted. You will find the odds considerably less... cooperative for the next 5 floors. We trust this will discourage further irregularities. The house always corrects itself."</div>
+    <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;">
+      <div style="font-size:8px;color:var(--red-light);border:1px solid #6a0000;padding:3px 8px;">Rare symbols: drastically reduced</div>
+      <div style="font-size:8px;color:var(--red-light);border:1px solid #6a0000;padding:3px 8px;">Pair payouts: -60%</div>
+      <div style="font-size:8px;color:var(--red-light);border:1px solid #6a0000;padding:3px 8px;">Duration: 5 floors</div>
+    </div>
+    <button onclick="closeHouseCrack()" style="padding:9px 22px;background:linear-gradient(135deg,#2a0000,#4a0000);border:1px solid #ff2200;color:#ff6644;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;cursor:pointer;text-transform:uppercase;">Accept Penalty</button>
   </div>
 </div>
 
