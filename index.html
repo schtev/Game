@@ -1470,6 +1470,7 @@ function initState(){
     vault:0,vaultActive:false,vaultSpinsLeft:0,vaultDeposited:false,vaultCost:50,vaultSpinInterval:5,
     bloodCrownUsed:false,bloodCrownBest:0,
     tomePages:[],shelfExpanded:false,tomeWildDisabledThisSpin:false,
+    stickyLockSpins:[0,0,0], // countdown per reel for sticky
     // House Suspicion
     suspicionWins:0,       // high-bet wins accumulator
     suspicionWarned:false, // warning popup shown
@@ -1850,11 +1851,15 @@ function updateFeverBar(){
 // ============================================================
 function checkIRS(){
   if(G.bossActive)return;
+  // IRS activates at 2x quota; +2% base risk per 25% above quota
   const doubleQuota=G.quota*2;
   if(G.coins>=doubleQuota){
-    if(!G.irsActive){G.irsActive=true;G.irsRisk=10;G.spinsSinceDouble=0;log('irs','⚠ Warning: You\'ve exceeded double the quota. The IRS is watching.');}
+    const overshootPct=Math.floor(((G.coins/G.quota)-2)*4)*2; // +2% per 25% above 2x quota
+    const baseRisk=Math.min(40,10+overshootPct);
+    if(!G.irsActive){G.irsActive=true;G.irsRisk=baseRisk;G.spinsSinceDouble=0;log('irs','IRS WATCHING. Risk: '+baseRisk+'%. Pay quota before they raid.');}
+    else{G.irsRisk=Math.max(G.irsRisk,baseRisk);} // do not reduce if already higher
     document.getElementById('irsWarn').classList.add('show');
-    document.getElementById('irsText').textContent=`⚠ IRS RISK: ${G.irsRisk}% — You hold ${G.coins} coins (quota: ${G.quota}). Pay before they strike.`;
+    document.getElementById('irsText').textContent='IRS RISK: '+G.irsRisk+'% — '+G.coins+' coins held (quota: '+G.quota+'). Pay now.';
   } else {
     G.irsActive=false;G.irsRisk=0;G.spinsSinceDouble=0;
     document.getElementById('irsWarn').classList.remove('show');
@@ -2095,8 +2100,13 @@ async function spin(){
   setTimeout(()=>SFX.play('reelStop',1),220);
   setTimeout(()=>SFX.play('reelStop',2),440);
   G.reels=finalReels;
-  // Clear sticky lock after using it
-  G.stickyLock=[false,false,false];
+  // Decrement sticky lock countdowns and clear expired ones
+  for(let c=0;c<3;c++){
+    if(G.stickyLock[c]){
+      G.stickyLockSpins[c]--;
+      if(G.stickyLockSpins[c]<=0){G.stickyLock[c]=false;G.stickyLockSpins[c]=0;}
+    }
+  }
   await wait(70);
 
   // Nudge phase
@@ -2182,7 +2192,7 @@ async function spin(){
     if(G.shopMods.deathWish){for(let c=0;c<3;c++)for(let r=0;r<3;r++)if(G.reels[c][r]==='💀'){G.coins+=15;G.totalWon+=15;}}
     // Sticky Reel: if rare landed (×12+), lock that column
     if(hasRelic('stickyreel')){
-      for(let c=0;c<3;c++){if(BASE_MULT[G.reels[c][1]]>=12){G.stickyLock[c]=true;log('relic',`📌 Reel ${c+1} locked!`);}}
+      for(let c=0;c<3;c++){if(BASE_MULT[G.reels[c][1]]>=12){G.stickyLock[c]=true;G.stickyLockSpins[c]=1;log('relic','📌 Reel '+(c+1)+' locked for 1 spin!');}}
     }
     // Fever: jackpot triples increase fever
     if(!G.feverActive){
@@ -2353,7 +2363,8 @@ function tryPayQuota(){
   }
   G.vaultActive=false;G.vaultDeposited=false;updateVaultUI();
   const over=G.coins-G.quota;
-  const extraIc=Math.floor((over/G.quota)*10);
+  const overPct=(over/G.quota)*100; // how many % over quota
+  const extraIc=Math.min(4,Math.floor(overPct/50)); // +1 per 50%, max 4
   let icEarned=3+extraIc;
   if(G.shopMods.icDouble)icEarned*=2;
   icEarned+=lv('icbonus');
@@ -2389,6 +2400,7 @@ function tryPayQuota(){
 // ============================================================
 function advFloor(){
   G.floor++;G.insuranceUsed=false;G.echoUsed=false;G.wildInjectorUsed=false;G.quotaBufferUsed=false;
+  G.stickyLock=[false,false,false]; // always reset reel locks between floors
   if(G.houseWatchFloors>0){
     G.houseWatchFloors--;
     if(G.houseWatchFloors===0){log('floor','The House has lifted its scrutiny.');
@@ -2553,7 +2565,7 @@ function resolveEv(tag,cost){
     case'witchbless':G.doubleMultNext=true;log('upgrade','⚗ Witch blessing: next spin ×2!');break;
     case'shadowbroker':G.itemCoins+=2;log('shop','🕵 Shadow Broker: +2 item coins.');break;
     case'alchemist':G.doubleMultNext=true;G.ghostSpins=Math.max(G.ghostSpins,3);log('upgrade','⚗ Alchemist: 3 boosted spins + double mult next!');break;
-    case'mirrormerch':{const sym=G.reels[1][1]||'🌙';for(let c=0;c<3;c++)G.reels[c][1]=sym;G.stickyLock=[true,false,true];log('upgrade','🪞 Mirror: mid reels locked on '+sym+' for 2 spins!');break;}
+    case'mirrormerch':{const sym=G.reels[1][1]||'🌙';for(let c=0;c<3;c++)G.reels[c][1]=sym;G.stickyLock=[true,false,true];G.stickyLockSpins=[2,0,2];log('upgrade','🪞 Mirror: reels locked on '+sym+' for 2 spins!');break;}
     case'arsonist':gainFever(30);log('fever','🔥 Arsonist: Fever +30%!');break;
     default:log('','You pass through unmarked.');break;
   }
@@ -2637,8 +2649,18 @@ function buyShopItem(item){
   if(G.coins<cost)return;
   if(item.req&&!G.shopOwned.includes(item.req))return;
   G.coins-=cost;G.shopOwned.push(item.id);SFX.play('buy');
-  applyShopMod(item);log('shop',`🛒 ${item.name}`);
+  applyShopMod(item);log('shop','Bought: '+item.name);
+  showShopPurchaseFeedback(item.name,item.icon||'');
   updateStats();updateUpgrades();updateDiagDisplay();
+}
+function showShopPurchaseFeedback(name,icon){
+  const fb=document.createElement('div');
+  fb.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.8);background:rgba(0,25,10,.96);border:2px solid var(--green);color:var(--green-light);font-family:Cinzel,serif;font-size:13px;padding:14px 28px;z-index:9999;letter-spacing:.12em;text-align:center;pointer-events:none;transition:all .35s cubic-bezier(.34,1.56,.64,1);opacity:0;';
+  fb.innerHTML=(icon?icon+' ':'')+name+'<br><span style="font-size:8px;letter-spacing:.25em;color:#2ecc71;">PURCHASED</span>';
+  document.body.appendChild(fb);
+  requestAnimationFrame(()=>{fb.style.opacity='1';fb.style.transform='translate(-50%,-50%) scale(1)';});
+  setTimeout(()=>{fb.style.opacity='0';fb.style.transform='translate(-50%,-60%) scale(0.85)';},900);
+  setTimeout(()=>fb.remove(),1300);
 }
 function buyRelic(item){
   const icCost=item.type==='debuff'?1:item.type==='mixed'?2:3;
@@ -2646,7 +2668,9 @@ function buyRelic(item){
   if(G.shelf.length>=SHELF_SIZE)return;
   G.itemCoins-=icCost;
   addRelic(item.id);
-  log('relic',`${item.icon} Acquired: ${item.name}`);
+  log('relic',item.icon+' Acquired: '+item.name);
+  SFX.play('buy');
+  showShopPurchaseFeedback(item.name, item.icon);
   updateStats();
 }
 function applyShopMod(item){
@@ -2745,6 +2769,24 @@ function openModifiers(){
   const nq=calcQuota();
   util.push(`<div class="mod-entry"><div class="mod-name">Next quota ~</div><div class="mod-val">${nq}</div></div>`);
   if(util.length)div.innerHTML+=renderModSection('Status & Preview',util.join(''));
+  // ── SYMBOL ODDS SECTION ──
+  const wAvg=getW(1); // use middle reel as representative
+  const wTotal=wAvg.reduce((a,b)=>a+b,0);
+  const symProbs=SYMS.map((s,i)=>({sym:s,pct:((wAvg[i]/wTotal)*100).toFixed(1),mult:BASE_MULT[s]}));
+  // Pair prob per symbol (any 2 of 3 reels match): ~2 * p * (1-p) * p + p^3 ≈ simplified
+  const pairHtml=symProbs.map(sp=>{
+    const p=sp.pct/100;
+    const pairP=Math.min(99,(3*p*p*(1-p))*100).toFixed(1);
+    const tripleP=Math.min(99,(p*p*p)*100).toFixed(2);
+    return '<div class="mod-entry"><div class="mod-name" style="font-size:7px;">'+sp.sym+' ×'+sp.mult+'</div>'+
+      '<div style="font-size:7px;color:var(--text-dim);display:flex;flex-direction:column;gap:1px;">'+
+      '<span style="color:var(--gold-light)">'+sp.pct+'% chance</span>'+
+      '<span style="color:var(--green-light)">pair: ~'+pairP+'%</span>'+
+      '<span style="color:var(--cyan)">triple: ~'+tripleP+'%</span>'+
+      '</div></div>';
+  }).join('');
+  div.innerHTML+=renderModSection('Symbol Odds (mid reel)',pairHtml);
+
   if(!div.innerHTML)div.innerHTML='<div class="mod-empty">No modifiers active yet.</div>';
   document.getElementById('modOverlay').classList.add('show');
 }
