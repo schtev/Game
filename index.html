@@ -1,11 +1,35 @@
 <!DOCTYPE html>
+<!-- 
+  FORTUNE'S DESCENT — Single-file game
+  ======================================
+  GITHUB PAGES SETUP:
+  1. Create a new repository on GitHub
+  2. Upload this file as index.html to the repository root
+  3. Go to Settings → Pages → Source → Deploy from branch → main / root
+  4. Your game will be live at https://yourusername.github.io/repositoryname/
+  
+  OFFLINE: Works fully offline once loaded. Uses a Service Worker for caching.
+  LOCALHOST: Works with any local server: python3 -m http.server 8080
+  FILE://: Works directly as a file (SW caching disabled, game fully playable)
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Fortune's Descent — A roguelike slot machine game">
+<meta name="theme-color" content="#0a0608">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Fortune's Descent">
+<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogIkZvcnR1bmUncyBEZXNjZW50IiwgInNob3J0X25hbWUiOiAiRm9ydHVuZSdzIERlc2NlbnQiLCAiZGVzY3JpcHRpb24iOiAiQSByb2d1ZWxpa2Ugc2xvdCBtYWNoaW5lIGdhbWUiLCAic3RhcnRfdXJsIjogIi4iLCAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwgImJhY2tncm91bmRfY29sb3IiOiAiIzBhMDYwOCIsICJ0aGVtZV9jb2xvciI6ICIjMGEwNjA4IiwgIm9yaWVudGF0aW9uIjogInBvcnRyYWl0LXByaW1hcnkiLCAiaWNvbnMiOiBbeyJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJyUzRSUzQ3JlY3Qgd2lkdGg9JzEwMCcgaGVpZ2h0PScxMDAnIGZpbGw9JyUyMzBhMDYwOCcvJTNFJTNDdGV4dCB5PScuOWVtJyBmb250LXNpemU9JzkwJyUzRSVGMCU5RiU4RSVCMCUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsICJzaXplcyI6ICJhbnkiLCAidHlwZSI6ICJpbWFnZS9zdmcreG1sIn1dfQ==">
 <title>FORTUNE'S DESCENT</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600&family=IM+Fell+English:ital@0;1&display=swap');
+/* Offline-compatible font stacks — no external requests */
+:root{
+  --font-display: 'Cinzel Decorative', 'Palatino Linotype', 'Palatino', 'Book Antiqua', 'Times New Roman', serif;
+  --font-body:    'Cinzel', 'Palatino Linotype', 'Palatino', 'Book Antiqua', Georgia, serif;
+  --font-lore:    'IM Fell English', 'Palatino Linotype', 'Garamond', 'Book Antiqua', Georgia, serif;
+}
 :root{
   --gold:#d4a843;--gold-light:#f0cc6e;--gold-dark:#8b6914;
   --red:#c0392b;--red-light:#e74c3c;
@@ -3151,6 +3175,42 @@ log('','Starting quota: 1000. Each new quota = previous + 20× your leftover coi
     <button onclick="closeHouseCrack()" style="padding:9px 22px;background:linear-gradient(135deg,#2a0000,#4a0000);border:1px solid #ff2200;color:#ff6644;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;cursor:pointer;text-transform:uppercase;">Accept Penalty</button>
   </div>
 </div>
+
+
+<script>
+// Register inline service worker for offline support
+if('serviceWorker' in navigator){
+  const swCode=`const CACHE='fortunes-descent-v1';
+const ASSETS=['./'];
+self.addEventListener('install',e=>{
+  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));
+});
+self.addEventListener('activate',e=>{
+  e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
+});
+self.addEventListener('fetch',e=>{
+  e.respondWith(caches.match(e.request).then(cached=>{
+    if(cached)return cached;
+    return fetch(e.request).then(res=>{
+      if(res&&res.status===200&&res.type!=='opaque'){
+        const clone=res.clone();
+        caches.open(CACHE).then(c=>c.put(e.request,clone));
+      }
+      return res;
+    }).catch(()=>cached||new Response('Offline',{status:503}));
+  }));
+});`;
+  const blob=new Blob([swCode],{type:'application/javascript'});
+  const swUrl=URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl,{scope:'./'}).then(reg=>{
+    console.log('SW registered for offline support');
+    URL.revokeObjectURL(swUrl);
+  }).catch(e=>{
+    // SW failed (e.g. file:// protocol) — game still works, just no caching
+    console.log('SW not available (offline mode still works):', e.message);
+  });
+}
+</script>
 
 </body>
 </html>
