@@ -555,7 +555,10 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
       </div>
       <div class="panel-box">
         <div class="panel-title">✦ Memory ✦</div>
-        <div class="save-row">
+        <div style="margin-bottom:6px;">
+  <button id="sfxToggleBtn" onclick="toggleSFX()" style="width:100%;background:var(--bg-panel);border:1px solid var(--border);color:var(--text-dim);font-family:'Cinzel',serif;font-size:8px;padding:6px;cursor:pointer;letter-spacing:.12em;transition:all .2s;text-transform:uppercase;">🔊 Sound: ON</button>
+</div>
+<div class="save-row">
           <button class="save-btn" onclick="saveGame()">⬇ Save</button>
           <button class="save-btn" onclick="loadGame()">⬆ Load</button>
         </div>
@@ -662,6 +665,325 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 </div>
 
 <script>
+
+// ============================================================
+// SOUND ENGINE — Web Audio API, fully offline, no files needed
+// ============================================================
+const SFX = (() => {
+  let ctx = null;
+  let masterGain = null;
+  let enabled = true;
+  let volume = 0.6;
+
+  function getCtx() {
+    if (!ctx) {
+      try {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = ctx.createGain();
+        masterGain.gain.value = volume;
+        masterGain.connect(ctx.destination);
+      } catch(e) { return null; }
+    }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+
+  // Core: play an oscillator with envelope
+  function osc(freq, type, startTime, dur, gainPeak, gainEnd, detune=0) {
+    const c = getCtx(); if (!c || !enabled) return;
+    const g = c.createGain();
+    g.connect(masterGain);
+    const o = c.createOscillator();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, startTime);
+    if (detune) o.detune.setValueAtTime(detune, startTime);
+    o.connect(g);
+    g.gain.setValueAtTime(0, startTime);
+    g.gain.linearRampToValueAtTime(gainPeak, startTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.001, gainEnd), startTime + dur);
+    o.start(startTime);
+    o.stop(startTime + dur + 0.05);
+  }
+
+  // Noise burst (for clicks, impacts)
+  function noise(startTime, dur, gainPeak, filterFreq=2000) {
+    const c = getCtx(); if (!c || !enabled) return;
+    const bufSize = Math.floor(c.sampleRate * dur);
+    const buf = c.createBuffer(1, bufSize, c.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+    const src2 = c.createBufferSource();
+    src2.buffer = buf;
+    const filter = c.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = filterFreq;
+    const g = c.createGain();
+    g.gain.setValueAtTime(gainPeak, startTime);
+    g.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+    src2.connect(filter);
+    filter.connect(g);
+    g.connect(masterGain);
+    src2.start(startTime);
+    src2.stop(startTime + dur);
+  }
+
+  const sounds = {
+    // Reels start spinning — mechanical whirr
+    reelSpin() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      // Low mechanical hum
+      osc(80, 'sawtooth', t, 0.8, 0.12, 0.001);
+      osc(120, 'sawtooth', t, 0.7, 0.08, 0.001, 10);
+      // Click rhythm
+      for (let i = 0; i < 8; i++) {
+        noise(t + i * 0.09, 0.04, 0.15, 800);
+      }
+    },
+
+    // Single reel stops — mechanical clunk
+    reelStop(col) {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      const pitches = [140, 120, 100];
+      osc(pitches[col], 'square', t, 0.12, 0.25, 0.001);
+      noise(t, 0.08, 0.3, 1200);
+    },
+
+    // Small win
+    winSmall() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      osc(523, 'sine', t, 0.15, 0.3, 0.001);
+      osc(659, 'sine', t + 0.08, 0.15, 0.3, 0.001);
+      osc(784, 'sine', t + 0.16, 0.2, 0.35, 0.001);
+    },
+
+    // Big win (5x+)
+    winBig() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      const notes = [523, 659, 784, 1047];
+      notes.forEach((f, i) => {
+        osc(f, 'sine', t + i * 0.07, 0.25, 0.4, 0.001);
+        osc(f * 2, 'sine', t + i * 0.07, 0.2, 0.15, 0.001);
+      });
+    },
+
+    // Jackpot — triumphant fanfare
+    jackpot() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      // Fanfare arpeggio
+      const notes = [523, 659, 784, 1047, 1319, 1047, 784, 659, 523];
+      notes.forEach((f, i) => {
+        osc(f, 'triangle', t + i * 0.06, 0.3, 0.5, 0.001);
+        osc(f * 1.5, 'sine', t + i * 0.06, 0.2, 0.2, 0.001);
+      });
+      // Bell hit at end
+      osc(2093, 'sine', t + 0.6, 0.8, 0.6, 0.001);
+      osc(2637, 'sine', t + 0.6, 0.7, 0.4, 0.001);
+    },
+
+    // Coin shower — rapid high ticks
+    coins() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      for (let i = 0; i < 5; i++) {
+        const f = 900 + Math.random() * 400;
+        osc(f, 'sine', t + i * 0.07, 0.06, 0.18, 0.001);
+        noise(t + i * 0.07, 0.04, 0.08, 2500);
+      }
+    },
+
+    // Loss — descending dull thud
+    lose() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      osc(220, 'sawtooth', t, 0.25, 0.15, 0.001);
+      osc(185, 'sawtooth', t + 0.1, 0.2, 0.1, 0.001);
+      osc(147, 'sawtooth', t + 0.2, 0.18, 0.001, 0.001);
+      noise(t, 0.15, 0.12, 600);
+    },
+
+    // Fever activate — rising surge
+    feverOn() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      osc(200, 'sawtooth', t, 0.4, 0.35, 0.001);
+      osc(300, 'sawtooth', t + 0.05, 0.35, 0.3, 0.001);
+      osc(450, 'sawtooth', t + 0.12, 0.3, 0.25, 0.001);
+      osc(600, 'square', t + 0.2, 0.3, 0.4, 0.001);
+      osc(900, 'sine', t + 0.3, 0.35, 0.5, 0.001);
+      osc(1200, 'sine', t + 0.4, 0.3, 0.001, 0.001);
+    },
+
+    // Fever expire — dying embers
+    feverOff() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      osc(600, 'sawtooth', t, 0.3, 0.2, 0.001);
+      osc(400, 'sawtooth', t + 0.1, 0.25, 0.1, 0.001);
+      osc(250, 'sawtooth', t + 0.2, 0.2, 0.001, 0.001);
+      noise(t, 0.25, 0.1, 800);
+    },
+
+    // Fever win — intense crackle
+    feverWin() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      for (let i = 0; i < 6; i++) {
+        osc(400 + i * 150, 'sawtooth', t + i * 0.05, 0.2, 0.45, 0.001);
+      }
+      osc(1760, 'sine', t + 0.3, 0.4, 0.6, 0.001);
+      noise(t, 0.4, 0.2, 3000);
+    },
+
+    // Quota paid — triumphant bell
+    quotaPaid() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      osc(523, 'sine', t, 0.2, 0.4, 0.001);
+      osc(659, 'sine', t + 0.1, 0.2, 0.4, 0.001);
+      osc(1047, 'sine', t + 0.2, 0.25, 0.5, 0.001);
+      osc(1319, 'sine', t + 0.3, 0.2, 0.4, 0.001);
+    },
+
+    // Floor descend — dark descent chime
+    floorDown() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      osc(330, 'sine', t, 0.3, 0.3, 0.001);
+      osc(277, 'sine', t + 0.15, 0.3, 0.3, 0.001);
+      osc(220, 'sine', t + 0.3, 0.3, 0.001, 0.001);
+    },
+
+    // Boss appears — ominous low horn
+    bossAppear() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      osc(55, 'sawtooth', t, 1.0, 0.45, 0.001, -20);
+      osc(110, 'sawtooth', t + 0.05, 0.9, 0.3, 0.001, 15);
+      osc(82, 'square', t + 0.1, 0.8, 0.2, 0.001);
+      noise(t, 0.6, 0.15, 400);
+    },
+
+    // Boss win — victory horn
+    bossWin() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      const melody = [262, 330, 392, 523, 659, 784];
+      melody.forEach((f, i) => {
+        osc(f, 'triangle', t + i * 0.1, 0.3, 0.4, 0.001);
+        if (i === melody.length - 1) osc(f * 2, 'sine', t + i * 0.1, 0.4, 0.3, 0.001);
+      });
+    },
+
+    // Boss loss — defeat descend
+    bossLose() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      osc(392, 'sawtooth', t, 0.3, 0.3, 0.001);
+      osc(330, 'sawtooth', t + 0.15, 0.3, 0.25, 0.001);
+      osc(247, 'sawtooth', t + 0.3, 0.3, 0.2, 0.001);
+      osc(196, 'sawtooth', t + 0.45, 0.35, 0.001, 0.001);
+    },
+
+    // Buy / purchase
+    buy() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      osc(440, 'sine', t, 0.1, 0.25, 0.001);
+      osc(554, 'sine', t + 0.06, 0.1, 0.25, 0.001);
+      osc(659, 'sine', t + 0.12, 0.12, 0.3, 0.001);
+    },
+
+    // Warning / alert — tense sting
+    warn() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      osc(880, 'square', t, 0.12, 0.3, 0.001);
+      osc(880, 'square', t + 0.15, 0.12, 0.3, 0.001);
+      osc(660, 'square', t + 0.3, 0.18, 0.2, 0.001);
+    },
+
+    // Devil deal / loan — sinister chord
+    devilDeal() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      osc(110, 'sawtooth', t, 0.6, 0.3, 0.001, -30);
+      osc(138, 'sawtooth', t + 0.05, 0.5, 0.25, 0.001, 20);
+      osc(165, 'square', t + 0.12, 0.4, 0.2, 0.001);
+      noise(t, 0.3, 0.12, 600);
+    },
+
+    // House crackdown — institutional slam
+    houseCrack() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      osc(55, 'square', t, 0.3, 0.5, 0.001);
+      osc(110, 'sawtooth', t + 0.05, 0.25, 0.35, 0.001);
+      noise(t, 0.2, 0.4, 500);
+      osc(220, 'square', t + 0.25, 0.2, 0.3, 0.001);
+      osc(55, 'square', t + 0.4, 0.25, 0.001, 0.001);
+    },
+
+    // Game over — descending dirge
+    gameOver() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      const notes = [392, 349, 330, 294, 262, 220, 196];
+      notes.forEach((f, i) => {
+        osc(f, 'sawtooth', t + i * 0.18, 0.3, 0.25, 0.001);
+        osc(f * 0.5, 'sine', t + i * 0.18, 0.25, 0.15, 0.001);
+      });
+      noise(t + 1.2, 0.5, 0.2, 300);
+    },
+
+    // IRS raid — harsh siren hit
+    irsRaid() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      for (let i = 0; i < 3; i++) {
+        osc(880, 'sawtooth', t + i * 0.2, 0.15, 0.3, 0.001);
+        osc(660, 'sawtooth', t + i * 0.2 + 0.1, 0.15, 0.25, 0.001);
+      }
+    },
+
+    // Tome page bind — dark thud
+    tomeBind() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      osc(82, 'sawtooth', t, 0.4, 0.45, 0.001, -10);
+      osc(55, 'square', t + 0.08, 0.35, 0.3, 0.001);
+      noise(t, 0.2, 0.3, 700);
+      osc(165, 'sine', t + 0.2, 0.25, 0.001, 0.001);
+    },
+
+    // Vault — safe door clunk
+    vault() {
+      const c = getCtx(); if (!c || !enabled) return;
+      const t = c.currentTime;
+      noise(t, 0.06, 0.5, 1500);
+      osc(180, 'square', t, 0.15, 0.3, 0.001);
+      noise(t + 0.08, 0.04, 0.3, 800);
+      osc(120, 'square', t + 0.12, 0.12, 0.001, 0.001);
+    },
+  };
+
+  // Public toggle
+  return {
+    play(name, ...args) {
+      if (!enabled) return;
+      try { if (sounds[name]) sounds[name](...args); }
+      catch(e) { /* audio errors are non-fatal */ }
+    },
+    toggle() { enabled = !enabled; return enabled; },
+    setVolume(v) { volume = Math.max(0, Math.min(1, v)); if (masterGain) masterGain.gain.value = volume; },
+    isEnabled() { return enabled; },
+  };
+})();
+
 // ============================================================
 // CONSTANTS
 // ============================================================
@@ -1484,6 +1806,7 @@ function activateFever(){
   G.feverSpinsLeft=5;
   if(G.feverTimer)clearTimeout(G.feverTimer);
   G.feverTimer=setTimeout(expireFever,30000);
+  SFX.play('feverOn');
   log('fever','FEVER ACTIVATED! x'+G.feverBoostMult.toFixed(1)+' for 5 spins!');
   updateFeverBar();
   document.getElementById('slotMachine').classList.add('fever-mode');
@@ -1494,6 +1817,7 @@ function expireFever(){
   updateFeverBar();
   const m=document.getElementById('slotMachine');
   if(m)m.classList.remove('fever-mode');
+  SFX.play('feverOff');
   log('fever','Fever burned out.');
 }
 function updateFeverBar(){
@@ -1550,6 +1874,7 @@ function rollIRS(){
     document.getElementById('irsLeft').innerHTML='Remaining: <span>'+left+' coins</span>';
     G.coins=left;
     G.irsActive=false;G.irsRisk=0;
+    SFX.play('irsRaid');
     document.getElementById('irsOverlay').classList.add('show');
     log('irs','IRS RAID: '+taken+' coins seized. Left with '+left+'.');
     updateStats();
@@ -1760,11 +2085,15 @@ async function spin(){
       }
     }
   }
+  SFX.play('reelSpin');
   await Promise.all([
     G.stickyLock[0]?Promise.resolve():spinReel(0,finalReels[0],baseDur),
     G.stickyLock[1]?Promise.resolve():spinReel(1,finalReels[1],baseDur+220),
     G.stickyLock[2]?Promise.resolve():spinReel(2,finalReels[2],baseDur+440),
   ]);
+  SFX.play('reelStop',0);
+  setTimeout(()=>SFX.play('reelStop',1),220);
+  setTimeout(()=>SFX.play('reelStop',2),440);
   G.reels=finalReels;
   // Clear sticky lock after using it
   G.stickyLock=[false,false,false];
@@ -2049,6 +2378,7 @@ function tryPayQuota(){
   document.getElementById('lastWarnBar').style.display='none';
   G.irsActive=false;G.irsRisk=0;G.spinsSinceDouble=0;
   document.getElementById('irsWarn').classList.remove('show');
+  SFX.play('quotaPaid');
   const qs=document.getElementById('quotaSec');qs.classList.add('quota-paid-flash');
   setTimeout(()=>qs.classList.remove('quota-paid-flash'),1300);
   setTimeout(()=>advFloor(),600);
@@ -2072,7 +2402,8 @@ function advFloor(){
   }
   G.bloodCrownUsed=false;G.bloodCrownBest=0;
   if(G.loanDebt>0){const d=G.loanDebt;G.coins=Math.max(15,G.coins-d);G.loanDebt=0;log('lose',`Moneylender collected ${d}.`);}
-  log('floor',`✦ Descended to Floor ${G.floor}.`);
+  SFX.play('floorDown');
+  log('floor','✦ Descended to Floor '+G.floor+'.');
   if(G.floor%5===0){G.isBossFloor=true;showBossIntro();}
   else{
     G.isBossFloor=false;
@@ -2112,6 +2443,7 @@ function showBossIntro(){
     if(G.bossMechanic){mechEl.textContent=G.bossMechanic.icon+' Special: '+G.bossMechanic.desc;mechEl.style.display='block';}
     else{mechEl.style.display='none';}
   }
+  SFX.play('bossAppear');
   document.getElementById('bossIntroOverlay').classList.add('show');
 }
 function startBoss(){
@@ -2174,6 +2506,7 @@ function endBoss(youQ,enemyQ){
       }
     }
     document.getElementById('bossResBonus').innerHTML='Boss bonus: <span>+'+bonus+' coins!</span>'+curseText;
+    SFX.play('bossWin');
     G.itemCoins+=2;log('boss','VICTORY! +'+bonus+' coins, +2 item coins.');
   }else{
     const pen=Math.floor(G.coins*.25);G.coins=Math.max(15,G.coins-pen);
@@ -2303,7 +2636,7 @@ function buyShopItem(item){
   const cost=Math.floor(item.cost*(owned>0&&item.stack?Math.pow(1.4,owned):1));
   if(G.coins<cost)return;
   if(item.req&&!G.shopOwned.includes(item.req))return;
-  G.coins-=cost;G.shopOwned.push(item.id);
+  G.coins-=cost;G.shopOwned.push(item.id);SFX.play('buy');
   applyShopMod(item);log('shop',`🛒 ${item.name}`);
   updateStats();updateUpgrades();updateDiagDisplay();
 }
@@ -2461,14 +2794,15 @@ function updateStats(){
 }
 function showWinMsg(r,total,feverWin=false){
   const e=document.getElementById('winMsg');e.className='win-msg';
-  if(feverWin){e.textContent=`🔥 FEVER WIN — +${total} 🔥`;e.classList.add('fever-win');}
-  else if(r.type==='triple'&&r.mult>=20){e.textContent=`✦ ${r.symbol} JACKPOT — +${total} ✦`;e.classList.add('jackpot');}
-  else if(r.win>=G.bet*5){e.textContent=`BIG WIN — +${total}`;e.classList.add('big');}
+  if(feverWin){e.textContent='🔥 FEVER WIN — +'+total+' 🔥';e.classList.add('fever-win');SFX.play('feverWin');}
+  else if(r.type==='triple'&&r.mult>=20){e.textContent='✦ '+r.symbol+' JACKPOT — +'+total+' ✦';e.classList.add('jackpot');SFX.play('jackpot');}
+  else if(r.win>=G.bet*5){e.textContent='BIG WIN — +'+total;e.classList.add('big');SFX.play('winBig');}
   else if(r.type==='reroll'){}
-  else{e.textContent=`Win: +${total}`;e.classList.add('small');}
+  else{e.textContent='Win: +'+total;e.classList.add('small');SFX.play('winSmall');}
   setTimeout(()=>e.classList.add('show'),10);setTimeout(()=>e.classList.remove('show'),3000);
 }
 function showLoseMsg(){
+  SFX.play('lose');
   const e=document.getElementById('winMsg');e.className='win-msg lose';
   const m=['The house wins.','Fortune frowns.','Nothing.','The void stares.','Empty hands.','Dead spin.'];
   e.textContent=m[Math.floor(Math.random()*m.length)];
@@ -2505,12 +2839,14 @@ function closeBetInput(){
 }
 function betInputKey(e){if(e.key==='Enter')confirmBetInput();else if(e.key==='Escape')closeBetInput();}
 function spawnCoins(){
+  SFX.play('coins');
   const btn=document.getElementById('spinBtn'),r=btn.getBoundingClientRect();
   for(let i=0;i<5;i++)setTimeout(()=>{const p=document.createElement('div');p.className='coin-p';p.textContent='🪙';p.style.left=(r.left+Math.random()*r.width)+'px';p.style.top=r.top+'px';document.body.appendChild(p);setTimeout(()=>p.remove(),1000);},i*80);
 }
 function log(type,msg){G.log.unshift({type,msg});if(G.log.length>50)G.log.pop();renderLog();}
 function renderLog(){document.getElementById('logEl').innerHTML=G.log.map(e=>`<div class="log-entry ${e.type}">${e.msg}</div>`).join('');}
 function trigGameOver(msg='The quota was not met. The house takes all.'){
+  SFX.play('gameOver');
   G.spinning=false;
   document.getElementById('goFloor').textContent=G.floor;
   document.getElementById('goSpins').textContent=G.spins;
@@ -2527,6 +2863,7 @@ function buyVault(){
   if(G.vaultActive){log('','Vault already active!');return;}
   if(G.coins<G.vaultCost){log('lose','Not enough coins to buy a vault.');return;}
   G.coins-=G.vaultCost;
+  SFX.play('vault');
   G.vaultActive=true;G.vault=0;G.vaultDeposited=false;
   G.vaultSpinsLeft=G.vaultSpinInterval;
   log('upgrade','🏦 Vault bought for '+G.vaultCost+'c. '+G.vaultSpinInterval+' spins remaining!');
@@ -2608,10 +2945,12 @@ function checkLoanOffer(){
   document.getElementById('loanPopupMsg').textContent=quote;
   document.getElementById('loanPopupAmount').innerHTML=loanAmt+' coins';
   document.getElementById('loanPopupCooldown').textContent='This offer is good for this quota only. The Collector moves on when the floor does.';
+  SFX.play('devilDeal');
   document.getElementById('loanPopup').style.display='flex';
 }
 function acceptLoan(){
   const loanAmt=Math.floor(G.quota*0.5);
+  SFX.play('devilDeal');
   G.coins+=loanAmt;G.loanDoubleNext=true;
   if(G.coins>G.peakCoins)G.peakCoins=G.coins;
   document.getElementById('loanPopup').style.display='none';
@@ -2632,11 +2971,13 @@ function declineLoan(){
 // HOUSE SUSPICION
 // ============================================================
 function showHouseWarning(){
+  SFX.play('warn');
   const popup=document.getElementById('houseWarnPopup');
   if(popup)popup.style.display='flex';
   log('irs','THE HOUSE IS WATCHING. Two more high-bet wins and the machine turns against you.');
 }
 function showHouseCrackdown(){
+  SFX.play('houseCrack');
   const popup=document.getElementById('houseCrackPopup');
   if(popup)popup.style.display='flex';
   log('irs','THE HOUSE ACTS. Odds crushed for 5 floors.');
@@ -2714,6 +3055,12 @@ function openDetailPopup(data){
   document.getElementById('detailPopupAccent').style.background='linear-gradient(90deg,transparent,'+data.accentColor+',transparent)';
   document.getElementById('detailPopup').style.display='flex';
 }
+
+function toggleSFX(){
+  const on=SFX.toggle();
+  const btn=document.getElementById('sfxToggleBtn');
+  if(btn)btn.textContent=(on?'🔊':'🔇')+' Sound: '+(on?'ON':'OFF');
+}
 function closeDetailPopup(){document.getElementById('detailPopup').style.display='none';}
 
 
@@ -2759,6 +3106,7 @@ function buyTomePage(page){
   if(G.coins<page.cost){log('lose','Need '+page.cost+' coins for '+page.name+'.');return;}
   G.coins-=page.cost;
   G.tomePages.push(page.id);
+  SFX.play('tomeBind');
   log('boss','BOUND: '+page.name+' — the tome grows heavier.');
   // Apply upside effects
   if(page.id==='page_vault'){G.vaultSpinInterval+=3;G.vaultCost=Math.floor(G.vaultCost*1.5);}
